@@ -1,0 +1,27 @@
+[project]
+name = "zimortal"
+version = "0.1.0"
+description = "Self-play AI for Ningxiang Paohuzi (Zi Pai), inspired by Mortal."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+  {name = "Ke Wang"}
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
