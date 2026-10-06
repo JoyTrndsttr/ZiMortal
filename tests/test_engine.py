@@ -633,3 +633,72 @@ def test_peng_no_discard_allowed_by_opening_double_ti():
     assert e.legal_actions(s)[0].kind == A.PENG
     s = e.step(s, e.legal_actions(s)[0])
     assert s.phase == "draw" and s.turn == 1
+
+
+def test_seed46_external_third_uses_peng_huxi_below_threshold():
+    # Frozen pre-fix step73 position; seed trajectories can change after fixes.
+    hand = [2, 3, 4, 5, 6, 7, 7, 8, 9, 14, 14, 16, 16, 16]
+    melds = [Meld(M.PENG, (18,) * 3), Meld(M.CHI, (0, 10, 10))]
+    assert evaluate_hand(hand + [14], melds, quad_requires_pair=True, protected={16})
+    assert not evaluate_hand(
+        hand + [14], melds, quad_requires_pair=True, protected={16}, exposed_triplet=14
+    )
+    s = response(hand, tile=14, source_player=1, seat=2, melds=melds)
+    s.players[2].kans = {16}
+    assert not RuleEngine()._wins(s, 2)
+    assert all(a.kind != A.HU for a in RuleEngine().legal_actions(s))
+
+
+@pytest.mark.parametrize("tile", [0, 10])
+def test_external_triplet_hu_preserves_peng_points(tile):
+    hand = [tile, tile] + [t for t in (2, 3, 4, 5, 7, 8) for _ in range(3)]
+    s = response(hand, tile=tile, source_player=1)
+    s.players[0].kans = {2, 3, 4, 5, 7, 8}
+    wins = RuleEngine()._wins(s, 0)
+    assert wins
+    group = next(g for g in wins[0] if g.tiles == (tile,) * 3)
+    assert group.kind == M.PENG
+    assert meld_huxi(group) == (3 if tile >= 10 else 1)
+
+
+@pytest.mark.parametrize("source,source_player", [(S.DRAW, 0), (S.DRAW, 2), (S.DISCARD, 2)])
+def test_discarded_tile_cannot_be_eaten_later(source, source_player):
+    e = RuleEngine()
+    s = response([1, 2, 3, 8], tile=2)
+    s.phase = "discard"
+    s.pending = None
+    from zimortal.engine import Action
+
+    s = e.step(s, Action(A.DISCARD, 0, 2))
+    assert 2 in s.players[0].passed_chi
+    s.pending = PendingTile(2, source_player, source)
+    s.phase = "respond"
+    assert all(a.kind != A.CHI or a.player != 0 for a in e.legal_actions(s))
+    assert GameState.deserialize(s.serialize()).players[0].passed_chi == {2}
+
+
+def test_mixed_bi_allows_other_size_to_remain():
+    hand = [0, 1, 3, 5, 6, 6, 7, 7, 8, 8, 8, 9, 14, 16, 16, 17]
+    e = RuleEngine()
+    s = response(hand, tile=6, source_player=0, seat=1)
+    # Already passed peng, as in the original seed1 step50.
+    s.players[1].passed_peng.add(6)
+    action = next(
+        a
+        for a in e.legal_actions(s)
+        if a.kind == A.CHI and a.chi == (6, 6, 16) and a.bi == ((1, 6, 9),)
+    )
+    out = e.step(s, action)
+    assert out.players[1].hand.count(6) == 0
+    assert out.players[1].hand.count(16) == 1
+
+
+def test_external_third_can_use_chi_instead_of_forced_peng_decomposition():
+    kans = {10, 12, 13, 15, 17}
+    hand = [t for t in sorted(kans) for _ in range(3)] + [3, 4, 4, 5, 14]
+    s = response(hand, tile=4, source_player=1)
+    s.players[0].kans = kans
+    wins = RuleEngine()._wins(s, 0)
+    assert any(
+        Meld(M.CHI, (3, 4, 5)) in groups and Meld(M.CHI, (4, 4, 14)) in groups for groups in wins
+    )

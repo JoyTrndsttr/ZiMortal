@@ -94,6 +94,7 @@ class RuleEngine:
             melds,
             quad_requires_pair=self.config.quad_requires_pair,
             protected=kans if self.config.protect_kans else (),
+            exposed_triplet=tile if player != pending.player and p.hand.count(tile) == 2 else None,
         )
 
     def decision_player(self, state):
@@ -266,6 +267,7 @@ class RuleEngine:
                 out.hu_passed.clear()
         elif action.kind == A.DISCARD:
             p.hand.remove(tile)
+            p.passed_chi.add(tile)
             out.pending = PendingTile(tile, action.player, S.DISCARD)
             out.phase = "respond"
             out.passed.clear()
