@@ -113,7 +113,7 @@ def explain(action, before, after):
             return "无人接牌，来牌落桌，由来牌者的下家摸牌。"
         return "主动放弃当前优先级的动作；放弃碰记录过碰，放弃吃记录过张，放弃胡不连带放弃碰或吃。"
     if action.kind == A.DISCARD:
-        return "从未锁定的手牌中出一张，其他玩家按优先级响应；弃牌不能胡。"
+        return "从未锁定的手牌中出一张，其他玩家按优先级响应；弃牌不能胡，自己打过的牌以后不能吃。"
     if action.source_type and action.source_type.value == "initial":
         return "起手四张相同，强制提；起手双提的下一次进张免出牌。"
     if action.kind in (A.WEI, A.STINKY_WEI):

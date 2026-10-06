@@ -35,7 +35,7 @@ def _decompose(counts, groups_left, pair_left):
     return tuple(result)
 
 
-def evaluate_hand(hand, melds=(), *, quad_requires_pair, protected=()):
+def evaluate_hand(hand, melds=(), *, quad_requires_pair, protected=(), exposed_triplet=None):
     """Return all >=15 hu-xi structures under the explicitly selected quad rule.
 
     The specification's six-group rule is literal; multiple-quad variants
@@ -62,6 +62,20 @@ def evaluate_hand(hand, melds=(), *, quad_requires_pair, protected=()):
     if target < len(fixed):
         return ()
     structures = _decompose(tuple(counts[t] for t in range(20)), target - len(fixed), pair)
-    return tuple(
-        tuple(fixed) + s for s in structures if sum(meld_huxi(g) for g in (*fixed, *s)) >= 15
-    )
+    if exposed_triplet is not None:
+        validate(exposed_triplet)
+        if counts[exposed_triplet] != 3:
+            raise ValueError("externally completed triplet requires three loose copies")
+    results = []
+    for structure in structures:
+        # Keep alternative chi decompositions available. Only a triplet made
+        # with the other player's offered third tile receives peng hu-xi.
+        groups = tuple(fixed) + tuple(
+            Meld(MeldType.PENG, g.tiles)
+            if g.kind == MeldType.KAN and g.tiles[0] == exposed_triplet
+            else g
+            for g in structure
+        )
+        if sum(meld_huxi(g) for g in groups) >= 15:
+            results.append(groups)
+    return tuple(results)
