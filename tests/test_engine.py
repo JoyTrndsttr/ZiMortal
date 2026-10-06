@@ -149,7 +149,7 @@ def response(hand=(), tile=0, source=S.DRAW, source_player=0, seat=0, melds=()):
 
 def test_wei_stinky_and_pass_peng():
     e = RuleEngine()
-    s = response([0, 0], source=S.DISCARD, source_player=2)
+    s = response([0, 0, 8], source=S.DISCARD, source_player=2)
     actions = e.legal_actions(s)
     assert actions[0].kind == A.PENG
     s = e.step(s, actions[1])
@@ -239,7 +239,7 @@ def test_chi_pass_and_peng_priority():
     assert e.legal_actions(s)[0].kind == A.CHI
     out = e.step(s, e.legal_actions(s)[-1])
     assert 2 in out.players[0].passed_chi
-    s.players[1].hand = [2, 2]
+    s.players[1].hand = [2, 2, 8]
     assert e.legal_actions(s)[0].kind == A.PENG
 
 
@@ -449,7 +449,7 @@ def test_fan_threshold_increments(kind):
 
 def test_decision_player_and_observation():
     e = RuleEngine()
-    s = response([0, 0], source=S.DISCARD, source_player=2)
+    s = response([0, 0, 8], source=S.DISCARD, source_player=2)
     assert e.decision_player(s) == 0
     assert e.observation(s, 0).decision_player == 0
     s.phase = "terminal"
@@ -573,3 +573,63 @@ def test_disabled_forced_ti_waives_discard():
     s = e.step(s, e.legal_actions(s)[0])
     assert s.phase == "draw" and s.turn == 1
     assert e.observation(s, 0).hu_disabled
+
+
+def test_drawer_chi_after_peng_pass_before_next_player():
+    e = RuleEngine()
+    s = response([4, 5, 8], tile=6, source_player=0)
+    s.players[1].hand = [6, 6, 4, 5, 4, 5, 7, 8, 9]
+    assert e.legal_actions(s)[0].kind == A.PENG
+    assert e.legal_actions(s)[0].player == 1
+    s = e.step(s, e.legal_actions(s)[1])
+    actions = e.legal_actions(s)
+    assert actions[0].kind == A.CHI and actions[0].player == 0
+    s = e.step(s, actions[-1])
+    assert 6 in s.players[0].passed_chi
+    actions = e.legal_actions(s)
+    assert actions[0].kind == A.CHI and actions[0].player == 1
+
+
+def test_drawer_chi_consumes_draw_once():
+    e = RuleEngine()
+    s = response([4, 5, 8], tile=6)
+    s = e.step(s, e.legal_actions(s)[0])
+    assert s.pending is None
+    assert s.players[0].hand == [8]
+    assert s.players[0].melds == [Meld(M.CHI, (4, 5, 6))]
+    assert s.phase == "discard" and s.turn == 0
+
+
+def test_cannot_chi_own_discard_or_other_non_upstream_tile():
+    e = RuleEngine()
+    s = response([4, 5, 8], tile=6, source=S.DISCARD)
+    assert all(a.kind != A.CHI for a in e.legal_actions(s))
+    s = response([4, 5, 8], tile=6, seat=2)
+    assert all(a.kind != A.CHI for a in e.legal_actions(s))
+
+
+def test_passed_drawer_chi_does_not_reappear():
+    e = RuleEngine()
+    s = response([4, 5, 8], tile=6)
+    s = e.step(s, e.legal_actions(s)[-1])
+    assert e.legal_actions(s)[0].forced
+    s.passed.clear()
+    assert all(a.kind != A.CHI for a in e.legal_actions(s))
+
+
+@pytest.mark.parametrize("hand,kans", [([0, 0], set()), ([0, 0, 8, 8, 8], {8})])
+def test_peng_cannot_leave_no_discard(hand, kans):
+    e = RuleEngine()
+    s = response(hand, source=S.DISCARD, source_player=2)
+    s.players[0].kans = kans
+    assert all(a.kind != A.PENG for a in e.legal_actions(s))
+    assert 0 not in s.players[0].passed_peng
+
+
+def test_peng_no_discard_allowed_by_opening_double_ti():
+    e = RuleEngine()
+    s = response([0, 0, 8], source=S.DISCARD, source_player=2)
+    s.players[0].opening_double_ti_pending = True
+    assert e.legal_actions(s)[0].kind == A.PENG
+    s = e.step(s, e.legal_actions(s)[0])
+    assert s.phase == "draw" and s.turn == 1

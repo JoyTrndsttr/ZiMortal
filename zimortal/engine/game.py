@@ -110,7 +110,7 @@ class RuleEngine:
         actions = self._legal(state)
         return tuple(a for a in actions if player is None or a.player == player)
 
-    def _chi_can_finish_turn(self, player, tile, chi, bi):
+    def _claim_can_finish_turn(self, player, tile, chi, bi):
         if player.opening_double_ti_pending:
             return True
         remaining = Counter(player.hand)
@@ -216,24 +216,31 @@ class RuleEngine:
                 and not p.hu_disabled
                 and tile not in p.passed_peng
                 and p.hand.count(tile) == 2
+                and self._claim_can_finish_turn(p, tile, (tile,) * 3, ())
             ):
                 return (
                     Action(A.PENG, seat, tile, source_player=q.player, source_type=q.source),
                     Action(A.PASS, seat, tile, source_player=q.player, source_type=q.source),
                 )
-        seat = (q.player + 1) % 3
-        p = state.players[seat]
-        if not p.hu_disabled and tile not in p.passed_chi:
-            options = enumerate_chi_with_required_bi(
-                p.hand, tile, protected=p.kans if self.config.protect_kans else ()
-            )
-            options = tuple(
-                (chi, bi) for chi, bi in options if self._chi_can_finish_turn(p, tile, chi, bi)
-            )
-            if options:
-                return tuple(
-                    Action(A.CHI, seat, tile, chi, bi, q.player, q.source) for chi, bi in options
-                ) + (Action(A.PASS, seat, tile, source_player=q.player, source_type=q.source),)
+        # A draw is offered to its drawer first, then to the drawer's next
+        # player. A discard may only be eaten by the discarder's next player.
+        chi_order = (q.player, (q.player + 1) % 3) if q.source == S.DRAW else ((q.player + 1) % 3,)
+        for seat in chi_order:
+            p = state.players[seat]
+            if not p.hu_disabled and tile not in p.passed_chi:
+                options = enumerate_chi_with_required_bi(
+                    p.hand, tile, protected=p.kans if self.config.protect_kans else ()
+                )
+                options = tuple(
+                    (chi, bi)
+                    for chi, bi in options
+                    if self._claim_can_finish_turn(p, tile, chi, bi)
+                )
+                if options:
+                    return tuple(
+                        Action(A.CHI, seat, tile, chi, bi, q.player, q.source)
+                        for chi, bi in options
+                    ) + (Action(A.PASS, seat, tile, source_player=q.player, source_type=q.source),)
         # Explicit forced pass disposes of the offered tile, advancing the turn.
         return (
             Action(
