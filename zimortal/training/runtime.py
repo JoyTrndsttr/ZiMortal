@@ -59,7 +59,15 @@ def choose(obs, rng, model=None, policy="model", device="cpu"):
     return obs.legal_actions[int(logits.argmax())]
 
 
-def tournament(model, seeds, opponent="random", device="cpu", model_seats=None):
+def tournament(
+    model,
+    seeds,
+    opponent="random",
+    device="cpu",
+    model_seats=None,
+    model_policy="model",
+    opponent_model=None,
+):
     engine = RuleEngine()
     wins = draws = illegal = hu_pass = hu_opportunities = 0
     payoff = 0
@@ -75,7 +83,11 @@ def tournament(model, seeds, opponent="random", device="cpu", model_seats=None):
                 actor = actions[0].player
                 obs = engine.observation(state, actor)
                 selected = choose(
-                    obs, rng, model, policy="model" if actor == seat else opponent, device=device
+                    obs,
+                    rng,
+                    model if actor == seat else opponent_model,
+                    policy=model_policy if actor == seat else opponent,
+                    device=device,
                 )
                 if actor == seat and any(a.kind == A.HU for a in actions):
                     hu_opportunities += 1

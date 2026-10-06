@@ -101,10 +101,27 @@ def test_disabled_player_has_no_readiness_label():
     assert row[3] == 0 and not row[4].any()
 
 
-def test_protected_kans_have_canonical_evaluation_order():
-    from zimortal.engine import evaluate_hand
+def test_selfplay_records_only_legal_candidates_and_terminal_targets():
+    from zimortal.training.reinforce import collect
 
-    hand = [t for t in range(7) for _ in range(3)]
-    a = evaluate_hand(hand, quad_requires_pair=True, protected=range(7))
-    b = evaluate_hand(hand, quad_requires_pair=True, protected=reversed(range(7)))
-    assert a and a == b
+    torch.set_num_threads(2)
+    torch.manual_seed(7)
+    model = PolicyValueNet("mlp")
+    rows, report = collect(model, model, 3, 33000)
+    assert report["games"] == 3 and report["replay_verified"]
+    assert rows
+    for row, logprob, value, target in rows:
+        assert 0 <= row[2] < len(row[1])
+        assert np.isfinite(logprob) and logprob <= 0
+        assert np.isfinite(value) and -0.5 <= target <= 1
+
+
+def test_random_baseline_and_frozen_opponent_routes():
+    from zimortal.training.runtime import tournament
+
+    torch.set_num_threads(2)
+    random_report = tournament(None, [7000], model_policy="random")
+    assert random_report["games"] == 3
+    model = PolicyValueNet("mlp")
+    report = tournament(model, [7000], opponent="model", opponent_model=model)
+    assert report["games"] == 3 and report["illegal_actions"] == 0

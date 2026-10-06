@@ -51,3 +51,16 @@ The name combines **Zi Pai** (字牌) with a tribute to **Mortal**, the open-sou
 ## Status
 
 Early-stage research and engineering project. The first priority is correctness of the game engine before any large-scale learning.
+
+## 神经网络训练与复盘
+
+已完成三轮实验：MLP／1D ResNet 监督预训练、模型状态聚合、自博弈 actor-critic。
+输入仅使用玩家可见 Observation，网络有 policy／value／听牌辅助头。
+安装训练依赖：`uv pip install --python .venv/bin/python -e '.[training,dev]'`。
+训练命令、完整结果和限制见 [训练记录](docs/training/README.md)。
+本机权重保存在 `checkpoints/`，不纳入 Git；各轮报告记录校验值。
+
+复盘网页新增各轮模型策略，默认仍为随机合法动作。
+例如 `http://127.0.0.1:8765/?seed=9002&dealer=2&policy=round3`，第12步可查看
+模型与教师对吃牌／下比方案的分歧。所有座位使用所选策略，网页为全信息审查，
+网络输入仍经过 Observation 隔离。模型目前尚未超过启发式教师。

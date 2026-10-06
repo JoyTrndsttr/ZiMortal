@@ -702,3 +702,12 @@ def test_external_third_can_use_chi_instead_of_forced_peng_decomposition():
     assert any(
         Meld(M.CHI, (3, 4, 5)) in groups and Meld(M.CHI, (4, 4, 14)) in groups for groups in wins
     )
+
+
+def test_protected_kans_have_canonical_evaluation_order():
+    from zimortal.engine import evaluate_hand
+
+    hand = [t for t in range(7) for _ in range(3)]
+    a = evaluate_hand(hand, quad_requires_pair=True, protected=range(7))
+    b = evaluate_hand(hand, quad_requires_pair=True, protected=reversed(range(7)))
+    assert a and a == b
