@@ -24,3 +24,20 @@
 模型权重位于本机 `checkpoints/`（忽略 Git），报告保留 SHA256。所有训练命令可复现 CPU 实验，跨硬件／版本不保证逐位一致。
 
 下一步：聚合模型状态继续监督训练，再用真实终局胜负进行带监督锚点的自博弈 actor-critic。仍缺精确向听、多步搜索、隐藏信息信念、可信的大样本棋力评估。
+
+## 第二轮：模型状态聚合
+
+```bash
+.venv/bin/python -m zimortal.training.train --seed 22 --resume checkpoints/round1-resnet.pt --puzzles 4096 --games 100 --aggregate 200 --epochs 14 --lr 0.0005 --output checkpoints/round2-resnet.pt --report docs/training/round2-resnet.json
+.venv/bin/python -m zimortal.training.review --checkpoint checkpoints/round2-resnet.pt --output docs/training/round2-review.json
+```
+
+4096 扰动题＋100 随机对局得到 6841 个决策，再聚合第一轮模型的 200 场对局（78 场有人胡牌）中的 5758 个决策，总计 12599。聚合过程检查守恒和完整重放。监督标签仍来自可见信息教师；这是一次 DAgger 风格的数据聚合，尚不是强化学习。独立验证 933 个样本、教师动作准确率 57.23%；验证集与第一轮不同，不能直接比较准确率。
+
+同一固定评估：随机对手 13/60 胜，教师 2/18 胜，均无非法动作、无漏胡。还不足以证明稳定提升，更没有超过教师。修正教师模拟动作后新增公开牌的计数，避免高估余张；禁止胡牌状态的辅助听牌标签归零。聚合加入完整重放检查。
+
+网页新增随机／三轮模型选择和种子 URL：`http://127.0.0.1:8765/?seed=9000&dealer=0&policy=round2`。这里三个座位均使用所选模型，和“模型对随机对手”评估不同。审查 JSON 的种子、庄家、步骤可在对应轮次网页中定位；模型始终仅收到 Observation。模型不存在时提示错误，不自动换成随机。浏览器已验证模型选择、URL 初始化、首尾导航与切回随机。
+
+剩余问题：教师仍只看一步，模型仍会选择明显弱于教师的出牌；没有精确 n 向听标签。下一轮尝试真实终局反馈，并保留监督锚点限制遗忘。
+
+第二轮重放审查定位到 seed 9049、终局第44步：protected 坎遍历顺序不稳定，使相同结算的牌组顺序不同。evaluator 现在按牌种排序固定坎，补充不同 protected 顺序的回归测试；胡息和结算数值不变。修正后重新完成同组审查。

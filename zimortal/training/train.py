@@ -40,7 +40,8 @@ def aggregate(model, games, seed):
     data = []
     outcomes = []
     for i in range(games):
-        state = engine.new_game(seed + i)
+        initial = engine.new_game(seed + i)
+        state = initial
         rows = []
         for _ in range(1000):
             if state.terminal:
@@ -54,6 +55,8 @@ def aggregate(model, games, seed):
             state.validate()
         else:
             raise RuntimeError("aggregation exceeded terminal limit")
+        if engine.replay(initial, state.history).serialize() != state.serialize():
+            raise RuntimeError("aggregation replay mismatch")
         # Readiness labels remain consistent with round-one pretraining;
         # outcome value learning is a separate explicit RL stage.
         data.extend(example(obs) for obs, _ in rows)

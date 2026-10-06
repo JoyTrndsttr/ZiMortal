@@ -49,7 +49,7 @@ def evaluate_hand(hand, melds=(), *, quad_requires_pair, protected=(), exposed_t
     if any(n > 4 for n in total.values()):
         raise ValueError("invalid hand")
     fixed = list(melds)
-    for t in protected:
+    for t in sorted(protected):
         if counts[t] != 3:
             raise ValueError("protected kan must contain three tiles")
         fixed.append(Meld(MeldType.KAN, (t,) * 3))

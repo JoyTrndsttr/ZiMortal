@@ -64,3 +64,47 @@ def test_puzzle_physical_and_repeatable():
 
 def test_waits_respect_four_copies():
     assert 0 not in winning_tiles((0, 0, 0, 0), (), ())
+
+
+def test_teacher_marks_its_hypothetical_discard_public(monkeypatch):
+    from collections import Counter
+
+    from zimortal.training import data
+
+    obs, _ = make_puzzle(1100001)
+    engine = RuleEngine()
+    state = engine.new_game(1)
+    while state.phase != "discard":
+        state = engine.step(state, engine.legal_actions(state)[-1])
+    obs = engine.observation(state, state.turn)
+    action = obs.legal_actions[0]
+    obs = replace(obs, legal_actions=(action,))
+    captured = []
+    monkeypatch.setattr(
+        data,
+        "hand_quality",
+        lambda hand, melds, kans, visible: captured.append(visible.copy()) or 0.0,
+    )
+    data.teacher_scores(obs)
+    before = Counter(obs.river)
+    for player in obs.players:
+        before.update(t for m in player.melds for t in m.tiles)
+    assert captured[0][action.tile] == before[action.tile] + 1
+
+
+def test_disabled_player_has_no_readiness_label():
+    from zimortal.training.data import example
+
+    obs, _ = make_puzzle(1100001)
+    obs = replace(obs, hu_disabled=True)
+    row = example(obs)
+    assert row[3] == 0 and not row[4].any()
+
+
+def test_protected_kans_have_canonical_evaluation_order():
+    from zimortal.engine import evaluate_hand
+
+    hand = [t for t in range(7) for _ in range(3)]
+    a = evaluate_hand(hand, quad_requires_pair=True, protected=range(7))
+    b = evaluate_hand(hand, quad_requires_pair=True, protected=reversed(range(7)))
+    assert a and a == b
