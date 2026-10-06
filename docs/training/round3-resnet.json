@@ -1,0 +1,131 @@
+{
+  "algorithm": "clipped actor-critic; frozen round-two opponents (75%), random (25%); supervised anchor",
+  "seed": 33,
+  "device": "cpu",
+  "iterations": [
+    {
+      "iteration": 1,
+      "games": 40,
+      "wins": 4,
+      "draws": 24,
+      "decisions": 387,
+      "replay_verified": true,
+      "loss": 0.27244604378938675,
+      "nonzero_rewards": 129
+    },
+    {
+      "iteration": 2,
+      "games": 40,
+      "wins": 5,
+      "draws": 23,
+      "decisions": 368,
+      "replay_verified": true,
+      "loss": 0.3252662933535046,
+      "nonzero_rewards": 138
+    },
+    {
+      "iteration": 3,
+      "games": 40,
+      "wins": 8,
+      "draws": 24,
+      "decisions": 402,
+      "replay_verified": true,
+      "loss": 0.354996994137764,
+      "nonzero_rewards": 159
+    },
+    {
+      "iteration": 4,
+      "games": 40,
+      "wins": 4,
+      "draws": 22,
+      "decisions": 384,
+      "replay_verified": true,
+      "loss": 0.2899416403637992,
+      "nonzero_rewards": 155
+    },
+    {
+      "iteration": 5,
+      "games": 40,
+      "wins": 7,
+      "draws": 25,
+      "decisions": 402,
+      "replay_verified": true,
+      "loss": 0.3492793043454488,
+      "nonzero_rewards": 144
+    },
+    {
+      "iteration": 6,
+      "games": 40,
+      "wins": 4,
+      "draws": 20,
+      "decisions": 371,
+      "replay_verified": true,
+      "loss": 0.292629427380032,
+      "nonzero_rewards": 179
+    },
+    {
+      "iteration": 7,
+      "games": 40,
+      "wins": 6,
+      "draws": 19,
+      "decisions": 365,
+      "replay_verified": true,
+      "loss": 0.3198474397261937,
+      "nonzero_rewards": 179
+    },
+    {
+      "iteration": 8,
+      "games": 40,
+      "wins": 8,
+      "draws": 19,
+      "decisions": 378,
+      "replay_verified": true,
+      "loss": 0.3347990761200587,
+      "nonzero_rewards": 201
+    },
+    {
+      "iteration": 9,
+      "games": 40,
+      "wins": 7,
+      "draws": 22,
+      "decisions": 388,
+      "replay_verified": true,
+      "loss": 0.37724008162816364,
+      "nonzero_rewards": 158
+    },
+    {
+      "iteration": 10,
+      "games": 40,
+      "wins": 6,
+      "draws": 19,
+      "decisions": 374,
+      "replay_verified": true,
+      "loss": 0.297832695974244,
+      "nonzero_rewards": 185
+    }
+  ],
+  "checkpoint": "checkpoints/round3-resnet.pt",
+  "sha256": "0de67baeaa2c2b35e67c60ba02206ca6182e3440f4504606d44184a47c0a3bd6",
+  "random_tournament": {
+    "games": 60,
+    "wins": 15,
+    "win_rate": 0.25,
+    "draws": 42,
+    "mean_payoff": 6.0,
+    "illegal_actions": 0,
+    "hu_opportunities": 15,
+    "passed_hu": 0,
+    "reviews": []
+  },
+  "teacher_tournament": {
+    "games": 18,
+    "wins": 2,
+    "win_rate": 0.1111111111111111,
+    "draws": 6,
+    "mean_payoff": -2.2222222222222223,
+    "illegal_actions": 0,
+    "hu_opportunities": 2,
+    "passed_hu": 0,
+    "reviews": []
+  }
+}

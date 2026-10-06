@@ -3,6 +3,7 @@
 import argparse
 import json
 import random
+from dataclasses import asdict
 from pathlib import Path
 
 import numpy as np
@@ -41,6 +42,8 @@ def audit(checkpoint, seeds, output):
                             "dealer": seed % 3,
                             "step": step,
                             "player": obs.player + 1,
+                            "model_candidate": asdict(selected),
+                            "teacher_candidate": asdict(actions[best]),
                             "model_action": selected.kind.value,
                             "model_tile": selected.tile,
                             "teacher_action": actions[best].kind.value,
