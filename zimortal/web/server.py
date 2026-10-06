@@ -11,6 +11,8 @@ from urllib.parse import parse_qs, urlparse
 from zimortal.engine import RuleClarificationRequired, RuleEngine, meld_huxi
 from zimortal.engine.types import ActionType as A
 
+from .layout import arrange_hand
+
 LABELS = {
     "draw": "摸牌",
     "discard": "出牌",
@@ -36,6 +38,7 @@ def snapshot(engine, state):
         "players": [
             {
                 "hand": sorted(p.hand),
+                "columns": arrange_hand(p.hand, p.kans),
                 "kans": sorted(p.kans),
                 "melds": [asdict(m) | {"huxi": meld_huxi(m)} for m in p.melds],
                 "huxi": sum(meld_huxi(m) for m in p.melds)

@@ -37,3 +37,32 @@ def test_seed322_cannot_peng_into_discard_dead_end():
     trace = build_game(322)
     assert trace["frames"][-1]["terminal"]
     assert all(not f["error"] for f in trace["frames"])
+
+
+def test_arrangement_preserves_tiles_and_locked_kans():
+    from collections import Counter
+
+    from zimortal.engine import RuleEngine
+    from zimortal.web.layout import arrange_hand
+
+    engine = RuleEngine()
+    for seed in range(100):
+        for player in engine.new_game(seed).players:
+            columns = arrange_hand(player.hand, player.kans)
+            assert Counter(t for c in columns for t in c) == Counter(player.hand)
+            assert all(1 <= len(c) <= 4 for c in columns)
+            assert 6 <= len(columns) <= 8
+            for kan in player.kans:
+                assert [kan] * 3 in columns
+            assert columns == arrange_hand(player.hand, player.kans)
+
+
+def test_arrangement_groups_special_sequences_and_mixed_rank():
+    from zimortal.web.layout import arrange_hand
+
+    # Enough unrelated columns to leave room for the preferred combinations.
+    hand = [0, 1, 2, 11, 16, 19, 4, 14, 3, 3, 5, 5, 7, 7, 8, 8, 12, 12, 15, 15]
+    columns = arrange_hand(hand)
+    assert any({0, 1, 2} <= set(c) for c in columns)
+    assert any({11, 16, 19} <= set(c) for c in columns)
+    assert any({4, 14} <= set(c) for c in columns)
