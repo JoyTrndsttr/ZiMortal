@@ -27,6 +27,32 @@ LABELS = {
 }
 
 
+def discard_records(history):
+    """Historical discards, including cards subsequently claimed by a player."""
+    records = [[] for _ in range(3)]
+    pending = None
+    for step, action in enumerate(history, 1):
+        if action.kind == A.DISCARD:
+            pending = {
+                "tile": action.tile,
+                "step": step,
+                "status": "pending",
+                "claimed_by": None,
+                "claim_kind": None,
+            }
+            records[action.player].append(pending)
+        elif pending is not None and action.source_type and action.source_type.value == "discard":
+            if action.kind in (A.CHI, A.PENG, A.PAO):
+                pending.update(
+                    status="claimed", claimed_by=action.player, claim_kind=action.kind.value
+                )
+                pending = None
+            elif action.kind == A.PASS and action.forced:
+                pending["status"] = "landed"
+                pending = None
+    return records
+
+
 def snapshot(engine, state):
     error = None
     try:
@@ -34,9 +60,12 @@ def snapshot(engine, state):
     except RuleClarificationRequired as exc:
         legal = ()
         error = str(exc)
+    discards = discard_records(state.history)
     return {
         "players": [
             {
+                "discards": discards[seat],
+                "last_action": None,
                 "hand": sorted(p.hand),
                 "columns": arrange_hand(p.hand, p.kans),
                 "kans": sorted(p.kans),
@@ -48,7 +77,7 @@ def snapshot(engine, state):
                 "hu_disabled": p.hu_disabled,
                 "quad_count": p.quad_count,
             }
-            for p in state.players
+            for seat, p in enumerate(state.players)
         ],
         "remaining": len(state.deck),
         "river": list(state.river),
@@ -101,6 +130,7 @@ def build_game(seed=118, dealer=0):
     initial = engine.new_game(seed, dealer)
     state = initial
     rng = random.Random(seed)
+    last_actions = [None, None, None]
     frames = [
         snapshot(engine, initial)
         | {
@@ -122,6 +152,9 @@ def build_game(seed=118, dealer=0):
         shown = asdict(action)
         if action.kind == A.DRAW and state.pending:
             shown["tile"] = state.pending.tile
+        last_actions[action.player] = shown
+        for seat, player in enumerate(frame["players"]):
+            player["last_action"] = last_actions[seat]
         frame.update(
             index=index, action=shown, note=explain(action, before, state), verified=action in legal
         )

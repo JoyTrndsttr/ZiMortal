@@ -66,3 +66,39 @@ def test_arrangement_groups_special_sequences_and_mixed_rank():
     assert any({0, 1, 2} <= set(c) for c in columns)
     assert any({11, 16, 19} <= set(c) for c in columns)
     assert any({4, 14} <= set(c) for c in columns)
+
+
+def test_discard_records_follow_each_players_actual_history():
+    trace = build_game(118)
+    expected = [[], [], []]
+    for frame in trace["frames"]:
+        action = frame["action"]
+        if action and action["kind"] == "discard":
+            expected[action["player"]].append((frame["index"], action["tile"]))
+        for seat, player in enumerate(frame["players"]):
+            assert [(d["step"], d["tile"]) for d in player["discards"]] == expected[seat]
+    assert not any(p["discards"] for p in trace["frames"][0]["players"])
+
+
+def test_discard_claim_and_landing_are_distinguished():
+    from zimortal.engine import Action, ActionType, SourceType
+    from zimortal.web.server import discard_records
+
+    history = [Action(ActionType.DISCARD, 0, 3)]
+    assert discard_records(history)[0][0]["status"] == "pending"
+    history.append(Action(ActionType.PENG, 1, 3, source_player=0, source_type=SourceType.DISCARD))
+    record = discard_records(history)[0][0]
+    assert record["status"] == "claimed" and record["claimed_by"] == 1
+    history.append(Action(ActionType.DISCARD, 1, 8))
+    history.append(
+        Action(ActionType.PASS, 1, 8, source_player=1, source_type=SourceType.DISCARD, forced=True)
+    )
+    assert discard_records(history)[1][0]["status"] == "landed"
+
+
+def test_last_actions_include_revealed_draw_tile():
+    trace = build_game(118)
+    frame = trace["frames"][6]
+    assert frame["players"][1]["last_action"]["kind"] == "draw"
+    assert frame["players"][1]["last_action"]["tile"] == 15
+    assert trace["frames"][7]["players"][1]["last_action"] == frame["players"][1]["last_action"]
