@@ -1,0 +1,111 @@
+{
+  "seed": 11,
+  "architecture": "mlp",
+  "training_samples": 3147,
+  "validation_namespace": 111,
+  "strata": {
+    "0": 512,
+    "1": 512,
+    "2": 512,
+    "3": 512
+  },
+  "aggregation": null,
+  "epochs": [
+    {
+      "epoch": 1,
+      "loss": 1.8369721603393554,
+      "policy_accuracy": 0.430939226519337,
+      "policy_cross_entropy": 1.672713200690338,
+      "samples": 543
+    },
+    {
+      "epoch": 2,
+      "loss": 1.5585898160934448,
+      "policy_accuracy": 0.43830570902394106,
+      "policy_cross_entropy": 1.6243273417154949,
+      "samples": 543
+    },
+    {
+      "epoch": 3,
+      "loss": 1.5250964212417601,
+      "policy_accuracy": 0.4419889502762431,
+      "policy_cross_entropy": 1.6160727934723182,
+      "samples": 543
+    },
+    {
+      "epoch": 4,
+      "loss": 1.5070530080795288,
+      "policy_accuracy": 0.43830570902394106,
+      "policy_cross_entropy": 1.633557908003721,
+      "samples": 543
+    },
+    {
+      "epoch": 5,
+      "loss": 1.4995239543914796,
+      "policy_accuracy": 0.4419889502762431,
+      "policy_cross_entropy": 1.603299009207204,
+      "samples": 543
+    },
+    {
+      "epoch": 6,
+      "loss": 1.4875077152252196,
+      "policy_accuracy": 0.4162062615101289,
+      "policy_cross_entropy": 1.6020823034353238,
+      "samples": 543
+    },
+    {
+      "epoch": 7,
+      "loss": 1.478940315246582,
+      "policy_accuracy": 0.43278084714548803,
+      "policy_cross_entropy": 1.6021307353376244,
+      "samples": 543
+    },
+    {
+      "epoch": 8,
+      "loss": 1.4697041940689086,
+      "policy_accuracy": 0.43646408839779005,
+      "policy_cross_entropy": 1.6046110332341483,
+      "samples": 543
+    },
+    {
+      "epoch": 9,
+      "loss": 1.4658741426467896,
+      "policy_accuracy": 0.43830570902394106,
+      "policy_cross_entropy": 1.6004464411164736,
+      "samples": 543
+    },
+    {
+      "epoch": 10,
+      "loss": 1.459140706062317,
+      "policy_accuracy": 0.425414364640884,
+      "policy_cross_entropy": 1.6051821454014787,
+      "samples": 543
+    }
+  ],
+  "checkpoint": "checkpoints/round1-mlp.pt",
+  "sha256": "a8af42c52f63cfb736b3158044d04b63ea9c76f61257ad27aa1437932abc1dc1",
+  "device": "cpu",
+  "torch": "2.14.1+cpu",
+  "random_tournament": {
+    "games": 60,
+    "wins": 10,
+    "win_rate": 0.16666666666666666,
+    "draws": 47,
+    "mean_payoff": 5.166666666666667,
+    "illegal_actions": 0,
+    "hu_opportunities": 10,
+    "passed_hu": 0,
+    "reviews": []
+  },
+  "teacher_tournament": {
+    "games": 18,
+    "wins": 1,
+    "win_rate": 0.05555555555555555,
+    "draws": 7,
+    "mean_payoff": -22.22222222222222,
+    "illegal_actions": 0,
+    "hu_opportunities": 1,
+    "passed_hu": 0,
+    "reviews": []
+  }
+}
