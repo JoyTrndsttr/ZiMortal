@@ -100,6 +100,7 @@ def teacher_scores(obs):
             hand.remove(action.tile)
             hand.remove(action.tile)
             melds.append(Meld(M.PENG, (action.tile,) * 3))
+        post_visible = visible + (Counter(obs.hand) - Counter(hand))
         # Optional claims usually require a discard: inspect every discard,
         # except opening double-ti's first intake (inferred from public history).
         initial_ti = sum(
@@ -121,14 +122,14 @@ def teacher_scores(obs):
                         tuple(x for i, x in enumerate(hand) if i != hand.index(t)),
                         melds,
                         ks,
-                        visible,
+                        post_visible + Counter({t: 1}),
                     )
                     for t in candidates
                 ),
                 default=-10.0,
             )
         else:
-            quality = hand_quality(hand, melds, ks, visible)
+            quality = hand_quality(hand, melds, ks, post_visible)
         scores.append(quality)
     return np.asarray(scores, dtype=np.float32)
 
@@ -186,6 +187,8 @@ def example(obs, value=None):
         tuple(obs.players[obs.player].melds),
         tuple(t for t, n in Counter(obs.hand).items() if n == 3),
     )
+    if obs.hu_disabled:
+        waits = ()
     target = np.zeros(20, dtype=np.float32)
     target[list(waits)] = 1
     if value is None:

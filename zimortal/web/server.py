@@ -125,7 +125,20 @@ def explain(action, before, after):
     return "碰可选择放弃，优先于吃；碰后按出牌义务继续。"
 
 
-def build_game(seed=118, dealer=0):
+def build_game(seed=118, dealer=0, policy="random"):
+    model = None
+    if policy != "random":
+        if policy not in ("round1", "round2", "round3"):
+            raise ValueError("unknown policy")
+        checkpoint = Path(__file__).resolve().parents[2] / "checkpoints" / f"{policy}-resnet.pt"
+        if not checkpoint.is_file():
+            raise ValueError(f"model checkpoint missing: {policy}")
+        import torch
+
+        from zimortal.training.runtime import choose, load_model
+
+        torch.set_num_threads(2)
+        model = load_model(checkpoint)
     engine = RuleEngine()
     initial = engine.new_game(seed, dealer)
     state = initial
@@ -144,7 +157,11 @@ def build_game(seed=118, dealer=0):
         if state.terminal or frames[-1]["error"]:
             break
         legal = engine.legal_actions(state)
-        action = rng.choice(legal)
+        action = (
+            rng.choice(legal)
+            if model is None
+            else choose(engine.observation(state, legal[0].player), rng, model)
+        )
         before = state
         state = engine.step(state, action)
         state.validate()
@@ -167,6 +184,7 @@ def build_game(seed=118, dealer=0):
     return {
         "seed": seed,
         "dealer": dealer,
+        "policy": policy,
         "frames": frames,
         "replay_verified": True,
         "actions": len(state.history),
@@ -183,7 +201,8 @@ class Handler(BaseHTTPRequestHandler):
                 dealer = int(args.get("dealer", ["0"])[0])
                 if not -(2**31) <= seed < 2**31 or dealer not in range(3):
                     raise ValueError("seed/dealer out of range")
-                body = json.dumps(build_game(seed, dealer), ensure_ascii=False).encode()
+                policy = args.get("policy", ["random"])[0]
+                body = json.dumps(build_game(seed, dealer, policy), ensure_ascii=False).encode()
             except ValueError as exc:
                 self.respond(400, json.dumps({"error": str(exc)}).encode(), "application/json")
                 return
