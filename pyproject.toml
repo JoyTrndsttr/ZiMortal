@@ -11,6 +11,7 @@ authors = [
 dependencies = []
 
 [project.optional-dependencies]
+training = ["numpy>=2.0", "torch>=2.5"]
 dev = [
   "pytest>=8.0",
   "ruff>=0.6",
