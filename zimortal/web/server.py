@@ -71,7 +71,7 @@ def explain(action, before, after):
     if action.kind == A.HU:
         return "胡牌结构成立且达到15胡；天胡为起手例外，其余胡牌来自墩牌。"
     if action.kind == A.CHI:
-        return "只能吃上家来牌；该方案已完成全部下比，且能完成本次出牌或满足夹比。"
+        return "墩牌先由摸牌者决定吃或过，再轮到下家；弃牌只能由下家吃。该方案已完成全部下比，且能完成本次出牌或满足夹比。"
     if action.kind == A.PASS:
         if before.phase == "opening":
             return "开局检查结束，由庄家出第一张。"
@@ -79,7 +79,7 @@ def explain(action, before, after):
             return "强制进张后的胡牌检查结束，按出牌义务继续。"
         if action.forced:
             return "无人接牌，来牌落桌，由来牌者的下家摸牌。"
-        return "主动放弃当前优先级的动作；过碰／过张会写入该玩家记录。"
+        return "主动放弃当前优先级的动作；放弃碰记录过碰，放弃吃记录过张，放弃胡不连带放弃碰或吃。"
     if action.kind == A.DISCARD:
         return "从未锁定的手牌中出一张，其他玩家按优先级响应；弃牌不能胡。"
     if action.source_type and action.source_type.value == "initial":
