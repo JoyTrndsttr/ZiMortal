@@ -128,7 +128,7 @@ def explain(action, before, after):
 def build_game(seed=118, dealer=0, policy="random"):
     model = None
     if policy != "random":
-        if policy not in ("round1", "round2", "round3"):
+        if policy not in ("round1", "round2", "round3", "scale100k"):
             raise ValueError("unknown policy")
         checkpoint = Path(__file__).resolve().parents[2] / "checkpoints" / f"{policy}-resnet.pt"
         if not checkpoint.is_file():
