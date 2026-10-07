@@ -22,11 +22,18 @@ class ResidualBlock(nn.Module):
 
 
 class PolicyValueNet(nn.Module):
-    def __init__(self, architecture="resnet", width=32, feature_version="legacy"):
+    def __init__(
+        self, architecture="resnet", width=32, feature_version="legacy", auxiliary_version="legacy"
+    ):
         super().__init__()
         self.architecture = architecture
         self.width = width
         self.feature_version = feature_version
+        self.auxiliary_version = auxiliary_version
+        if auxiliary_version not in ("legacy", "boundary"):
+            raise ValueError("unknown auxiliary version")
+        if auxiliary_version == "boundary" and feature_version != "huxi":
+            raise ValueError("boundary heads require huxi features")
         self.input_channels = HUXI_CHANNELS if feature_version == "huxi" else CHANNELS
         if architecture == "resnet":
             self.encoder = nn.Sequential(
@@ -54,19 +61,42 @@ class PolicyValueNet(nn.Module):
         self.value = nn.Sequential(nn.Linear(128, 32), nn.SiLU(), nn.Linear(32, 1))
         self.wait = nn.Linear(128, 20)
         self.huxi = nn.Linear(128, 21) if feature_version == "huxi" else None
+        self.outcome = (
+            nn.Sequential(
+                nn.Linear(128 + self.input_channels * 2, 128), nn.SiLU(), nn.Linear(128, 4)
+            )
+            if auxiliary_version == "boundary"
+            else None
+        )
 
-    def forward_all(self, features, actions, mask):
+    def forward_aux(self, features, actions, mask):
         latent = self.encoder(features)
         embeddings = self.action_encoder(actions)
         logits = (embeddings * self.policy_context(latent).unsqueeze(1)).sum(
             -1
         ) / 8 + self.action_bias(actions).squeeze(-1)
+        hu = self.huxi(latent) if self.huxi is not None else None
+        eligibility = amount = fan = None
+        if self.outcome is not None:
+            local = features.transpose(1, 2)
+            opposite = torch.cat((local[:, 10:], local[:, :10]), dim=1)
+            outcomes = self.outcome(
+                torch.cat((latent[:, None].expand(-1, 20, -1), local, opposite), -1)
+            )
+            hu = torch.cat((hu[:, :1], outcomes[:, :, 0]), dim=1)
+            eligibility, amount, fan = (outcomes[:, :, i] for i in (1, 2, 3))
         return (
             logits.masked_fill(~mask, -1e9),
             self.value(latent).squeeze(-1),
             self.wait(latent),
-            self.huxi(latent) if self.huxi is not None else None,
+            hu,
+            eligibility,
+            amount,
+            fan,
         )
+
+    def forward_all(self, features, actions, mask):
+        return self.forward_aux(features, actions, mask)[:4]
 
     def forward(self, features, actions, mask):
         return self.forward_all(features, actions, mask)[:3]

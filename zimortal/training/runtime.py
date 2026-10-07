@@ -22,6 +22,7 @@ def save_model(model, path, **metadata):
             "architecture": model.architecture,
             "width": model.width,
             "feature_version": model.feature_version,
+            "auxiliary_version": model.auxiliary_version,
             "metadata": metadata,
         },
         path,
@@ -31,7 +32,10 @@ def save_model(model, path, **metadata):
 def load_model(path, device="cpu"):
     data = torch.load(path, map_location=device, weights_only=True)
     model = PolicyValueNet(
-        data["architecture"], data["width"], data.get("feature_version", "legacy")
+        data["architecture"],
+        data["width"],
+        data.get("feature_version", "legacy"),
+        data.get("auxiliary_version", "legacy"),
     ).to(device)
     model.load_state_dict(data["state_dict"])
     model.eval()
@@ -72,12 +76,14 @@ def tournament(
     model_seats=None,
     model_policy="model",
     opponent_model=None,
+    include_games=False,
 ):
     engine = RuleEngine()
     wins = draws = illegal = hu_pass = hu_opportunities = 0
     payoff = 0
     winning_huxi = winning_fan = winning_amount = 0
     reviews = []
+    game_results = []
     for seed in seeds:
         for seat in range(3) if model_seats is None else model_seats:
             state = engine.new_game(seed, dealer=seed % 3)
@@ -117,6 +123,15 @@ def tournament(
                 raise RuntimeError("nonterminal model game")
             wins += state.winner == seat
             draws += state.winner is None
+            if include_games:
+                game_results.append(
+                    {
+                        "seed": seed,
+                        "seat": seat,
+                        "payoff": state.settlement.payments[seat] if state.settlement else 0,
+                        "winner": state.winner,
+                    }
+                )
             if state.settlement:
                 payoff += state.settlement.payments[seat]
                 if state.winner == seat:
@@ -124,7 +139,7 @@ def tournament(
                     winning_fan += sum(state.settlement.fan.values()) or 1
                     winning_amount += state.settlement.amount_each
     games = len(seeds) * (3 if model_seats is None else len(model_seats))
-    return {
+    result = {
         "games": games,
         "wins": wins,
         "win_rate": wins / games,
@@ -138,3 +153,6 @@ def tournament(
         "passed_hu": hu_pass,
         "reviews": reviews,
     }
+    if include_games:
+        result["game_results"] = game_results
+    return result

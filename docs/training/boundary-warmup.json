@@ -1,0 +1,1159 @@
+{
+  "train_base": 107390,
+  "train_boundary": 16000,
+  "validation_base": 4633,
+  "validation_boundary": 3200,
+  "before": {
+    "boundary": {
+      "samples": 3200,
+      "structural_tile_samples": 10725,
+      "teacher_policy_accuracy": 1.0,
+      "formed_huxi_mae": 3.5613061428070067,
+      "draw_huxi_mae": 15.732372250145687,
+      "fifteen_threshold_accuracy": 0.32317016317016317,
+      "huxi_threshold_accuracy": 0.32317016317016317,
+      "strata": {
+        "low": {
+          "n": 2345,
+          "huxi_mae": 9.819192055903518,
+          "threshold_accuracy": 1.0
+        },
+        "14": {
+          "n": 1121,
+          "huxi_mae": 13.311075048931574,
+          "threshold_accuracy": 1.0
+        },
+        "15": {
+          "n": 1339,
+          "huxi_mae": 14.628100348907767,
+          "threshold_accuracy": 0.0
+        },
+        "16": {
+          "n": 1522,
+          "huxi_mae": 15.405082632458319,
+          "threshold_accuracy": 0.0
+        },
+        "high": {
+          "n": 4398,
+          "huxi_mae": 19.951888642564803,
+          "threshold_accuracy": 0.0
+        }
+      }
+    },
+    "ordinary": {
+      "samples": 4633,
+      "structural_tile_samples": 90,
+      "teacher_policy_accuracy": 0.8040146773149147,
+      "formed_huxi_mae": 3.269254544886147,
+      "draw_huxi_mae": 11.992775683932834,
+      "fifteen_threshold_accuracy": 0.5888888888888889,
+      "huxi_threshold_accuracy": 0.5888888888888889,
+      "strata": {
+        "low": {
+          "n": 53,
+          "huxi_mae": 8.582058141816336,
+          "threshold_accuracy": 1.0
+        },
+        "14": {
+          "n": 0,
+          "huxi_mae": 0.0,
+          "threshold_accuracy": 0.0
+        },
+        "15": {
+          "n": 15,
+          "huxi_mae": 13.770360438028971,
+          "threshold_accuracy": 0.0
+        },
+        "16": {
+          "n": 1,
+          "huxi_mae": 13.326197624206543,
+          "threshold_accuracy": 0.0
+        },
+        "high": {
+          "n": 21,
+          "huxi_mae": 19.267579214913503,
+          "threshold_accuracy": 0.0
+        }
+      }
+    }
+  },
+  "after": {
+    "boundary": {
+      "samples": 3200,
+      "structural_tile_samples": 10725,
+      "teacher_policy_accuracy": 1.0,
+      "formed_huxi_mae": 1.1465485787391663,
+      "draw_huxi_mae": 1.6932940318145395,
+      "fifteen_threshold_accuracy": 0.9841491841491842,
+      "huxi_threshold_accuracy": 0.985920745920746,
+      "strata": {
+        "low": {
+          "n": 2345,
+          "huxi_mae": 1.672001013521955,
+          "threshold_accuracy": 0.9867803837953092
+        },
+        "14": {
+          "n": 1121,
+          "huxi_mae": 2.3212228182912615,
+          "threshold_accuracy": 0.9803746654772525
+        },
+        "15": {
+          "n": 1339,
+          "huxi_mae": 2.5509415591626667,
+          "threshold_accuracy": 0.9327856609410008
+        },
+        "16": {
+          "n": 1522,
+          "huxi_mae": 2.084622020947009,
+          "threshold_accuracy": 0.9894875164257556
+        },
+        "high": {
+          "n": 4398,
+          "huxi_mae": 1.1480536172475637,
+          "threshold_accuracy": 0.9974988631195998
+        }
+      },
+      "legal_tile_samples": 7259,
+      "ordinary_amount_each_mae": 11.071783788670984,
+      "additive_fan_mae": 0.6730384843448645
+    },
+    "ordinary": {
+      "samples": 4633,
+      "structural_tile_samples": 90,
+      "teacher_policy_accuracy": 0.8329376214116123,
+      "formed_huxi_mae": 1.4556685294750928,
+      "draw_huxi_mae": 2.446509912278917,
+      "fifteen_threshold_accuracy": 0.8777777777777778,
+      "huxi_threshold_accuracy": 0.8666666666666667,
+      "strata": {
+        "low": {
+          "n": 53,
+          "huxi_mae": 2.243037961563974,
+          "threshold_accuracy": 0.8679245283018868
+        },
+        "14": {
+          "n": 0,
+          "huxi_mae": 0.0,
+          "threshold_accuracy": 0.0
+        },
+        "15": {
+          "n": 15,
+          "huxi_mae": 3.5759600321451823,
+          "threshold_accuracy": 0.8666666666666667
+        },
+        "16": {
+          "n": 1,
+          "huxi_mae": 1.4065837860107422,
+          "threshold_accuracy": 1.0
+        },
+        "high": {
+          "n": 21,
+          "huxi_mae": 2.202804837908064,
+          "threshold_accuracy": 0.9047619047619048
+        }
+      }
+    }
+  },
+  "epochs": [
+    {
+      "epoch": 1,
+      "loss": 0.6326058712773915,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.1893296670913696,
+        "draw_huxi_mae": 1.6380245039790937,
+        "fifteen_threshold_accuracy": 0.936969696969697,
+        "huxi_threshold_accuracy": 0.9564568764568765,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 2.359807456530996,
+            "threshold_accuracy": 0.9044776119402985
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 2.2460977977987486,
+            "threshold_accuracy": 0.6904549509366636
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 1.8771626391991294,
+            "threshold_accuracy": 0.9372666168782674
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 1.2730773356834943,
+            "threshold_accuracy": 0.9875164257555847
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.1516699415816671,
+            "threshold_accuracy": 0.9995452478399273
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 15.690567508035093,
+        "additive_fan_mae": 0.999683915263064
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.8236563781567019,
+        "formed_huxi_mae": 1.855470030348424,
+        "draw_huxi_mae": 3.6656515863206653,
+        "fifteen_threshold_accuracy": 0.8666666666666667,
+        "huxi_threshold_accuracy": 0.7666666666666667,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 3.4004547371054596,
+            "threshold_accuracy": 0.8679245283018868
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 3.43178284962972,
+            "threshold_accuracy": 0.8
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 3.5138511657714844,
+            "threshold_accuracy": 1.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 4.509235654558454,
+            "threshold_accuracy": 0.9047619047619048
+          }
+        }
+      }
+    },
+    {
+      "epoch": 2,
+      "loss": 0.38266996360693073,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.2283569169044495,
+        "draw_huxi_mae": 1.7645616110777245,
+        "fifteen_threshold_accuracy": 0.9715617715617716,
+        "huxi_threshold_accuracy": 0.9718414918414918,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 1.442923865084455,
+            "threshold_accuracy": 0.9692963752665246
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 1.513632993842745,
+            "threshold_accuracy": 0.8777876895628903
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 2.6461647495215646,
+            "threshold_accuracy": 0.9507094846900672
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 2.3062871890375085,
+            "threshold_accuracy": 0.9829172141918529
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.544133726278724,
+            "threshold_accuracy": 0.9990904956798545
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 15.530489997205247,
+        "additive_fan_mae": 0.977675963529773
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.8195553636952299,
+        "formed_huxi_mae": 1.6302631780804298,
+        "draw_huxi_mae": 2.6851878590053984,
+        "fifteen_threshold_accuracy": 0.8777777777777778,
+        "huxi_threshold_accuracy": 0.8333333333333334,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 2.240264226805489,
+            "threshold_accuracy": 0.8490566037735849
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 3.127197774251302,
+            "threshold_accuracy": 0.8666666666666667
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 1.3905296325683594,
+            "threshold_accuracy": 1.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 3.554019428434826,
+            "threshold_accuracy": 0.9523809523809523
+          }
+        }
+      }
+    },
+    {
+      "epoch": 3,
+      "loss": 0.3060257391630975,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.148909273147583,
+        "draw_huxi_mae": 1.7455814985795455,
+        "fifteen_threshold_accuracy": 0.9742657342657343,
+        "huxi_threshold_accuracy": 0.9780885780885781,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 1.6182111679109683,
+            "threshold_accuracy": 0.9714285714285714
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 1.5870031710717425,
+            "threshold_accuracy": 0.8884924174843889
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 2.8190199436760377,
+            "threshold_accuracy": 0.9566840926064227
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 2.273733695452536,
+            "threshold_accuracy": 0.9888304862023654
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.3443235889138174,
+            "threshold_accuracy": 0.9979536152796725
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 14.179825401520798,
+        "additive_fan_mae": 0.900054964746742
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.8223613209583424,
+        "formed_huxi_mae": 1.578824282670263,
+        "draw_huxi_mae": 2.64943413204617,
+        "fifteen_threshold_accuracy": 0.8777777777777778,
+        "huxi_threshold_accuracy": 0.8222222222222222,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 2.3979204105881027,
+            "threshold_accuracy": 0.8679245283018868
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 2.8479769388834635,
+            "threshold_accuracy": 0.8666666666666667
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 0.35759544372558594,
+            "threshold_accuracy": 1.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 3.2515256064278737,
+            "threshold_accuracy": 0.9047619047619048
+          }
+        }
+      }
+    },
+    {
+      "epoch": 4,
+      "loss": 0.260766012473558,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.143328263759613,
+        "draw_huxi_mae": 1.725078107927229,
+        "fifteen_threshold_accuracy": 0.9789277389277389,
+        "huxi_threshold_accuracy": 0.9785547785547786,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 1.640901506175873,
+            "threshold_accuracy": 0.9769722814498933
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 1.4846784666539514,
+            "threshold_accuracy": 0.9241748438893844
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 2.928876587666176,
+            "threshold_accuracy": 0.9581777445855115
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 2.3492265067181983,
+            "threshold_accuracy": 0.9862023653088042
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.2487347591134732,
+            "threshold_accuracy": 0.9977262391996362
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 13.222983268893888,
+        "additive_fan_mae": 0.8755173624722828
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.8253831210878481,
+        "formed_huxi_mae": 1.52344375271121,
+        "draw_huxi_mae": 3.1371710459391275,
+        "fifteen_threshold_accuracy": 0.8777777777777778,
+        "huxi_threshold_accuracy": 0.8222222222222222,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 3.05964165813518,
+            "threshold_accuracy": 0.8867924528301887
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 3.5849939982096353,
+            "threshold_accuracy": 0.8666666666666667
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 0.1776752471923828,
+            "threshold_accuracy": 0.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 3.1538951056344167,
+            "threshold_accuracy": 0.9047619047619048
+          }
+        }
+      }
+    },
+    {
+      "epoch": 5,
+      "loss": 0.23228329190191963,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.1901698446273803,
+        "draw_huxi_mae": 1.6956570968094407,
+        "fifteen_threshold_accuracy": 0.977995337995338,
+        "huxi_threshold_accuracy": 0.9828438228438229,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 1.7162399031714335,
+            "threshold_accuracy": 0.9718550106609808
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 1.7110193041581112,
+            "threshold_accuracy": 0.9134701159678859
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 2.8143903334876152,
+            "threshold_accuracy": 0.9604182225541449
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 2.1493325928977534,
+            "threshold_accuracy": 0.9908015768725361
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.183159212786374,
+            "threshold_accuracy": 0.9986357435197817
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 13.464926703974768,
+        "additive_fan_mae": 0.7896622017098426
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.8299158212821066,
+        "formed_huxi_mae": 1.5440533747303544,
+        "draw_huxi_mae": 3.426495064629449,
+        "fifteen_threshold_accuracy": 0.8444444444444444,
+        "huxi_threshold_accuracy": 0.8222222222222222,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 3.22016733997273,
+            "threshold_accuracy": 0.8113207547169812
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 4.520479011535644,
+            "threshold_accuracy": 0.8666666666666667
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 0.39592552185058594,
+            "threshold_accuracy": 1.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 3.3101227169945124,
+            "threshold_accuracy": 0.9047619047619048
+          }
+        }
+      }
+    },
+    {
+      "epoch": 6,
+      "loss": 0.21509776639266934,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.0897485613822937,
+        "draw_huxi_mae": 1.6399188701923078,
+        "fifteen_threshold_accuracy": 0.9799533799533799,
+        "huxi_threshold_accuracy": 0.9838694638694638,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 1.7651287054456373,
+            "threshold_accuracy": 0.9731343283582089
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 2.298255119017466,
+            "threshold_accuracy": 0.9241748438893844
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 2.3898657363595315,
+            "threshold_accuracy": 0.9663928304705004
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 1.831754884957954,
+            "threshold_accuracy": 0.9901445466491459
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.1106407179405278,
+            "threshold_accuracy": 0.9984083674397454
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 12.208960420124514,
+        "additive_fan_mae": 0.7524492585943426
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.8258148068206346,
+        "formed_huxi_mae": 1.5472694226533992,
+        "draw_huxi_mae": 2.7838362058003745,
+        "fifteen_threshold_accuracy": 0.8555555555555555,
+        "huxi_threshold_accuracy": 0.8555555555555555,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 2.354281227543669,
+            "threshold_accuracy": 0.8301886792452831
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 3.5589157740275064,
+            "threshold_accuracy": 0.8666666666666667
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 0.6386547088623047,
+            "threshold_accuracy": 1.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 3.416474160693941,
+            "threshold_accuracy": 0.9047619047619048
+          }
+        }
+      }
+    },
+    {
+      "epoch": 7,
+      "loss": 0.200696704756866,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.0307688546180724,
+        "draw_huxi_mae": 1.7600316586083187,
+        "fifteen_threshold_accuracy": 0.9808857808857809,
+        "huxi_threshold_accuracy": 0.9854545454545455,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 2.18525437149666,
+            "threshold_accuracy": 0.982089552238806
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 2.5151061569336375,
+            "threshold_accuracy": 0.9464763603925067
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 2.383453572125823,
+            "threshold_accuracy": 0.9544436146377894
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 1.8336085922301364,
+            "threshold_accuracy": 0.980946123521682
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.1255768068598964,
+            "threshold_accuracy": 0.997044110959527
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 11.895227128280506,
+        "additive_fan_mae": 0.7390602915586364
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.8258148068206346,
+        "formed_huxi_mae": 1.5513318430494856,
+        "draw_huxi_mae": 2.378859276241726,
+        "fifteen_threshold_accuracy": 0.8777777777777778,
+        "huxi_threshold_accuracy": 0.9,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 1.9798785335612747,
+            "threshold_accuracy": 0.8490566037735849
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 3.4341557184855143,
+            "threshold_accuracy": 0.8666666666666667
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 0.9024734497070312,
+            "threshold_accuracy": 1.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 2.7023312704903737,
+            "threshold_accuracy": 0.9523809523809523
+          }
+        }
+      }
+    },
+    {
+      "epoch": 8,
+      "loss": 0.18948472838268846,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.0718368697166443,
+        "draw_huxi_mae": 2.13193870989037,
+        "fifteen_threshold_accuracy": 0.9838694638694638,
+        "huxi_threshold_accuracy": 0.9858275058275058,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 1.3922078472210655,
+            "threshold_accuracy": 0.9786780383795309
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 1.6802812009704209,
+            "threshold_accuracy": 0.9687778768956289
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 3.5238639697643963,
+            "threshold_accuracy": 0.9536967886482449
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 3.084998467905293,
+            "threshold_accuracy": 0.9901445466491459
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.8878805343537723,
+            "threshold_accuracy": 0.9974988631195998
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 11.355448079514016,
+        "additive_fan_mae": 0.700359736893617
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.8273257068853874,
+        "formed_huxi_mae": 1.5268186111828947,
+        "draw_huxi_mae": 3.0302535639868844,
+        "fifteen_threshold_accuracy": 0.8333333333333334,
+        "huxi_threshold_accuracy": 0.7888888888888889,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 2.640959820657406,
+            "threshold_accuracy": 0.8113207547169812
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 4.26361509958903,
+            "threshold_accuracy": 0.8666666666666667
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 1.3653860092163086,
+            "threshold_accuracy": 1.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 3.2110635212489536,
+            "threshold_accuracy": 0.8571428571428571
+          }
+        }
+      }
+    },
+    {
+      "epoch": 9,
+      "loss": 0.18147298027992623,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.034439206123352,
+        "draw_huxi_mae": 1.9665183839597902,
+        "fifteen_threshold_accuracy": 0.9845221445221445,
+        "huxi_threshold_accuracy": 0.985920745920746,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 1.2133466805984725,
+            "threshold_accuracy": 0.9791044776119403
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 1.4384879632042946,
+            "threshold_accuracy": 0.9696699375557538
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 3.3402199107733477,
+            "threshold_accuracy": 0.9581777445855115
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 2.9493121198536376,
+            "threshold_accuracy": 0.9888304862023654
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.7443518332862593,
+            "threshold_accuracy": 0.9977262391996362
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 11.363375209576802,
+        "additive_fan_mae": 0.6872607369179746
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.8296999784157134,
+        "formed_huxi_mae": 1.4709352921029546,
+        "draw_huxi_mae": 2.385210471683078,
+        "fifteen_threshold_accuracy": 0.8777777777777778,
+        "huxi_threshold_accuracy": 0.8777777777777778,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 2.058753139567825,
+            "threshold_accuracy": 0.8867924528301887
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 3.442651557922363,
+            "threshold_accuracy": 0.8666666666666667
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 1.1531963348388672,
+            "threshold_accuracy": 1.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 2.512479055495489,
+            "threshold_accuracy": 0.8571428571428571
+          }
+        }
+      }
+    },
+    {
+      "epoch": 10,
+      "loss": 0.1716991834774004,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.1465485787391663,
+        "draw_huxi_mae": 1.6932940318145395,
+        "fifteen_threshold_accuracy": 0.9841491841491842,
+        "huxi_threshold_accuracy": 0.985920745920746,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 1.672001013521955,
+            "threshold_accuracy": 0.9867803837953092
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 2.3212228182912615,
+            "threshold_accuracy": 0.9803746654772525
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 2.5509415591626667,
+            "threshold_accuracy": 0.9327856609410008
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 2.084622020947009,
+            "threshold_accuracy": 0.9894875164257556
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.1480536172475637,
+            "threshold_accuracy": 0.9974988631195998
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 11.071783788670984,
+        "additive_fan_mae": 0.6730384843448645
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.8329376214116123,
+        "formed_huxi_mae": 1.4556685294750928,
+        "draw_huxi_mae": 2.446509912278917,
+        "fifteen_threshold_accuracy": 0.8777777777777778,
+        "huxi_threshold_accuracy": 0.8666666666666667,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 2.243037961563974,
+            "threshold_accuracy": 0.8679245283018868
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 3.5759600321451823,
+            "threshold_accuracy": 0.8666666666666667
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 1.4065837860107422,
+            "threshold_accuracy": 1.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 2.202804837908064,
+            "threshold_accuracy": 0.9047619047619048
+          }
+        }
+      }
+    },
+    {
+      "epoch": 11,
+      "loss": 0.1646018808570913,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.0301214575767517,
+        "draw_huxi_mae": 1.777760342684659,
+        "fifteen_threshold_accuracy": 0.9851748251748251,
+        "huxi_threshold_accuracy": 0.987972027972028,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 1.356372272027835,
+            "threshold_accuracy": 0.9778251599147122
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 1.892787091972358,
+            "threshold_accuracy": 0.9580731489741302
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 2.950655040498809,
+            "threshold_accuracy": 0.9701269604182226
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 2.526578903198242,
+            "threshold_accuracy": 0.9921156373193167
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.3568876092137938,
+            "threshold_accuracy": 0.998180991359709
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 10.713340615471678,
+        "additive_fan_mae": 0.6668178388714621
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.831858407079646,
+        "formed_huxi_mae": 1.4385095534972026,
+        "draw_huxi_mae": 2.2873640060424805,
+        "fifteen_threshold_accuracy": 0.8222222222222222,
+        "huxi_threshold_accuracy": 0.8444444444444444,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 2.298157386060031,
+            "threshold_accuracy": 0.7924528301886793
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 2.9937333424886066,
+            "threshold_accuracy": 0.8
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 0.5202617645263672,
+            "threshold_accuracy": 1.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 1.8397218613397508,
+            "threshold_accuracy": 0.9047619047619048
+          }
+        }
+      }
+    },
+    {
+      "epoch": 12,
+      "loss": 0.1587001501032388,
+      "boundary": {
+        "samples": 3200,
+        "structural_tile_samples": 10725,
+        "teacher_policy_accuracy": 1.0,
+        "formed_huxi_mae": 1.0430420017242432,
+        "draw_huxi_mae": 1.8636840934130974,
+        "fifteen_threshold_accuracy": 0.9875058275058275,
+        "huxi_threshold_accuracy": 0.9889044289044289,
+        "strata": {
+          "low": {
+            "n": 2345,
+            "huxi_mae": 1.3194734601832148,
+            "threshold_accuracy": 0.9833688699360341
+          },
+          "14": {
+            "n": 1121,
+            "huxi_mae": 1.654048005987979,
+            "threshold_accuracy": 0.9714540588760036
+          },
+          "15": {
+            "n": 1339,
+            "huxi_mae": 3.189883184397372,
+            "threshold_accuracy": 0.9634055265123226
+          },
+          "16": {
+            "n": 1522,
+            "huxi_mae": 2.803437031208294,
+            "threshold_accuracy": 0.9947437582128777
+          },
+          "high": {
+            "n": 4398,
+            "huxi_mae": 1.4783023766573584,
+            "threshold_accuracy": 0.9986357435197817
+          }
+        },
+        "legal_tile_samples": 7259,
+        "ordinary_amount_each_mae": 10.986470736152704,
+        "additive_fan_mae": 0.6401914544964488
+      },
+      "ordinary": {
+        "samples": 4633,
+        "structural_tile_samples": 90,
+        "teacher_policy_accuracy": 0.8314267213468595,
+        "formed_huxi_mae": 1.4788723465384095,
+        "draw_huxi_mae": 2.2473241726557416,
+        "fifteen_threshold_accuracy": 0.8444444444444444,
+        "huxi_threshold_accuracy": 0.8555555555555555,
+        "strata": {
+          "low": {
+            "n": 53,
+            "huxi_mae": 1.8730723228094712,
+            "threshold_accuracy": 0.8679245283018868
+          },
+          "14": {
+            "n": 0,
+            "huxi_mae": 0.0,
+            "threshold_accuracy": 0.0
+          },
+          "15": {
+            "n": 15,
+            "huxi_mae": 3.251598421732585,
+            "threshold_accuracy": 0.7333333333333333
+          },
+          "16": {
+            "n": 1,
+            "huxi_mae": 1.3032817840576172,
+            "threshold_accuracy": 1.0
+          },
+          "high": {
+            "n": 21,
+            "huxi_mae": 2.5194801603044783,
+            "threshold_accuracy": 0.8571428571428571
+          }
+        }
+      }
+    }
+  ],
+  "checkpoint": "checkpoints/boundary-warmup.pt",
+  "sha256": "9dd7e0b552b3ad8152225c4f6688a82e7d32a3b5153a558b8d5b01f92a9cb251",
+  "random_tournament": {
+    "games": 150,
+    "wins": 58,
+    "win_rate": 0.38666666666666666,
+    "draws": 87,
+    "mean_payoff": 25.166666666666668,
+    "mean_winning_huxi": 20.70689655172414,
+    "mean_winning_fan": 1.7413793103448276,
+    "mean_winning_amount_each": 33.53448275862069,
+    "illegal_actions": 0,
+    "hu_opportunities": 60,
+    "passed_hu": 2,
+    "reviews": [
+      {
+        "seed": 28045,
+        "dealer": 1,
+        "seat": 1,
+        "step": 44,
+        "issue": "model_passed_hu"
+      },
+      {
+        "seed": 28045,
+        "dealer": 1,
+        "seat": 1,
+        "step": 50,
+        "issue": "model_passed_hu"
+      }
+    ]
+  },
+  "teacher_tournament": {
+    "games": 60,
+    "wins": 13,
+    "win_rate": 0.21666666666666667,
+    "draws": 5,
+    "mean_payoff": -2.5,
+    "mean_winning_huxi": 21.384615384615383,
+    "mean_winning_fan": 1.6153846153846154,
+    "mean_winning_amount_each": 33.84615384615385,
+    "illegal_actions": 0,
+    "hu_opportunities": 13,
+    "passed_hu": 0,
+    "reviews": []
+  },
+  "loss_weights": {
+    "huxi_mse": 10.0,
+    "huxi_threshold_margin": 0.2
+  },
+  "training_policy_decisions": 107390,
+  "training_auxiliary_draw_states": 16000,
+  "selected_epoch": 10
+}

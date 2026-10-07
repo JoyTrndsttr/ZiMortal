@@ -167,9 +167,21 @@ def explain(action, before, after):
 def build_game(seed=118, dealer=0, policy="random"):
     model = None
     if policy != "random":
-        if policy not in ("round1", "round2", "round3", "scale100k", "huxi", "huxi_warmup"):
+        if policy not in (
+            "round1",
+            "round2",
+            "round3",
+            "scale100k",
+            "huxi",
+            "huxi_warmup",
+            "boundary",
+            "boundary_warmup",
+        ):
             raise ValueError("unknown policy")
-        filename = "huxi-warmup.pt" if policy == "huxi_warmup" else f"{policy}-resnet.pt"
+        filename = {
+            "huxi_warmup": "huxi-warmup.pt",
+            "boundary_warmup": "boundary-calibrated.pt",
+        }.get(policy, f"{policy}-resnet.pt")
         checkpoint = Path(__file__).resolve().parents[2] / "checkpoints" / filename
         if not checkpoint.is_file():
             raise ValueError(f"model checkpoint missing: {policy}")
