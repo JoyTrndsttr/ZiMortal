@@ -1,0 +1,10 @@
+{
+  "games": 24,
+  "decisions": 663,
+  "steps": 1696,
+  "puzzles": 50,
+  "source_verified": true,
+  "seed_namespaces_disjoint": true,
+  "input_huxi_and_policy_targets_verified": true,
+  "conservation_and_replay_verified": true
+}

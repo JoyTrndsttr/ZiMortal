@@ -53,7 +53,7 @@ def discard_records(history):
     return records
 
 
-def snapshot(engine, state):
+def snapshot(engine, state, include_huxi=False):
     error = None
     try:
         legal = engine.legal_actions(state)
@@ -61,7 +61,7 @@ def snapshot(engine, state):
         legal = ()
         error = str(exc)
     discards = discard_records(state.history)
-    return {
+    frame = {
         "players": [
             {
                 "discards": discards[seat],
@@ -91,6 +91,45 @@ def snapshot(engine, state):
         "settlement": asdict(state.settlement) if state.settlement else None,
         "error": error,
     }
+
+    if include_huxi:
+        from collections import Counter
+
+        from zimortal.training.valuation import draw_values, formed_huxi
+
+        public = Counter(state.river)
+        for player in state.players:
+            public.update(t for meld in player.melds for t in meld.tiles)
+        if state.pending:
+            public[state.pending.tile] += 1
+        for seat, player in enumerate(state.players):
+            stats = frame["players"][seat]
+            if any(n == 4 for n in Counter(player.hand).values()):
+                stats["analysis_note"] = "需先完成强制提牌"
+                continue
+            stats["formed_huxi"] = formed_huxi(player.hand, player.melds, player.kans)
+            stats["huxi_target"] = 15
+            stats["draw_analysis"] = []
+            if player.hu_disabled or state.terminal:
+                continue
+            if state.phase == "discard" and state.turn == seat:
+                stats["analysis_note"] = "本次需先出牌，进张分析在出牌后更新"
+                continue
+            values = draw_values(
+                tuple(sorted(player.hand)), tuple(player.melds), tuple(sorted(player.kans))
+            )
+            own = Counter(player.hand)
+            stats["draw_analysis"] = [
+                {
+                    "tile": tile,
+                    "huxi": hu,
+                    "amount_each": amount,
+                    "remaining_upper_bound": max(0, 4 - own[tile] - public[tile]),
+                }
+                for tile, (hu, amount, _fan) in enumerate(values)
+                if hu >= 0 and 4 - own[tile] - public[tile] > 0
+            ]
+    return frame
 
 
 def explain(action, before, after):
@@ -128,9 +167,10 @@ def explain(action, before, after):
 def build_game(seed=118, dealer=0, policy="random"):
     model = None
     if policy != "random":
-        if policy not in ("round1", "round2", "round3", "scale100k"):
+        if policy not in ("round1", "round2", "round3", "scale100k", "huxi", "huxi_warmup"):
             raise ValueError("unknown policy")
-        checkpoint = Path(__file__).resolve().parents[2] / "checkpoints" / f"{policy}-resnet.pt"
+        filename = "huxi-warmup.pt" if policy == "huxi_warmup" else f"{policy}-resnet.pt"
+        checkpoint = Path(__file__).resolve().parents[2] / "checkpoints" / filename
         if not checkpoint.is_file():
             raise ValueError(f"model checkpoint missing: {policy}")
         import torch
@@ -145,7 +185,7 @@ def build_game(seed=118, dealer=0, policy="random"):
     rng = random.Random(seed)
     last_actions = [None, None, None]
     frames = [
-        snapshot(engine, initial)
+        snapshot(engine, initial, include_huxi=policy != "random")
         | {
             "index": 0,
             "action": None,
@@ -165,7 +205,7 @@ def build_game(seed=118, dealer=0, policy="random"):
         before = state
         state = engine.step(state, action)
         state.validate()
-        frame = snapshot(engine, state)
+        frame = snapshot(engine, state, include_huxi=policy != "random")
         shown = asdict(action)
         if action.kind == A.DRAW and state.pending:
             shown["tile"] = state.pending.tile
@@ -185,6 +225,7 @@ def build_game(seed=118, dealer=0, policy="random"):
         "seed": seed,
         "dealer": dealer,
         "policy": policy,
+        "player_policies": [policy] * 3,
         "frames": frames,
         "replay_verified": True,
         "actions": len(state.history),

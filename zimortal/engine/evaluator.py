@@ -35,12 +35,19 @@ def _decompose(counts, groups_left, pair_left):
     return tuple(result)
 
 
-def evaluate_hand(hand, melds=(), *, quad_requires_pair, protected=(), exposed_triplet=None):
-    """Return all >=15 hu-xi structures under the explicitly selected quad rule.
+def evaluate_hand(
+    hand, melds=(), *, quad_requires_pair, protected=(), exposed_triplet=None, minimum_huxi=15
+):
+    """Return structures meeting minimum_huxi (15 by default).
+
+    Explicit minimum_huxi=0 is for structural analysis only; RuleEngine
+    always uses the default legal 15 threshold.
 
     The specification's six-group rule is literal; multiple-quad variants
     must be clarified before using a different structural rule.
     """
+    if minimum_huxi < 0:
+        raise ValueError("minimum hu-xi cannot be negative")
     melds = tuple(melds)
     counts = Counter(hand)
     for tile in counts:
@@ -76,6 +83,6 @@ def evaluate_hand(hand, melds=(), *, quad_requires_pair, protected=(), exposed_t
             else g
             for g in structure
         )
-        if sum(meld_huxi(g) for g in groups) >= 15:
+        if sum(meld_huxi(g) for g in groups) >= minimum_huxi:
             results.append(groups)
     return tuple(results)

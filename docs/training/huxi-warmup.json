@@ -1,0 +1,165 @@
+{
+  "train": 107390,
+  "validation": 4633,
+  "source": {
+    "engine/__init__.py": "386826f007b6ead5cdd68c6292d45e9954b5f3038ef04db5f4a112279521b424",
+    "engine/chi.py": "a0230f431b7e19b8a6b8e3a03d22207748c0b89d657ccf952f772fef9f6fa62e",
+    "engine/evaluator.py": "cf7b8a6d39e895138554f290620ee2bbc6eac23dee4fc18e83489929f1e6685a",
+    "engine/game.py": "f777b049890133c2108fb49e6c5b6a46c5b5350c553bd1f85a217e7b884940c9",
+    "engine/observation.py": "2e0b1d4a9edfedd96044338d396f7d1c2d46ad1690f3d4009d6193abfc767580",
+    "engine/scoring.py": "f6d4b6e777985d9457d11741526a273ced8899a29eab7e3cbc8840961d859a44",
+    "engine/tiles.py": "442bfa7d160b2cf2cf54e19d375628b2a79025005bdf2bb4699304ffc2c81423",
+    "engine/types.py": "ece0b0d6942a69c26642d3808ba847789bf485931a3c0446e2ca6b7dd6b43c13",
+    "model/encoding.py": "1d5395aacfd29317220216a5ab43fe6df717703152e825b3a214c76feb71300e",
+    "training/huxi.py": "df5e8ccf428f57e5f46d7e036b4c88d2709df78d6a7b895a50277ea614d9ff24",
+    "training/valuation.py": "07e0aa5829cfafbe76c9e01af28d69e7f786dadb0a0ec892f8db5cb4f153fa20",
+    "training/data.py": "0632445e85696fc12c99bcf27ca6a146589a6dc5b318dab57573a4e9011a7c14"
+  },
+  "checkpoint": "checkpoints/huxi-warmup.pt",
+  "sha256": "f9f5be742ca1b3c103850827cb8455934d24d7ddb35236823b0975582b2bedc1",
+  "epochs": [
+    {
+      "epoch": 1,
+      "loss": 0.7246873718121052,
+      "policy_accuracy": 0.8154543492337578,
+      "policy_cross_entropy": 0.574127731430281,
+      "samples": 4633
+    },
+    {
+      "epoch": 2,
+      "loss": 0.6002792912895358,
+      "policy_accuracy": 0.8236563781567019,
+      "policy_cross_entropy": 0.5488923287098335,
+      "samples": 4633
+    },
+    {
+      "epoch": 3,
+      "loss": 0.5601985982287162,
+      "policy_accuracy": 0.8273257068853874,
+      "policy_cross_entropy": 0.5269965699391619,
+      "samples": 4633
+    },
+    {
+      "epoch": 4,
+      "loss": 0.5291329526537145,
+      "policy_accuracy": 0.8281890783509605,
+      "policy_cross_entropy": 0.5159588002139642,
+      "samples": 4633
+    },
+    {
+      "epoch": 5,
+      "loss": 0.5060919034602045,
+      "policy_accuracy": 0.8387653788042305,
+      "policy_cross_entropy": 0.48969452411495995,
+      "samples": 4633
+    },
+    {
+      "epoch": 6,
+      "loss": 0.4840781833031222,
+      "policy_accuracy": 0.8379020073386575,
+      "policy_cross_entropy": 0.4890200758814014,
+      "samples": 4633
+    },
+    {
+      "epoch": 7,
+      "loss": 0.46118331467742324,
+      "policy_accuracy": 0.8422188646665227,
+      "policy_cross_entropy": 0.4766011288529875,
+      "samples": 4633
+    },
+    {
+      "epoch": 8,
+      "loss": 0.4432360672525592,
+      "policy_accuracy": 0.8411396503345564,
+      "policy_cross_entropy": 0.46884128369653094,
+      "samples": 4633
+    },
+    {
+      "epoch": 9,
+      "loss": 0.4252820748220066,
+      "policy_accuracy": 0.8381178502050507,
+      "policy_cross_entropy": 0.47817875030306795,
+      "samples": 4633
+    },
+    {
+      "epoch": 10,
+      "loss": 0.40975765204038883,
+      "policy_accuracy": 0.8454565076624218,
+      "policy_cross_entropy": 0.46194616528121385,
+      "samples": 4633
+    },
+    {
+      "epoch": 11,
+      "loss": 0.39410748628167336,
+      "policy_accuracy": 0.8458881933952083,
+      "policy_cross_entropy": 0.46687343263121783,
+      "samples": 4633
+    },
+    {
+      "epoch": 12,
+      "loss": 0.37809314610116895,
+      "policy_accuracy": 0.8407079646017699,
+      "policy_cross_entropy": 0.4674563102219909,
+      "samples": 4633
+    }
+  ],
+  "random_tournament": {
+    "games": 150,
+    "wins": 53,
+    "win_rate": 0.35333333333333333,
+    "draws": 84,
+    "mean_payoff": 16.7,
+    "illegal_actions": 0,
+    "hu_opportunities": 57,
+    "passed_hu": 4,
+    "reviews": [
+      {
+        "seed": 19034,
+        "dealer": 2,
+        "seat": 1,
+        "step": 72,
+        "issue": "model_passed_hu"
+      },
+      {
+        "seed": 19044,
+        "dealer": 0,
+        "seat": 3,
+        "step": 30,
+        "issue": "model_passed_hu"
+      },
+      {
+        "seed": 19044,
+        "dealer": 0,
+        "seat": 3,
+        "step": 54,
+        "issue": "model_passed_hu"
+      },
+      {
+        "seed": 19045,
+        "dealer": 1,
+        "seat": 1,
+        "step": 56,
+        "issue": "model_passed_hu"
+      }
+    ]
+  },
+  "teacher_tournament": {
+    "games": 60,
+    "wins": 9,
+    "win_rate": 0.15,
+    "draws": 11,
+    "mean_payoff": -10.666666666666666,
+    "illegal_actions": 0,
+    "hu_opportunities": 10,
+    "passed_hu": 1,
+    "reviews": [
+      {
+        "seed": 19507,
+        "dealer": 1,
+        "seat": 2,
+        "step": 76,
+        "issue": "model_passed_hu"
+      }
+    ]
+  }
+}
