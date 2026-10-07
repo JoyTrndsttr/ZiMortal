@@ -66,3 +66,5 @@ Early-stage research and engineering project. The first priority is correctness 
 网络输入仍经过 Observation 隔离。模型目前尚未超过启发式教师。
 
 第五轮新增 [胡息与结算收益训练](docs/training/huxi.md)。复盘策略 `huxi` 显示锁定胡息、组合潜力及不足15胡的结构进张；当前收益模型对教师仍为负收益。
+
+第六轮加入 [十五胡边界与名堂金额校准](docs/training/boundary.md)，网页策略 `boundary` 可复盘新的收益训练模型，`boundary_warmup` 可对照校准模型。

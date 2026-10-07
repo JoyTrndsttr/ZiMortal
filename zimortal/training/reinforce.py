@@ -108,9 +108,16 @@ def run(args):
     rng = random.Random(args.seed)
     model = load_model(args.resume)
     opponent = copy.deepcopy(model).eval()
-    # Readiness logits have a different meaning from terminal utility.
-    nn.init.zeros_(model.value[-1].weight)
-    nn.init.zeros_(model.value[-1].bias)
+    # Reset only when changing units; calibrated settlement critics can continue.
+    if not args.keep_value:
+        nn.init.zeros_(model.value[-1].weight)
+        nn.init.zeros_(model.value[-1].bias)
+    elif args.reward != "settlement":
+        raise ValueError("keeping value currently requires settlement reward")
+    else:
+        metadata = torch.load(args.resume, map_location="cpu", weights_only=True)["metadata"]
+        if "payments/100" not in metadata.get("value_target", ""):
+            raise ValueError("cannot retain a value head trained in different units")
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
     if model.feature_version == "huxi":
         from .huxi import huxi_loss, rich_example
@@ -119,6 +126,13 @@ def run(args):
     else:
         make_example = example
     anchors = [make_example(make_puzzle(args.seed * 100000 + i)[0]) for i in range(256)]
+    boundary_anchors = []
+    if args.anchor_data:
+        from .boundary import datasets
+
+        if model.auxiliary_version != "boundary":
+            raise ValueError("boundary anchors require boundary model heads")
+        boundary_anchors, _ = datasets(args.anchor_data)
     logs = []
     for iteration in range(args.iterations):
         rows, metrics = collect(
@@ -141,7 +155,8 @@ def run(args):
                 indices = order[start : start + 128]
                 selected = [rows[i] for i in indices]
                 x, a, m, y, _v, _w = batch([r[0] for r in selected])
-                logits, value, waits, hu_prediction = model.forward_all(x, a, m)
+                outputs = model.forward_aux(x, a, m)
+                logits, value, waits, hu_prediction = outputs[:4]
                 distribution = torch.distributions.Categorical(logits=logits)
                 logprob = distribution.log_prob(y)
                 old = torch.tensor([r[1] for r in selected])
@@ -150,13 +165,21 @@ def run(args):
                 actor = -torch.minimum(ratio * adv, ratio.clamp(0.8, 1.2) * adv).mean()
                 critic = nn.functional.mse_loss(value, torch.tensor([r[3] for r in selected]))
                 anchor_rows = rng.sample(anchors, 32)
+                if boundary_anchors:
+                    anchor_rows += rng.sample(boundary_anchors, 32)
                 anchor = batch(anchor_rows)
-                al, _, aw, ah = model.forward_all(*anchor[:3])
+                anchor_outputs = model.forward_aux(*anchor[:3])
+                al, _, aw, ah = anchor_outputs[:4]
                 imitation = nn.functional.cross_entropy(
                     al, anchor[3]
                 ) + 0.1 * nn.functional.binary_cross_entropy_with_logits(aw, anchor[5])
                 loss = actor + 0.5 * critic - 0.01 * distribution.entropy().mean() + 0.2 * imitation
-                if hu_prediction is not None:
+                if model.auxiliary_version == "boundary":
+                    from .boundary import outcome_loss
+
+                    loss += 0.15 * outcome_loss(outputs, [r[0] for r in selected])
+                    loss += 0.3 * outcome_loss(anchor_outputs, anchor_rows)
+                elif hu_prediction is not None:
                     hu_targets = torch.tensor(np.stack([r[0][5] for r in selected]))
                     anchor_hu = torch.tensor(np.stack([r[5] for r in anchor_rows]))
                     loss += (
@@ -188,6 +211,8 @@ def run(args):
     report = {
         "algorithm": "clipped actor-critic with supervised hu-xi anchor",
         "opponent_mode": args.opponents,
+        "anchor_data": args.anchor_data,
+        "value_output_reset": not args.keep_value,
         "resume": args.resume,
         "seed": args.seed,
         "value_target": value_target,
@@ -216,6 +241,10 @@ def main():
     p.add_argument("--reward", choices=["utility", "settlement"], default="utility")
     p.add_argument("--eval-start", type=int, default=7000)
     p.add_argument("--opponents", choices=["frozen", "mixed"], default="frozen")
+    p.add_argument("--anchor-data", help="balanced boundary data retained during settlement RL")
+    p.add_argument(
+        "--keep-value", action="store_true", help="continue an existing settlement critic"
+    )
     run(p.parse_args())
 
 

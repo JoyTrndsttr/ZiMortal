@@ -1,0 +1,31 @@
+{
+  "train": 16000,
+  "validation": 3200,
+  "regenerated_fixtures": 480,
+  "strata": {
+    "low": 81,
+    "14": 88,
+    "16": 117,
+    "high": 102,
+    "15": 92
+  },
+  "conservation_verified": true,
+  "real_draw_hu_gate_and_payout_verified": true,
+  "all_twenty_draw_labels_and_network_inputs_regenerated": true,
+  "source": {
+    "boundary_generator": "f5c18086fa0a16057b806ec4a413900760d98661ded379207982653f9bb7f2e3",
+    "engine/__init__.py": "386826f007b6ead5cdd68c6292d45e9954b5f3038ef04db5f4a112279521b424",
+    "engine/chi.py": "a0230f431b7e19b8a6b8e3a03d22207748c0b89d657ccf952f772fef9f6fa62e",
+    "engine/evaluator.py": "cf7b8a6d39e895138554f290620ee2bbc6eac23dee4fc18e83489929f1e6685a",
+    "engine/game.py": "f777b049890133c2108fb49e6c5b6a46c5b5350c553bd1f85a217e7b884940c9",
+    "engine/observation.py": "2e0b1d4a9edfedd96044338d396f7d1c2d46ad1690f3d4009d6193abfc767580",
+    "engine/scoring.py": "f6d4b6e777985d9457d11741526a273ced8899a29eab7e3cbc8840961d859a44",
+    "engine/tiles.py": "442bfa7d160b2cf2cf54e19d375628b2a79025005bdf2bb4699304ffc2c81423",
+    "engine/types.py": "ece0b0d6942a69c26642d3808ba847789bf485931a3c0446e2ca6b7dd6b43c13",
+    "model/encoding.py": "1d5395aacfd29317220216a5ab43fe6df717703152e825b3a214c76feb71300e",
+    "training/huxi.py": "df5e8ccf428f57e5f46d7e036b4c88d2709df78d6a7b895a50277ea614d9ff24",
+    "training/valuation.py": "07e0aa5829cfafbe76c9e01af28d69e7f786dadb0a0ec892f8db5cb4f153fa20",
+    "training/data.py": "0632445e85696fc12c99bcf27ca6a146589a6dc5b318dab57573a4e9011a7c14"
+  },
+  "synthetic_midgame_not_standard_deal_history": true
+}
