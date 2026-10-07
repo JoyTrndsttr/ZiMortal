@@ -711,3 +711,15 @@ def test_protected_kans_have_canonical_evaluation_order():
     a = evaluate_hand(hand, quad_requires_pair=True, protected=range(7))
     b = evaluate_hand(hand, quad_requires_pair=True, protected=reversed(range(7)))
     assert a and a == b
+
+
+def test_low_huxi_structural_analysis_does_not_lower_legal_threshold():
+    from zimortal.engine import Meld, MeldType, evaluate_hand, meld_huxi
+
+    hand = (2, 3, 4, 6, 11, 12, 13, 13, 14, 15, 16, 16, 17, 17, 17)
+    melds = (Meld(MeldType.PENG, (9,) * 3), Meld(MeldType.CHI, (6, 7, 8)))
+    structural = evaluate_hand(
+        hand, melds, quad_requires_pair=True, protected=(17,), minimum_huxi=0
+    )
+    assert structural and max(sum(meld_huxi(m) for m in g) for g in structural) < 15
+    assert not evaluate_hand(hand, melds, quad_requires_pair=True, protected=(17,))

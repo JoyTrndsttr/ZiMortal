@@ -1,0 +1,22 @@
+{
+  "validation_samples": 4633,
+  "models": {
+    "original": {
+      "teacher_policy_accuracy": 0.7608461040362616
+    },
+    "warmup": {
+      "teacher_policy_accuracy": 0.8454565076624218,
+      "formed_huxi_mae": 3.079981488747188,
+      "draw_huxi_mae_on_structural_tiles": 13.569566557142469,
+      "fifteen_threshold_accuracy_on_structural_tiles": 0.5888888888888889,
+      "structural_tile_samples": 90
+    },
+    "settlement": {
+      "teacher_policy_accuracy": 0.8040146773149147,
+      "formed_huxi_mae": 3.269254544886147,
+      "draw_huxi_mae_on_structural_tiles": 11.992775683932834,
+      "fifteen_threshold_accuracy_on_structural_tiles": 0.5888888888888889,
+      "structural_tile_samples": 90
+    }
+  }
+}

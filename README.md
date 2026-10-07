@@ -64,3 +64,5 @@ Early-stage research and engineering project. The first priority is correctness 
 例如 `http://127.0.0.1:8765/?seed=9002&dealer=2&policy=round3`，第12步可查看
 模型与教师对吃牌／下比方案的分歧。所有座位使用所选策略，网页为全信息审查，
 网络输入仍经过 Observation 隔离。模型目前尚未超过启发式教师。
+
+第五轮新增 [胡息与结算收益训练](docs/training/huxi.md)。复盘策略 `huxi` 显示锁定胡息、组合潜力及不足15胡的结构进张；当前收益模型对教师仍为负收益。

@@ -21,6 +21,7 @@ def save_model(model, path, **metadata):
             "state_dict": model.state_dict(),
             "architecture": model.architecture,
             "width": model.width,
+            "feature_version": model.feature_version,
             "metadata": metadata,
         },
         path,
@@ -29,14 +30,18 @@ def save_model(model, path, **metadata):
 
 def load_model(path, device="cpu"):
     data = torch.load(path, map_location=device, weights_only=True)
-    model = PolicyValueNet(data["architecture"], data["width"]).to(device)
+    model = PolicyValueNet(
+        data["architecture"], data["width"], data.get("feature_version", "legacy")
+    ).to(device)
     model.load_state_dict(data["state_dict"])
     model.eval()
     return model
 
 
 def predict(model, obs, device="cpu"):
-    features = torch.from_numpy(encode_observation(obs)).unsqueeze(0).to(device)
+    features = (
+        torch.from_numpy(encode_observation(obs, model.feature_version)).unsqueeze(0).to(device)
+    )
     actions = (
         torch.from_numpy(np.stack([encode_action(a, obs.player) for a in obs.legal_actions]))
         .unsqueeze(0)
@@ -71,6 +76,7 @@ def tournament(
     engine = RuleEngine()
     wins = draws = illegal = hu_pass = hu_opportunities = 0
     payoff = 0
+    winning_huxi = winning_fan = winning_amount = 0
     reviews = []
     for seed in seeds:
         for seat in range(3) if model_seats is None else model_seats:
@@ -113,6 +119,10 @@ def tournament(
             draws += state.winner is None
             if state.settlement:
                 payoff += state.settlement.payments[seat]
+                if state.winner == seat:
+                    winning_huxi += state.settlement.huxi
+                    winning_fan += sum(state.settlement.fan.values()) or 1
+                    winning_amount += state.settlement.amount_each
     games = len(seeds) * (3 if model_seats is None else len(model_seats))
     return {
         "games": games,
@@ -120,6 +130,9 @@ def tournament(
         "win_rate": wins / games,
         "draws": draws,
         "mean_payoff": payoff / games,
+        "mean_winning_huxi": winning_huxi / wins if wins else 0,
+        "mean_winning_fan": winning_fan / wins if wins else 0,
+        "mean_winning_amount_each": winning_amount / wins if wins else 0,
         "illegal_actions": illegal,
         "hu_opportunities": hu_opportunities,
         "passed_hu": hu_pass,

@@ -15,11 +15,17 @@ from .data import teacher_scores
 from .runtime import choose, load_model
 
 
-def audit(checkpoint, seeds, output):
+def audit(checkpoint, seeds, output, teacher="legacy"):
     torch.set_num_threads(2)
     model = load_model(checkpoint)
     engine = RuleEngine()
     reviews = []
+    if teacher == "huxi":
+        from .valuation import action_scores
+
+        score_actions = action_scores
+    else:
+        score_actions = teacher_scores
     steps = wins = 0
     for seed in seeds:
         initial = engine.new_game(seed, dealer=seed % 3)
@@ -32,7 +38,7 @@ def audit(checkpoint, seeds, output):
             obs = engine.observation(state, actions[0].player)
             selected = choose(obs, rng, model)
             if len(actions) > 1:
-                scores = teacher_scores(obs)
+                scores = score_actions(obs)
                 chosen = actions.index(selected)
                 best = int(np.argmax(scores))
                 if scores[best] - scores[chosen] > 0.5 and len(reviews) < 12:
@@ -71,6 +77,7 @@ def audit(checkpoint, seeds, output):
         wins += state.winner is not None
     report = {
         "checkpoint": checkpoint,
+        "teacher": teacher,
         "seeds": list(seeds),
         "games": len(seeds),
         "steps": steps,
@@ -89,5 +96,6 @@ if __name__ == "__main__":
     p.add_argument("--start", type=int, default=9000)
     p.add_argument("--games", type=int, default=50)
     p.add_argument("--output", required=True)
+    p.add_argument("--teacher", choices=["legacy", "huxi"], default="legacy")
     a = p.parse_args()
-    print(json.dumps(audit(a.checkpoint, range(a.start, a.start + a.games), a.output)))
+    print(json.dumps(audit(a.checkpoint, range(a.start, a.start + a.games), a.output, a.teacher)))

@@ -13,7 +13,7 @@ from zimortal.engine.chi import CHI_PATTERNS
 ACTION_DIM = len(KINDS) + 60 + len(CHI_PATTERNS) + 5
 
 
-def encode_observation(obs):
+def encode_observation(obs, version="legacy"):
     own = Counter(obs.hand)
     public = Counter(obs.river)
     for player in obs.players:
@@ -79,10 +79,39 @@ def encode_observation(obs):
                 [min(passes[t], 4) / 4 for t in range(20)],
             ]
         )
+    if version == "huxi":
+        from zimortal.training.valuation import SCORING_PATTERNS, formed_huxi
+
+        kans = {t for t, n in own.items() if n == 3}
+        formed = formed_huxi(obs.hand, my_melds, kans)
+        losses = []
+        for tile in range(20):
+            if own[tile] and tile not in kans:
+                hand = list(obs.hand)
+                hand.remove(tile)
+                losses.append((formed - formed_huxi(hand, my_melds, kans)) / 12)
+            else:
+                losses.append(0.0)
+        channels.extend(
+            [
+                [15 / 60] * 20,
+                [formed / 60] * 20,
+                [max(0, 15 - formed) / 15] * 20,
+                losses,
+                [float(t in kans) for t in range(20)],
+            ]
+        )
+        for pattern, _hu in SCORING_PATTERNS:
+            filled = sum(min(own[t], 1) for t in pattern if t not in kans) / 3
+            channels.append([filled if t in pattern else 0.0 for t in range(20)])
+        channels.append([max(0, 15 - hu) / 15] * 20)
+    elif version != "legacy":
+        raise ValueError("unknown feature version")
     return np.asarray(channels, dtype=np.float32)
 
 
 CHANNELS = 45
+HUXI_CHANNELS = 55
 
 
 def encode_action(action, player):
