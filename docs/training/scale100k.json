@@ -1,0 +1,137 @@
+{
+  "raw_training_samples": 107034,
+  "raw_validation_samples": 4675,
+  "training_samples": 107031,
+  "validation_samples": 4674,
+  "exact_input_overlap_after_filtering": 0,
+  "data": "data/generated/scale100k",
+  "generator_signature": {
+    "engine/__init__.py": "386826f007b6ead5cdd68c6292d45e9954b5f3038ef04db5f4a112279521b424",
+    "engine/chi.py": "a0230f431b7e19b8a6b8e3a03d22207748c0b89d657ccf952f772fef9f6fa62e",
+    "engine/evaluator.py": "799eb69906d10af1be0724e65ad5005c99d5734977c3226eff8c92ae9202534c",
+    "engine/game.py": "f777b049890133c2108fb49e6c5b6a46c5b5350c553bd1f85a217e7b884940c9",
+    "engine/observation.py": "2e0b1d4a9edfedd96044338d396f7d1c2d46ad1690f3d4009d6193abfc767580",
+    "engine/scoring.py": "f6d4b6e777985d9457d11741526a273ced8899a29eab7e3cbc8840961d859a44",
+    "engine/tiles.py": "442bfa7d160b2cf2cf54e19d375628b2a79025005bdf2bb4699304ffc2c81423",
+    "engine/types.py": "ece0b0d6942a69c26642d3808ba847789bf485931a3c0446e2ca6b7dd6b43c13",
+    "model/encoding.py": "16ac8d947cf53a8711982cd728eec487d2848c68332dc20c31e01c62b4039542",
+    "training/data.py": "0632445e85696fc12c99bcf27ca6a146589a6dc5b318dab57573a4e9011a7c14"
+  },
+  "dataset_sha256": "4b835a943e18ea5465e3bd58b0ca1edbfe6a0ba745df4765a82bb56c6d6af58b",
+  "resume": "checkpoints/round2-resnet.pt",
+  "seed": 44,
+  "device": "cpu",
+  "torch": "2.14.1+cpu",
+  "initial_validation": {
+    "policy_accuracy": 0.7186563970902867,
+    "policy_cross_entropy": 0.8837894844508957,
+    "samples": 4674
+  },
+  "epochs": [
+    {
+      "epoch": 1,
+      "loss": 0.8176292903383926,
+      "seconds": 4.494333267211914,
+      "policy_accuracy": 0.7830551989730423,
+      "policy_cross_entropy": 0.7011965848362033,
+      "samples": 4674
+    },
+    {
+      "epoch": 2,
+      "loss": 0.7140153575810734,
+      "seconds": 4.596723556518555,
+      "policy_accuracy": 0.8074454428754814,
+      "policy_cross_entropy": 0.6399492758382422,
+      "samples": 4674
+    },
+    {
+      "epoch": 3,
+      "loss": 0.6593172563369113,
+      "seconds": 4.236174583435059,
+      "policy_accuracy": 0.8168592212237912,
+      "policy_cross_entropy": 0.6130172687052252,
+      "samples": 4674
+    },
+    {
+      "epoch": 4,
+      "loss": 0.621538973388339,
+      "seconds": 4.1179986000061035,
+      "policy_accuracy": 0.8228498074454429,
+      "policy_cross_entropy": 0.5900078935912904,
+      "samples": 4674
+    },
+    {
+      "epoch": 5,
+      "loss": 0.5913414348893247,
+      "seconds": 4.084048748016357,
+      "policy_accuracy": 0.8333333333333334,
+      "policy_cross_entropy": 0.5628838786009698,
+      "samples": 4674
+    },
+    {
+      "epoch": 6,
+      "loss": 0.5655964773930279,
+      "seconds": 2.6614949703216553,
+      "policy_accuracy": 0.8359007274283269,
+      "policy_cross_entropy": 0.5673319639484241,
+      "samples": 4674
+    },
+    {
+      "epoch": 7,
+      "loss": 0.5444032170066503,
+      "seconds": 4.080356121063232,
+      "policy_accuracy": 0.8446726572528883,
+      "policy_cross_entropy": 0.5473257869953878,
+      "samples": 4674
+    },
+    {
+      "epoch": 8,
+      "loss": 0.5232795007403175,
+      "seconds": 4.09205436706543,
+      "policy_accuracy": 0.8371844244758238,
+      "policy_cross_entropy": 0.5300316743275321,
+      "samples": 4674
+    },
+    {
+      "epoch": 9,
+      "loss": 0.5047031072982798,
+      "seconds": 4.088214159011841,
+      "policy_accuracy": 0.8399657680787335,
+      "policy_cross_entropy": 0.5173494706666005,
+      "samples": 4674
+    },
+    {
+      "epoch": 10,
+      "loss": 0.48914674755411625,
+      "seconds": 4.114185810089111,
+      "policy_accuracy": 0.8448866067608044,
+      "policy_cross_entropy": 0.5066695051107541,
+      "samples": 4674
+    }
+  ],
+  "selected_by": "lowest validation policy cross entropy",
+  "checkpoint": "checkpoints/scale100k-resnet.pt",
+  "sha256": "849ffb1ad07e25aa415351cc5aa48f4d0048b9ae6cd7a3e7a09b02cde550b99d",
+  "random_tournament": {
+    "games": 150,
+    "wins": 41,
+    "win_rate": 0.2733333333333333,
+    "draws": 105,
+    "mean_payoff": 19.3,
+    "illegal_actions": 0,
+    "hu_opportunities": 41,
+    "passed_hu": 0,
+    "reviews": []
+  },
+  "teacher_tournament": {
+    "games": 60,
+    "wins": 8,
+    "win_rate": 0.13333333333333333,
+    "draws": 13,
+    "mean_payoff": -19.5,
+    "illegal_actions": 0,
+    "hu_opportunities": 8,
+    "passed_hu": 0,
+    "reviews": []
+  }
+}

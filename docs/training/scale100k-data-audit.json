@@ -1,0 +1,9 @@
+{
+  "games": 24,
+  "decisions": 648,
+  "steps": 1715,
+  "puzzles": 50,
+  "seed_namespaces_disjoint": true,
+  "saved_inputs_and_labels_verified": true,
+  "conservation_and_replay_verified": true
+}

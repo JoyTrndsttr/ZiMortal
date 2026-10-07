@@ -125,3 +125,43 @@ def test_random_baseline_and_frozen_opponent_routes():
     model = PolicyValueNet("mlp")
     report = tournament(model, [7000], opponent="model", opponent_model=model)
     assert report["games"] == 3 and report["illegal_actions"] == 0
+
+
+def test_numeric_shards_preserve_ragged_actions(tmp_path):
+    from zimortal.training.data import example
+    from zimortal.training.scale import read_shard, write_shard
+
+    rows = [example(make_puzzle(s)[0]) for s in (1100000, 1100001)]
+    path = tmp_path / "data.npz"
+    write_shard(path, rows)
+    restored = read_shard(path)
+    for original, result in zip(rows, restored, strict=True):
+        for i in (0, 1, 4):
+            np.testing.assert_array_equal(original[i], result[i])
+        assert original[2:4] == result[2:4]
+    assert len(restored[0][1]) != len(restored[1][1])
+
+
+def test_shards_reject_illegal_teacher_indices(tmp_path):
+    from zimortal.training.data import example
+    from zimortal.training.scale import read_shard, write_shard
+
+    path = tmp_path / "bad.npz"
+    write_shard(path, [example(make_puzzle(1100001)[0])])
+    with np.load(path, allow_pickle=False) as source:
+        fields = {k: source[k] for k in source.files}
+    fields["policy"][0] = len(fields["actions"])
+    np.savez_compressed(path, **fields)
+    with pytest.raises(ValueError, match="teacher index"):
+        read_shard(path)
+
+
+def test_scale_validation_excludes_exact_training_inputs():
+    from zimortal.training.data import example
+    from zimortal.training.scale import deduplicate
+
+    a = example(make_puzzle(1100000)[0])
+    b = example(make_puzzle(1100001)[0])
+    training, valid = deduplicate([a, a], [a, b, b])
+    assert len(training) == 1 and len(valid) == 1
+    np.testing.assert_array_equal(valid[0][0], b[0])
