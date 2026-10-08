@@ -53,6 +53,33 @@ def discard_records(history):
     return records
 
 
+def displayed_melds(player, history, seat):
+    """Order the offered chi tile last without changing canonical rule groups."""
+    incoming = []
+    for action in history:
+        if action.player == seat and action.kind == A.CHI:
+            incoming.append(action.tile)
+            incoming.extend([None] * len(action.bi))
+    chi_index = 0
+    result = []
+    for meld in player.melds:
+        claimed = None
+        if meld.kind.value == "chi":
+            claimed = incoming[chi_index]
+            chi_index += 1
+        elif meld.kind.value == "peng":
+            claimed = meld.tiles[0]
+        ordered = list(meld.tiles)
+        if claimed is not None:
+            ordered.remove(claimed)
+            ordered.append(claimed)
+        result.append(
+            asdict(meld)
+            | {"huxi": meld_huxi(meld), "display_tiles": ordered, "claimed_tile": claimed}
+        )
+    return result
+
+
 def snapshot(engine, state, include_huxi=False):
     error = None
     try:
@@ -69,7 +96,7 @@ def snapshot(engine, state, include_huxi=False):
                 "hand": sorted(p.hand),
                 "columns": arrange_hand(p.hand, p.kans),
                 "kans": sorted(p.kans),
-                "melds": [asdict(m) | {"huxi": meld_huxi(m)} for m in p.melds],
+                "melds": displayed_melds(p, state.history, seat),
                 "huxi": sum(meld_huxi(m) for m in p.melds)
                 + sum(6 if t >= 10 else 3 for t in p.kans),
                 "passed_peng": sorted(p.passed_peng),
