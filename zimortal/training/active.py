@@ -12,6 +12,7 @@ import math
 import multiprocessing
 import os
 import random
+import shutil
 import sqlite3
 import subprocess
 import time
@@ -46,7 +47,7 @@ from .rollout import teacher
 from .runtime import choose, load_model
 from .valuation import action_scores
 
-VERSION = 1
+VERSION = 2
 EVIDENCE_BYTES = 128 * 1024 * 1024
 QUOTAS = {"chi_bi": 1000, "peng_pass": 500, "hu_pass": 200, "fan_boundary": 750, "late": 1500}
 PARENT = None
@@ -64,6 +65,9 @@ def atomic_json(path, value):
 
 
 def atomic_npz(path, **arrays):
+    required = 2 * 1024**3 + sum(np.asarray(value).nbytes for value in arrays.values())
+    if shutil.disk_usage(Path(path).parent).free < required:
+        raise OSError("insufficient disk reserve for atomic evidence; no training")
     temporary = Path(str(path) + ".tmp")
     with temporary.open("wb") as file:
         np.savez_compressed(file, **arrays)
@@ -239,6 +243,25 @@ def mine_game(seed, models):
     return list(selected.values())
 
 
+def search_priority(meta, result):
+    """Screening heuristic only; argmax index on a tie is not disagreement."""
+    q = np.asarray(result.q_cash)
+    best, reference, candidate = int(q.argmax()), meta["reference"], meta["q_choice"]
+    raw = np.asarray(result.outcomes_cash, np.float64)
+    difference = raw[:, best, None] - raw
+    error = difference.std(axis=0, ddof=1) / math.sqrt(len(raw))
+    margin = q[best] - q
+    # This only allocates compute, never certifies a training label.
+    clear = margin > np.maximum(1, 2 * error)
+    priority = (
+        meta["mining_priority"]
+        + 5 * bool(clear[reference])
+        + 3 * bool(clear[candidate])
+        + min(4, max(0, margin[reference] - 2 * error[reference]) / max(1, error[reference]))
+    )
+    return best, float(priority)
+
+
 def initialize_worker(parent):
     global PARENT
     torch.set_num_threads(1)
@@ -264,17 +287,10 @@ def process_root(task):
             world_sampler=sampler,
             batched=True,
             reference_index=reference,
+            keep_outcomes=True,
             max_attempts=configuration["max_attempts"],
         )
-        q = np.array(result.q_cash)
-        best = int(q.argmax())
-        error = max(1, result.paired_standard_errors[best])
-        priority = (
-            meta["mining_priority"]
-            + 5 * (best != reference)
-            + 3 * (best != meta["q_choice"])
-            + min(4, (q[best] - q[reference]) / error)
-        )
+        best, priority = search_priority(meta, result)
         meta.update(
             pilot_q_cash=list(result.q_cash),
             pilot_paired_se_cash=list(result.paired_standard_errors),
@@ -934,7 +950,7 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["run", "status", "audit"])
-    parser.add_argument("--data", default="data/generated/active-v1")
+    parser.add_argument("--data", default="data/generated/active-v2")
     parser.add_argument("--parent", default="checkpoints/huxi-resnet.pt")
     parser.add_argument("--current", default="checkpoints/cashq-regret.gated.pt")
     parser.add_argument("--target", type=int, default=5000)

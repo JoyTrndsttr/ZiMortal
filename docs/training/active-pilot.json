@@ -57,11 +57,11 @@
   },
   "clone_speed_is_not_end_to_end_speed": true,
   "cpu_tests": {
-    "passed": 223,
+    "passed": 226,
     "skipped": 1
   },
   "cuda_tests": {
-    "passed": 224,
+    "passed": 227,
     "skipped": 0
   },
   "training_completed": false,
@@ -114,5 +114,34 @@
     "torch": "2.7.1+cu128",
     "device": "NVIDIA GeForce RTX 5080",
     "cuda_available": true
+  },
+  "screening_fix_validation": {
+    "configuration_sha256": "df59dcd01cf30b0d9699f6443363fedb7e5a90479ff57326b7be7706069c3732",
+    "progress": {
+      "status": "smoke_complete",
+      "target_training_roots": 8,
+      "target_validation_roots": 2,
+      "qualified": {},
+      "training_strata": {},
+      "quotas": {},
+      "queue": {
+        "refine": 7,
+        "screen": 15
+      },
+      "qualified_particles": 0,
+      "qualified_terminal_rollouts": 0,
+      "confidence_method": "alpha-spent simultaneous empirical Bernstein",
+      "tie_cash": 1,
+      "training_started": false,
+      "timestamp": 1791439896.73747,
+      "process_id": 117647,
+      "mined_games": 4,
+      "refinement_particles": 1536,
+      "refinement_terminal_rollouts": 4352,
+      "completed_tasks": 19,
+      "elapsed_seconds": 26.611336318999747
+    },
+    "tied_or_noisy_argmax_does_not_add_search_disagreement_priority": true,
+    "disk_reserve_preserves_existing_evidence": true
   }
 }
