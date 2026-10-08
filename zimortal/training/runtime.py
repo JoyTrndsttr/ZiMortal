@@ -36,12 +36,17 @@ def save_model(model, path, **metadata):
 
 def load_model(path, device="cpu"):
     data = torch.load(path, map_location=device, weights_only=True)
-    model = PolicyValueNet(
-        data["architecture"],
-        data["width"],
-        data.get("feature_version", "legacy"),
-        data.get("auxiliary_version", "legacy"),
-    ).to(device)
+    if data["architecture"] == "cashq":
+        from zimortal.model.cashq import CashQNet
+
+        model = CashQNet(data["width"]).to(device)
+    else:
+        model = PolicyValueNet(
+            data["architecture"],
+            data["width"],
+            data.get("feature_version", "legacy"),
+            data.get("auxiliary_version", "legacy"),
+        ).to(device)
     model.load_state_dict(data["state_dict"])
     model.eval()
     return model
@@ -60,6 +65,28 @@ def predict(model, obs, device="cpu"):
     with torch.no_grad():
         logits, value, _ = model(features, actions, mask)
     return logits[0], value[0]
+
+
+def choose_batch(model, observations, device="cpu"):
+    """Batch independent visible decisions without exposing hidden worlds."""
+    if not observations:
+        return []
+    x = torch.from_numpy(
+        np.stack([encode_observation(obs, model.feature_version) for obs in observations])
+    ).to(device)
+    size = max(len(obs.legal_actions) for obs in observations)
+    encoded = [
+        np.stack([encode_action(a, obs.player) for a in obs.legal_actions]) for obs in observations
+    ]
+    a = torch.zeros(len(observations), size, encoded[0].shape[-1], device=device)
+    mask = torch.zeros(len(observations), size, dtype=torch.bool, device=device)
+    for i, row in enumerate(encoded):
+        a[i, : len(row)] = torch.from_numpy(row).to(device)
+        mask[i, : len(row)] = True
+    with torch.inference_mode():
+        scores, *_ = model(x, a, mask)
+        choices = scores.argmax(-1).cpu().tolist()
+    return [obs.legal_actions[k] for obs, k in zip(observations, choices, strict=True)]
 
 
 def choose(obs, rng, model=None, policy="model", device="cpu"):
@@ -89,6 +116,7 @@ def tournament(
     winning_huxi = winning_fan = winning_amount = 0
     reviews = []
     game_results = []
+    cashq_decisions = cashq_changes = 0
     for seed in seeds:
         for seat in range(3) if model_seats is None else model_seats:
             state = engine.new_game(seed, dealer=seed % 3)
@@ -106,6 +134,15 @@ def tournament(
                     policy=model_policy if actor == seat else opponent,
                     device=device,
                 )
+                if (
+                    actor == seat
+                    and model_policy == "model"
+                    and getattr(model, "architecture", None) == "cashq"
+                    and len(actions) > 1
+                ):
+                    reference = choose(obs, rng, model.parent, device=device)
+                    cashq_decisions += 1
+                    cashq_changes += selected != reference
                 if actor == seat and any(a.kind == A.HU for a in actions):
                     hu_opportunities += 1
                     hu_pass += selected.kind != A.HU
@@ -160,4 +197,7 @@ def tournament(
     }
     if include_games:
         result["game_results"] = game_results
+    if getattr(model, "architecture", None) == "cashq":
+        result["cashq_decisions"] = cashq_decisions
+        result["cashq_changes"] = cashq_changes
     return result
