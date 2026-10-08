@@ -16,6 +16,8 @@
 
 先用另一个随机流的 32 个共同粒子做搜索筛选。筛选粒子不参与认证与训练标签。
 搜索与模型／父策略越不一致、动作收益差相对配对误差越大，精算优先级越高。
+筛选均值并列或差值未超过筛选配对误差时，不因argmax选了第一个动作而加分；
+筛选误差只用于分配计算，不充当标签认证。
 每轮仅增加一个倍增档位，已有粒子不重复计算；调度对昂贵根加预算惩罚，
 及时补充候选，避免单个未收敛根长期阻止挖掘。类别配额不足时提高其优先级。
 
@@ -82,10 +84,11 @@ scripts/train-active-wsl.sh run --train-after
 .venv/bin/python -m zimortal.training.active audit
 ```
 
-默认目录 `data/generated/active-v1`。SQLite WAL 持久化队列、seed cursor、置信预算编号；
+默认目录 `data/generated/active-v2`。SQLite WAL 持久化队列、seed cursor、置信预算编号；
 NPZ／JSON 原子保存完整档位的粒子证据与区间，断电后重算未保存的半档。
 同一运行命令可续跑；代码、环境版本、模型或统计配置改变时必须新建数据版本。
 训练只读取每根的紧凑目标，不把原始 rollout 矩阵装入训练集。
+证据落盘前保留至少2GiB磁盘余量，不足时明确停止，不占满WSL根分区。
 
 独立 systemd 用户服务使用 CPU torch 生成数据，三个单线程 worker，
 MemoryMax=8G、MemorySwapMax=1G、CPUQuota=600%、Nice=10。CUDA用于后续训练，

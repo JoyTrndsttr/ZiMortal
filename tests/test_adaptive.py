@@ -341,3 +341,37 @@ def test_resume_rejects_lossy_particle_evidence(invalid):
     raw[0, 0] = invalid
     with pytest.raises(ValueError, match="lossless"):
         adaptive_rollout(obs, None, initial=raw)
+
+
+def test_screening_argmax_on_a_tie_does_not_manufacture_search_disagreement():
+    from zimortal.training.active import search_priority
+    from zimortal.training.rollout import RolloutTargets
+
+    meta = {"reference": 1, "q_choice": 2, "mining_priority": 7}
+    tied = RolloutTargets((0, 0, 0), (0, 0, 0), (), 32, 32, outcomes_cash=((0, 0, 0),) * 32)
+    assert search_priority(meta, tied) == (0, 7)
+    clear = RolloutTargets((100, 0, 0), (0, 0, 0), (), 32, 32, outcomes_cash=((100, 0, 0),) * 32)
+    assert search_priority(meta, clear) == (0, 19)
+
+
+def test_screening_does_not_prioritize_noisy_argmax_as_search_conflict():
+    from zimortal.training.active import search_priority
+    from zimortal.training.rollout import RolloutTargets
+
+    raw = ((101, 0),) * 16 + ((-99, 0),) * 16
+    noisy = RolloutTargets((1, 0), (18, 0), (), 32, 32, outcomes_cash=raw)
+    assert search_priority({"reference": 1, "q_choice": 1, "mining_priority": 7}, noisy) == (0, 7)
+
+
+def test_disk_reserve_preserves_previous_atomic_evidence(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from zimortal.training import active
+
+    path = tmp_path / "evidence.npz"
+    path.write_bytes(b"previous evidence")
+    monkeypatch.setattr(active.shutil, "disk_usage", lambda _: SimpleNamespace(free=0))
+    with pytest.raises(OSError, match="disk reserve"):
+        active.atomic_npz(path, outcomes=np.zeros((128, 2), dtype=np.int16))
+    assert path.read_bytes() == b"previous evidence"
+    assert not (tmp_path / "evidence.npz.tmp").exists()
