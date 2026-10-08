@@ -1,0 +1,788 @@
+[
+  {
+    "seed": 240000030,
+    "target": 5,
+    "distance": 2,
+    "status": "exact",
+    "effective": [
+      {
+        "tile": 2,
+        "source": "own_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 2,
+        "source": "upstream_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 2,
+        "source": "upstream_discard",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 7,
+        "source": "own_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 7,
+        "source": "upstream_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 8,
+        "source": "own_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 8,
+        "source": "upstream_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 12,
+        "source": "own_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 12,
+        "source": "upstream_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 14,
+        "source": "own_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 14,
+        "source": "upstream_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 18,
+        "source": "own_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 18,
+        "source": "upstream_draw",
+        "live_upper": 1,
+        "distance_after": 1,
+        "unknown_copy_upper": 1
+      }
+    ],
+    "wins": [],
+    "nodes": 9,
+    "definition": "minimum accepted legal intakes including final hu; optimistic opponents"
+  },
+  {
+    "seed": 240000032,
+    "target": 13,
+    "distance": 1,
+    "status": "exact",
+    "effective": [
+      {
+        "tile": 3,
+        "source": "own_draw",
+        "live_upper": 2,
+        "distance_after": 0,
+        "unknown_copy_upper": 2
+      },
+      {
+        "tile": 3,
+        "source": "upstream_draw",
+        "live_upper": 2,
+        "distance_after": 0,
+        "unknown_copy_upper": 2
+      },
+      {
+        "tile": 13,
+        "source": "own_draw",
+        "live_upper": 3,
+        "distance_after": 0,
+        "unknown_copy_upper": 3
+      },
+      {
+        "tile": 13,
+        "source": "upstream_draw",
+        "live_upper": 3,
+        "distance_after": 0,
+        "unknown_copy_upper": 3
+      }
+    ],
+    "wins": [
+      {
+        "tile": 3,
+        "source": "own_draw",
+        "huxi": 15,
+        "fan": {
+          "点胡": 4
+        },
+        "amount_each": 40,
+        "net_payoff": 80,
+        "groups": [
+          {
+            "kind": "pao",
+            "tiles": [
+              4,
+              4,
+              4,
+              4
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              5,
+              5,
+              15
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "kind": "wei",
+            "tiles": [
+              18,
+              18,
+              18
+            ]
+          },
+          {
+            "kind": "peng",
+            "tiles": [
+              17,
+              17,
+              17
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              3,
+              3,
+              13
+            ]
+          },
+          {
+            "kind": "pair",
+            "tiles": [
+              12,
+              12
+            ]
+          }
+        ]
+      },
+      {
+        "tile": 3,
+        "source": "upstream_draw",
+        "huxi": 15,
+        "fan": {
+          "点胡": 4
+        },
+        "amount_each": 40,
+        "net_payoff": 80,
+        "groups": [
+          {
+            "kind": "pao",
+            "tiles": [
+              4,
+              4,
+              4,
+              4
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              5,
+              5,
+              15
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "kind": "wei",
+            "tiles": [
+              18,
+              18,
+              18
+            ]
+          },
+          {
+            "kind": "peng",
+            "tiles": [
+              17,
+              17,
+              17
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              3,
+              3,
+              13
+            ]
+          },
+          {
+            "kind": "pair",
+            "tiles": [
+              12,
+              12
+            ]
+          }
+        ]
+      },
+      {
+        "tile": 13,
+        "source": "own_draw",
+        "huxi": 15,
+        "fan": {
+          "点胡": 4
+        },
+        "amount_each": 40,
+        "net_payoff": 80,
+        "groups": [
+          {
+            "kind": "pao",
+            "tiles": [
+              4,
+              4,
+              4,
+              4
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              5,
+              5,
+              15
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "kind": "wei",
+            "tiles": [
+              18,
+              18,
+              18
+            ]
+          },
+          {
+            "kind": "peng",
+            "tiles": [
+              17,
+              17,
+              17
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              3,
+              13,
+              13
+            ]
+          },
+          {
+            "kind": "pair",
+            "tiles": [
+              12,
+              12
+            ]
+          }
+        ]
+      },
+      {
+        "tile": 13,
+        "source": "upstream_draw",
+        "huxi": 15,
+        "fan": {
+          "点胡": 4
+        },
+        "amount_each": 40,
+        "net_payoff": 80,
+        "groups": [
+          {
+            "kind": "pao",
+            "tiles": [
+              4,
+              4,
+              4,
+              4
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              5,
+              5,
+              15
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "kind": "wei",
+            "tiles": [
+              18,
+              18,
+              18
+            ]
+          },
+          {
+            "kind": "peng",
+            "tiles": [
+              17,
+              17,
+              17
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              3,
+              13,
+              13
+            ]
+          },
+          {
+            "kind": "pair",
+            "tiles": [
+              12,
+              12
+            ]
+          }
+        ]
+      }
+    ],
+    "nodes": 1,
+    "definition": "minimum accepted legal intakes including final hu; optimistic opponents"
+  },
+  {
+    "seed": 240000008,
+    "target": 13,
+    "distance": 1,
+    "status": "exact",
+    "effective": [
+      {
+        "tile": 3,
+        "source": "own_draw",
+        "live_upper": 3,
+        "distance_after": 0,
+        "unknown_copy_upper": 3
+      },
+      {
+        "tile": 3,
+        "source": "upstream_draw",
+        "live_upper": 3,
+        "distance_after": 0,
+        "unknown_copy_upper": 3
+      },
+      {
+        "tile": 13,
+        "source": "own_draw",
+        "live_upper": 3,
+        "distance_after": 0,
+        "unknown_copy_upper": 3
+      },
+      {
+        "tile": 13,
+        "source": "upstream_draw",
+        "live_upper": 3,
+        "distance_after": 0,
+        "unknown_copy_upper": 3
+      }
+    ],
+    "wins": [
+      {
+        "tile": 3,
+        "source": "own_draw",
+        "huxi": 16,
+        "fan": {
+          "三扁": 3
+        },
+        "amount_each": 30,
+        "net_payoff": 60,
+        "groups": [
+          {
+            "kind": "peng",
+            "tiles": [
+              17,
+              17,
+              17
+            ]
+          },
+          {
+            "kind": "peng",
+            "tiles": [
+              8,
+              8,
+              8
+            ]
+          },
+          {
+            "kind": "wei",
+            "tiles": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kind": "kan",
+            "tiles": [
+              5,
+              5,
+              5
+            ]
+          },
+          {
+            "kind": "kan",
+            "tiles": [
+              12,
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              0,
+              0,
+              10
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              3,
+              3,
+              13
+            ]
+          }
+        ]
+      },
+      {
+        "tile": 3,
+        "source": "upstream_draw",
+        "huxi": 16,
+        "fan": {
+          "三扁": 3
+        },
+        "amount_each": 30,
+        "net_payoff": 60,
+        "groups": [
+          {
+            "kind": "peng",
+            "tiles": [
+              17,
+              17,
+              17
+            ]
+          },
+          {
+            "kind": "peng",
+            "tiles": [
+              8,
+              8,
+              8
+            ]
+          },
+          {
+            "kind": "wei",
+            "tiles": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kind": "kan",
+            "tiles": [
+              5,
+              5,
+              5
+            ]
+          },
+          {
+            "kind": "kan",
+            "tiles": [
+              12,
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              0,
+              0,
+              10
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              3,
+              3,
+              13
+            ]
+          }
+        ]
+      },
+      {
+        "tile": 13,
+        "source": "own_draw",
+        "huxi": 16,
+        "fan": {
+          "三扁": 3
+        },
+        "amount_each": 30,
+        "net_payoff": 60,
+        "groups": [
+          {
+            "kind": "peng",
+            "tiles": [
+              17,
+              17,
+              17
+            ]
+          },
+          {
+            "kind": "peng",
+            "tiles": [
+              8,
+              8,
+              8
+            ]
+          },
+          {
+            "kind": "wei",
+            "tiles": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kind": "kan",
+            "tiles": [
+              5,
+              5,
+              5
+            ]
+          },
+          {
+            "kind": "kan",
+            "tiles": [
+              12,
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              0,
+              0,
+              10
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              3,
+              13,
+              13
+            ]
+          }
+        ]
+      },
+      {
+        "tile": 13,
+        "source": "upstream_draw",
+        "huxi": 16,
+        "fan": {
+          "三扁": 3
+        },
+        "amount_each": 30,
+        "net_payoff": 60,
+        "groups": [
+          {
+            "kind": "peng",
+            "tiles": [
+              17,
+              17,
+              17
+            ]
+          },
+          {
+            "kind": "peng",
+            "tiles": [
+              8,
+              8,
+              8
+            ]
+          },
+          {
+            "kind": "wei",
+            "tiles": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "kind": "kan",
+            "tiles": [
+              5,
+              5,
+              5
+            ]
+          },
+          {
+            "kind": "kan",
+            "tiles": [
+              12,
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              0,
+              0,
+              10
+            ]
+          },
+          {
+            "kind": "chi",
+            "tiles": [
+              3,
+              13,
+              13
+            ]
+          }
+        ]
+      }
+    ],
+    "nodes": 1,
+    "definition": "minimum accepted legal intakes including final hu; optimistic opponents"
+  },
+  {
+    "seed": 280000003,
+    "target": 8,
+    "distance": 4,
+    "status": "exact",
+    "effective": [
+      {
+        "tile": 0,
+        "source": "own_draw",
+        "live_upper": 1,
+        "distance_after": 3,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 0,
+        "source": "upstream_draw",
+        "live_upper": 1,
+        "distance_after": 3,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 2,
+        "source": "own_draw",
+        "live_upper": 1,
+        "distance_after": 3,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 2,
+        "source": "upstream_draw",
+        "live_upper": 1,
+        "distance_after": 3,
+        "unknown_copy_upper": 1
+      },
+      {
+        "tile": 18,
+        "source": "own_draw",
+        "live_upper": 2,
+        "distance_after": 3,
+        "unknown_copy_upper": 2
+      },
+      {
+        "tile": 18,
+        "source": "upstream_draw",
+        "live_upper": 2,
+        "distance_after": 3,
+        "unknown_copy_upper": 2
+      },
+      {
+        "tile": 18,
+        "source": "upstream_discard",
+        "live_upper": 2,
+        "distance_after": 3,
+        "unknown_copy_upper": 2
+      }
+    ],
+    "wins": [],
+    "nodes": 122,
+    "definition": "minimum accepted legal intakes including final hu; optimistic opponents"
+  }
+]

@@ -12,3 +12,6 @@ checkpoints/
 runs/
 wandb/
 data/generated/
+
+.venv-cuda/
+logs/

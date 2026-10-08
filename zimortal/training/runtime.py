@@ -1,5 +1,6 @@
 """Model policies and seat-rotated reproducible tournaments."""
 
+import os
 import random
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from .data import teacher_scores
 
 def save_model(model, path, **metadata):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
+    temporary = Path(path).with_suffix(Path(path).suffix + ".tmp")
     torch.save(
         {
             "state_dict": model.state_dict(),
@@ -25,8 +27,11 @@ def save_model(model, path, **metadata):
             "auxiliary_version": model.auxiliary_version,
             "metadata": metadata,
         },
-        path,
+        temporary,
     )
+    with temporary.open("rb") as saved:
+        os.fsync(saved.fileno())
+    os.replace(temporary, path)
 
 
 def load_model(path, device="cpu"):

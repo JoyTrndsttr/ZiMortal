@@ -30,9 +30,9 @@ class PolicyValueNet(nn.Module):
         self.width = width
         self.feature_version = feature_version
         self.auxiliary_version = auxiliary_version
-        if auxiliary_version not in ("legacy", "boundary"):
+        if auxiliary_version not in ("legacy", "boundary", "planning"):
             raise ValueError("unknown auxiliary version")
-        if auxiliary_version == "boundary" and feature_version != "huxi":
+        if auxiliary_version in ("boundary", "planning") and feature_version != "huxi":
             raise ValueError("boundary heads require huxi features")
         self.input_channels = HUXI_CHANNELS if feature_version == "huxi" else CHANNELS
         if architecture == "resnet":
@@ -65,12 +65,16 @@ class PolicyValueNet(nn.Module):
             nn.Sequential(
                 nn.Linear(128 + self.input_channels * 2, 128), nn.SiLU(), nn.Linear(128, 4)
             )
-            if auxiliary_version == "boundary"
+            if auxiliary_version in ("boundary", "planning")
             else None
         )
+        self.belief = nn.Linear(128, 100) if auxiliary_version == "planning" else None
+        self.distance = nn.Linear(128, 16) if auxiliary_version == "planning" else None
+        if self.belief is not None:
+            nn.init.zeros_(self.belief.weight)
+            nn.init.zeros_(self.belief.bias)
 
-    def forward_aux(self, features, actions, mask):
-        latent = self.encoder(features)
+    def _heads(self, latent, features, actions, mask):
         embeddings = self.action_encoder(actions)
         logits = (embeddings * self.policy_context(latent).unsqueeze(1)).sum(
             -1
@@ -94,6 +98,35 @@ class PolicyValueNet(nn.Module):
             amount,
             fan,
         )
+
+    def forward_aux(self, features, actions, mask):
+        return self._heads(self.encoder(features), features, actions, mask)
+
+    def forward_planning(self, features, actions, mask):
+        if self.belief is None:
+            raise ValueError("planning heads not enabled")
+        latent = self.encoder(features)
+        known = ((features[:, 0] + features[:, 1]) * 4).round()
+        upper = (4 - known).clamp(0, 4)
+        # Learn a residual over the physically valid uniform-allocation prior.
+        # This uses only visible counts and remaining wall length, never labels.
+        counts = torch.arange(5, device=features.device)[None, None]
+        pool = upper.sum(-1)[:, None, None]
+        wall = (features[:, 27, 0] * 20).round()[:, None, None]
+
+        def log_comb(n, k):
+            score = torch.lgamma(n + 1) - torch.lgamma(k + 1) - torch.lgamma(n - k + 1)
+            return score.masked_fill((k < 0) | (k > n), -1e9)
+
+        prior = (
+            log_comb(upper[:, :, None], counts)
+            + log_comb(pool - upper[:, :, None], wall - counts)
+            - log_comb(pool, wall)
+        )
+        belief = self.belief(latent).reshape(-1, 20, 5) + prior
+        impossible = torch.arange(5, device=features.device)[None, None] > upper[:, :, None]
+        belief = belief.masked_fill(impossible, -1e9)
+        return self._heads(latent, features, actions, mask), belief, self.distance(latent)
 
     def forward_all(self, features, actions, mask):
         return self.forward_aux(features, actions, mask)[:4]

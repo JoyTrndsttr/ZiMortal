@@ -1,0 +1,3696 @@
+{
+  "models": {
+    "baseline": {
+      "checkpoint": "checkpoints/huxi-resnet.pt",
+      "random": {
+        "games": 150,
+        "wins": 60,
+        "win_rate": 0.4,
+        "draws": 90,
+        "mean_payoff": 18.466666666666665,
+        "mean_winning_huxi": 19.183333333333334,
+        "mean_winning_fan": 1.45,
+        "mean_winning_amount_each": 23.083333333333332,
+        "illegal_actions": 0,
+        "hu_opportunities": 60,
+        "passed_hu": 0,
+        "reviews": [],
+        "game_results": [
+          {
+            "seed": 35000,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35000,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35000,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35001,
+            "seat": 0,
+            "payoff": 60,
+            "winner": 0
+          },
+          {
+            "seed": 35001,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35001,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35002,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35002,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35002,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35003,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35003,
+            "seat": 1,
+            "payoff": 80,
+            "winner": 1
+          },
+          {
+            "seed": 35003,
+            "seat": 2,
+            "payoff": 40,
+            "winner": 2
+          },
+          {
+            "seed": 35004,
+            "seat": 0,
+            "payoff": 30,
+            "winner": 0
+          },
+          {
+            "seed": 35004,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35004,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35005,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35005,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35005,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35006,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35006,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35006,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35007,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35007,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35007,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35008,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35008,
+            "seat": 1,
+            "payoff": 40,
+            "winner": 1
+          },
+          {
+            "seed": 35008,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35009,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35009,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35009,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35010,
+            "seat": 0,
+            "payoff": 120,
+            "winner": 0
+          },
+          {
+            "seed": 35010,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35010,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35011,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35011,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35011,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35012,
+            "seat": 0,
+            "payoff": 160,
+            "winner": 0
+          },
+          {
+            "seed": 35012,
+            "seat": 1,
+            "payoff": 20,
+            "winner": 1
+          },
+          {
+            "seed": 35012,
+            "seat": 2,
+            "payoff": 40,
+            "winner": 2
+          },
+          {
+            "seed": 35013,
+            "seat": 0,
+            "payoff": 60,
+            "winner": 0
+          },
+          {
+            "seed": 35013,
+            "seat": 1,
+            "payoff": 160,
+            "winner": 1
+          },
+          {
+            "seed": 35013,
+            "seat": 2,
+            "payoff": 40,
+            "winner": 2
+          },
+          {
+            "seed": 35014,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35014,
+            "seat": 1,
+            "payoff": 20,
+            "winner": 1
+          },
+          {
+            "seed": 35014,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35015,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35015,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35015,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35016,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35016,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35016,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35017,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35017,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35017,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35018,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35018,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35018,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35019,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35019,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35019,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35020,
+            "seat": 0,
+            "payoff": 30,
+            "winner": 0
+          },
+          {
+            "seed": 35020,
+            "seat": 1,
+            "payoff": 60,
+            "winner": 1
+          },
+          {
+            "seed": 35020,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35021,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35021,
+            "seat": 1,
+            "payoff": 80,
+            "winner": 1
+          },
+          {
+            "seed": 35021,
+            "seat": 2,
+            "payoff": 90,
+            "winner": 2
+          },
+          {
+            "seed": 35022,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35022,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35022,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35023,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35023,
+            "seat": 1,
+            "payoff": 40,
+            "winner": 1
+          },
+          {
+            "seed": 35023,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35024,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35024,
+            "seat": 1,
+            "payoff": 40,
+            "winner": 1
+          },
+          {
+            "seed": 35024,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35025,
+            "seat": 0,
+            "payoff": 30,
+            "winner": 0
+          },
+          {
+            "seed": 35025,
+            "seat": 1,
+            "payoff": 40,
+            "winner": 1
+          },
+          {
+            "seed": 35025,
+            "seat": 2,
+            "payoff": 60,
+            "winner": 2
+          },
+          {
+            "seed": 35026,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35026,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35026,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35027,
+            "seat": 0,
+            "payoff": 60,
+            "winner": 0
+          },
+          {
+            "seed": 35027,
+            "seat": 1,
+            "payoff": 50,
+            "winner": 1
+          },
+          {
+            "seed": 35027,
+            "seat": 2,
+            "payoff": 70,
+            "winner": 2
+          },
+          {
+            "seed": 35028,
+            "seat": 0,
+            "payoff": 40,
+            "winner": 0
+          },
+          {
+            "seed": 35028,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35028,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35029,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35029,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35029,
+            "seat": 2,
+            "payoff": 150,
+            "winner": 2
+          },
+          {
+            "seed": 35030,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35030,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35030,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35031,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35031,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35031,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35032,
+            "seat": 0,
+            "payoff": 40,
+            "winner": 0
+          },
+          {
+            "seed": 35032,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35032,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35033,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35033,
+            "seat": 1,
+            "payoff": 40,
+            "winner": 1
+          },
+          {
+            "seed": 35033,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35034,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35034,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35034,
+            "seat": 2,
+            "payoff": 70,
+            "winner": 2
+          },
+          {
+            "seed": 35035,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35035,
+            "seat": 1,
+            "payoff": 40,
+            "winner": 1
+          },
+          {
+            "seed": 35035,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35036,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35036,
+            "seat": 1,
+            "payoff": 40,
+            "winner": 1
+          },
+          {
+            "seed": 35036,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35037,
+            "seat": 0,
+            "payoff": 40,
+            "winner": 0
+          },
+          {
+            "seed": 35037,
+            "seat": 1,
+            "payoff": 20,
+            "winner": 1
+          },
+          {
+            "seed": 35037,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35038,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35038,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35038,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35039,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35039,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35039,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35040,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35040,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35040,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35041,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35041,
+            "seat": 1,
+            "payoff": 20,
+            "winner": 1
+          },
+          {
+            "seed": 35041,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35042,
+            "seat": 0,
+            "payoff": 40,
+            "winner": 0
+          },
+          {
+            "seed": 35042,
+            "seat": 1,
+            "payoff": 20,
+            "winner": 1
+          },
+          {
+            "seed": 35042,
+            "seat": 2,
+            "payoff": 60,
+            "winner": 2
+          },
+          {
+            "seed": 35043,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35043,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35043,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35044,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35044,
+            "seat": 1,
+            "payoff": 20,
+            "winner": 1
+          },
+          {
+            "seed": 35044,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35045,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35045,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35045,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35046,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35046,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35046,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35047,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35047,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35047,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35048,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35048,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35048,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35049,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35049,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35049,
+            "seat": 2,
+            "payoff": 150,
+            "winner": 2
+          }
+        ]
+      },
+      "teacher": {
+        "games": 150,
+        "wins": 27,
+        "win_rate": 0.18,
+        "draws": 29,
+        "mean_payoff": -6.333333333333333,
+        "mean_winning_huxi": 20.333333333333332,
+        "mean_winning_fan": 1.8148148148148149,
+        "mean_winning_amount_each": 34.629629629629626,
+        "illegal_actions": 0,
+        "hu_opportunities": 27,
+        "passed_hu": 0,
+        "reviews": [],
+        "game_results": [
+          {
+            "seed": 35500,
+            "seat": 0,
+            "payoff": -35,
+            "winner": 1
+          },
+          {
+            "seed": 35500,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35500,
+            "seat": 2,
+            "payoff": -35,
+            "winner": 1
+          },
+          {
+            "seed": 35501,
+            "seat": 0,
+            "payoff": -240,
+            "winner": 2
+          },
+          {
+            "seed": 35501,
+            "seat": 1,
+            "payoff": 20,
+            "winner": 1
+          },
+          {
+            "seed": 35501,
+            "seat": 2,
+            "payoff": 80,
+            "winner": 2
+          },
+          {
+            "seed": 35502,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35502,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35502,
+            "seat": 2,
+            "payoff": 60,
+            "winner": 2
+          },
+          {
+            "seed": 35503,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35503,
+            "seat": 1,
+            "payoff": 20,
+            "winner": 1
+          },
+          {
+            "seed": 35503,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35504,
+            "seat": 0,
+            "payoff": 250,
+            "winner": 0
+          },
+          {
+            "seed": 35504,
+            "seat": 1,
+            "payoff": -25,
+            "winner": 0
+          },
+          {
+            "seed": 35504,
+            "seat": 2,
+            "payoff": -30,
+            "winner": 0
+          },
+          {
+            "seed": 35505,
+            "seat": 0,
+            "payoff": 40,
+            "winner": 0
+          },
+          {
+            "seed": 35505,
+            "seat": 1,
+            "payoff": -40,
+            "winner": 2
+          },
+          {
+            "seed": 35505,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35506,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35506,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35506,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35507,
+            "seat": 0,
+            "payoff": 50,
+            "winner": 0
+          },
+          {
+            "seed": 35507,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35507,
+            "seat": 2,
+            "payoff": -360,
+            "winner": 0
+          },
+          {
+            "seed": 35508,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35508,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35508,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35509,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 2
+          },
+          {
+            "seed": 35509,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35509,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35510,
+            "seat": 0,
+            "payoff": 180,
+            "winner": 0
+          },
+          {
+            "seed": 35510,
+            "seat": 1,
+            "payoff": -30,
+            "winner": 0
+          },
+          {
+            "seed": 35510,
+            "seat": 2,
+            "payoff": -40,
+            "winner": 0
+          },
+          {
+            "seed": 35511,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35511,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35511,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35512,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35512,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35512,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35513,
+            "seat": 0,
+            "payoff": 30,
+            "winner": 0
+          },
+          {
+            "seed": 35513,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35513,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35514,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35514,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35514,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35515,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 2
+          },
+          {
+            "seed": 35515,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35515,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35516,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35516,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35516,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35517,
+            "seat": 0,
+            "payoff": 30,
+            "winner": 0
+          },
+          {
+            "seed": 35517,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35517,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35518,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35518,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35518,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35519,
+            "seat": 0,
+            "payoff": 30,
+            "winner": 0
+          },
+          {
+            "seed": 35519,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35519,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35520,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35520,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35520,
+            "seat": 2,
+            "payoff": 30,
+            "winner": 2
+          },
+          {
+            "seed": 35521,
+            "seat": 0,
+            "payoff": -25,
+            "winner": 1
+          },
+          {
+            "seed": 35521,
+            "seat": 1,
+            "payoff": 60,
+            "winner": 1
+          },
+          {
+            "seed": 35521,
+            "seat": 2,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35522,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35522,
+            "seat": 1,
+            "payoff": -20,
+            "winner": 0
+          },
+          {
+            "seed": 35522,
+            "seat": 2,
+            "payoff": -30,
+            "winner": 0
+          },
+          {
+            "seed": 35523,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35523,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35523,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35524,
+            "seat": 0,
+            "payoff": -120,
+            "winner": 1
+          },
+          {
+            "seed": 35524,
+            "seat": 1,
+            "payoff": 160,
+            "winner": 1
+          },
+          {
+            "seed": 35524,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35525,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35525,
+            "seat": 1,
+            "payoff": -20,
+            "winner": 0
+          },
+          {
+            "seed": 35525,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35526,
+            "seat": 0,
+            "payoff": 40,
+            "winner": 0
+          },
+          {
+            "seed": 35526,
+            "seat": 1,
+            "payoff": -30,
+            "winner": 0
+          },
+          {
+            "seed": 35526,
+            "seat": 2,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35527,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35527,
+            "seat": 1,
+            "payoff": -20,
+            "winner": 2
+          },
+          {
+            "seed": 35527,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35528,
+            "seat": 0,
+            "payoff": -30,
+            "winner": 2
+          },
+          {
+            "seed": 35528,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35528,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35529,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35529,
+            "seat": 1,
+            "payoff": -150,
+            "winner": 0
+          },
+          {
+            "seed": 35529,
+            "seat": 2,
+            "payoff": -20,
+            "winner": 0
+          },
+          {
+            "seed": 35530,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35530,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35530,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35531,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35531,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35531,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35532,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35532,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35532,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35533,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35533,
+            "seat": 1,
+            "payoff": 20,
+            "winner": 1
+          },
+          {
+            "seed": 35533,
+            "seat": 2,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35534,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35534,
+            "seat": 1,
+            "payoff": -25,
+            "winner": 2
+          },
+          {
+            "seed": 35534,
+            "seat": 2,
+            "payoff": -45,
+            "winner": 0
+          },
+          {
+            "seed": 35535,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 2
+          },
+          {
+            "seed": 35535,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35535,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35536,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35536,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35536,
+            "seat": 2,
+            "payoff": 30,
+            "winner": 2
+          },
+          {
+            "seed": 35537,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 2
+          },
+          {
+            "seed": 35537,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35537,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35538,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 2
+          },
+          {
+            "seed": 35538,
+            "seat": 1,
+            "payoff": -40,
+            "winner": 2
+          },
+          {
+            "seed": 35538,
+            "seat": 2,
+            "payoff": 120,
+            "winner": 2
+          },
+          {
+            "seed": 35539,
+            "seat": 0,
+            "payoff": -30,
+            "winner": 1
+          },
+          {
+            "seed": 35539,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35539,
+            "seat": 2,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35540,
+            "seat": 0,
+            "payoff": -140,
+            "winner": 1
+          },
+          {
+            "seed": 35540,
+            "seat": 1,
+            "payoff": 60,
+            "winner": 1
+          },
+          {
+            "seed": 35540,
+            "seat": 2,
+            "payoff": -30,
+            "winner": 1
+          },
+          {
+            "seed": 35541,
+            "seat": 0,
+            "payoff": 160,
+            "winner": 0
+          },
+          {
+            "seed": 35541,
+            "seat": 1,
+            "payoff": -75,
+            "winner": 0
+          },
+          {
+            "seed": 35541,
+            "seat": 2,
+            "payoff": -50,
+            "winner": 0
+          },
+          {
+            "seed": 35542,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35542,
+            "seat": 1,
+            "payoff": 40,
+            "winner": 1
+          },
+          {
+            "seed": 35542,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35543,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35543,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35543,
+            "seat": 2,
+            "payoff": -100,
+            "winner": 0
+          },
+          {
+            "seed": 35544,
+            "seat": 0,
+            "payoff": 150,
+            "winner": 0
+          },
+          {
+            "seed": 35544,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35544,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35545,
+            "seat": 0,
+            "payoff": -40,
+            "winner": 1
+          },
+          {
+            "seed": 35545,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35545,
+            "seat": 2,
+            "payoff": -60,
+            "winner": 1
+          },
+          {
+            "seed": 35546,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35546,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35546,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35547,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35547,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35547,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35548,
+            "seat": 0,
+            "payoff": 50,
+            "winner": 0
+          },
+          {
+            "seed": 35548,
+            "seat": 1,
+            "payoff": -20,
+            "winner": 0
+          },
+          {
+            "seed": 35548,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35549,
+            "seat": 0,
+            "payoff": 80,
+            "winner": 0
+          },
+          {
+            "seed": 35549,
+            "seat": 1,
+            "payoff": -20,
+            "winner": 0
+          },
+          {
+            "seed": 35549,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 0
+          }
+        ]
+      }
+    },
+    "planning": {
+      "checkpoint": "checkpoints/planning-cuda-resnet.pt",
+      "random": {
+        "games": 150,
+        "wins": 24,
+        "win_rate": 0.16,
+        "draws": 117,
+        "mean_payoff": 5.9,
+        "mean_winning_huxi": 18.583333333333332,
+        "mean_winning_fan": 1.5,
+        "mean_winning_amount_each": 22.5,
+        "illegal_actions": 0,
+        "hu_opportunities": 24,
+        "passed_hu": 0,
+        "reviews": [],
+        "game_results": [
+          {
+            "seed": 35000,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35000,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35000,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35001,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35001,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35001,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35002,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35002,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35002,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35003,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35003,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35003,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35004,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35004,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35004,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35005,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35005,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35005,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35006,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35006,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35006,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35007,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35007,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35007,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35008,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35008,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35008,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35009,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35009,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35009,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35010,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35010,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35010,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35011,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35011,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35011,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35012,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35012,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35012,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35013,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35013,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35013,
+            "seat": 2,
+            "payoff": 40,
+            "winner": 2
+          },
+          {
+            "seed": 35014,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35014,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35014,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35015,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35015,
+            "seat": 1,
+            "payoff": 60,
+            "winner": 1
+          },
+          {
+            "seed": 35015,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35016,
+            "seat": 0,
+            "payoff": 60,
+            "winner": 0
+          },
+          {
+            "seed": 35016,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35016,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35017,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35017,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35017,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35018,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35018,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35018,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35019,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35019,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35019,
+            "seat": 2,
+            "payoff": 150,
+            "winner": 2
+          },
+          {
+            "seed": 35020,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35020,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35020,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35021,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35021,
+            "seat": 1,
+            "payoff": 120,
+            "winner": 1
+          },
+          {
+            "seed": 35021,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35022,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35022,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35022,
+            "seat": 2,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35023,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35023,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35023,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35024,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35024,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35024,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35025,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35025,
+            "seat": 1,
+            "payoff": 40,
+            "winner": 1
+          },
+          {
+            "seed": 35025,
+            "seat": 2,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35026,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35026,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35026,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35027,
+            "seat": 0,
+            "payoff": 90,
+            "winner": 0
+          },
+          {
+            "seed": 35027,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35027,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35028,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35028,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35028,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35029,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35029,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35029,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35030,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35030,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35030,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35031,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35031,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35031,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35032,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35032,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35032,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35033,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35033,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35033,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35034,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35034,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35034,
+            "seat": 2,
+            "payoff": -25,
+            "winner": 0
+          },
+          {
+            "seed": 35035,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35035,
+            "seat": 1,
+            "payoff": 60,
+            "winner": 1
+          },
+          {
+            "seed": 35035,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35036,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35036,
+            "seat": 1,
+            "payoff": 50,
+            "winner": 1
+          },
+          {
+            "seed": 35036,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35037,
+            "seat": 0,
+            "payoff": 40,
+            "winner": 0
+          },
+          {
+            "seed": 35037,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35037,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35038,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35038,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35038,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35039,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35039,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35039,
+            "seat": 2,
+            "payoff": 30,
+            "winner": 2
+          },
+          {
+            "seed": 35040,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35040,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35040,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35041,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35041,
+            "seat": 1,
+            "payoff": 20,
+            "winner": 1
+          },
+          {
+            "seed": 35041,
+            "seat": 2,
+            "payoff": -60,
+            "winner": 1
+          },
+          {
+            "seed": 35042,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35042,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35042,
+            "seat": 2,
+            "payoff": 40,
+            "winner": 2
+          },
+          {
+            "seed": 35043,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35043,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35043,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35044,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35044,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35044,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35045,
+            "seat": 0,
+            "payoff": 50,
+            "winner": 0
+          },
+          {
+            "seed": 35045,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35045,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35046,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35046,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35046,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35047,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35047,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35047,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35048,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35048,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35048,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35049,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35049,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35049,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          }
+        ]
+      },
+      "teacher": {
+        "games": 150,
+        "wins": 20,
+        "win_rate": 0.13333333333333333,
+        "draws": 33,
+        "mean_payoff": -8.233333333333333,
+        "mean_winning_huxi": 19.6,
+        "mean_winning_fan": 1.65,
+        "mean_winning_amount_each": 31.25,
+        "illegal_actions": 0,
+        "hu_opportunities": 20,
+        "passed_hu": 0,
+        "reviews": [],
+        "game_results": [
+          {
+            "seed": 35500,
+            "seat": 0,
+            "payoff": -25,
+            "winner": 1
+          },
+          {
+            "seed": 35500,
+            "seat": 1,
+            "payoff": -200,
+            "winner": 0
+          },
+          {
+            "seed": 35500,
+            "seat": 2,
+            "payoff": -30,
+            "winner": 1
+          },
+          {
+            "seed": 35501,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35501,
+            "seat": 1,
+            "payoff": 20,
+            "winner": 1
+          },
+          {
+            "seed": 35501,
+            "seat": 2,
+            "payoff": 80,
+            "winner": 2
+          },
+          {
+            "seed": 35502,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35502,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35502,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35503,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35503,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35503,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35504,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35504,
+            "seat": 1,
+            "payoff": -25,
+            "winner": 0
+          },
+          {
+            "seed": 35504,
+            "seat": 2,
+            "payoff": -60,
+            "winner": 0
+          },
+          {
+            "seed": 35505,
+            "seat": 0,
+            "payoff": 30,
+            "winner": 0
+          },
+          {
+            "seed": 35505,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35505,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35506,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35506,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35506,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35507,
+            "seat": 0,
+            "payoff": 60,
+            "winner": 0
+          },
+          {
+            "seed": 35507,
+            "seat": 1,
+            "payoff": -20,
+            "winner": 0
+          },
+          {
+            "seed": 35507,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35508,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 2
+          },
+          {
+            "seed": 35508,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35508,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35509,
+            "seat": 0,
+            "payoff": -25,
+            "winner": 2
+          },
+          {
+            "seed": 35509,
+            "seat": 1,
+            "payoff": 90,
+            "winner": 1
+          },
+          {
+            "seed": 35509,
+            "seat": 2,
+            "payoff": -20,
+            "winner": 0
+          },
+          {
+            "seed": 35510,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35510,
+            "seat": 1,
+            "payoff": -40,
+            "winner": 0
+          },
+          {
+            "seed": 35510,
+            "seat": 2,
+            "payoff": -40,
+            "winner": 0
+          },
+          {
+            "seed": 35511,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35511,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35511,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35512,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35512,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35512,
+            "seat": 2,
+            "payoff": -60,
+            "winner": 1
+          },
+          {
+            "seed": 35513,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35513,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35513,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35514,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35514,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35514,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35515,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35515,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35515,
+            "seat": 2,
+            "payoff": -40,
+            "winner": 0
+          },
+          {
+            "seed": 35516,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35516,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35516,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35517,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35517,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35517,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35518,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35518,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35518,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35519,
+            "seat": 0,
+            "payoff": -80,
+            "winner": 2
+          },
+          {
+            "seed": 35519,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35519,
+            "seat": 2,
+            "payoff": 40,
+            "winner": 2
+          },
+          {
+            "seed": 35520,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35520,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35520,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35521,
+            "seat": 0,
+            "payoff": -25,
+            "winner": 1
+          },
+          {
+            "seed": 35521,
+            "seat": 1,
+            "payoff": -20,
+            "winner": 0
+          },
+          {
+            "seed": 35521,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35522,
+            "seat": 0,
+            "payoff": 20,
+            "winner": 0
+          },
+          {
+            "seed": 35522,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35522,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35523,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35523,
+            "seat": 1,
+            "payoff": -100,
+            "winner": 2
+          },
+          {
+            "seed": 35523,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35524,
+            "seat": 0,
+            "payoff": -100,
+            "winner": 1
+          },
+          {
+            "seed": 35524,
+            "seat": 1,
+            "payoff": 160,
+            "winner": 1
+          },
+          {
+            "seed": 35524,
+            "seat": 2,
+            "payoff": -20,
+            "winner": 0
+          },
+          {
+            "seed": 35525,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35525,
+            "seat": 1,
+            "payoff": -20,
+            "winner": 0
+          },
+          {
+            "seed": 35525,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35526,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35526,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35526,
+            "seat": 2,
+            "payoff": -25,
+            "winner": 0
+          },
+          {
+            "seed": 35527,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35527,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35527,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35528,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35528,
+            "seat": 1,
+            "payoff": 120,
+            "winner": 1
+          },
+          {
+            "seed": 35528,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35529,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35529,
+            "seat": 1,
+            "payoff": -25,
+            "winner": 0
+          },
+          {
+            "seed": 35529,
+            "seat": 2,
+            "payoff": -30,
+            "winner": 1
+          },
+          {
+            "seed": 35530,
+            "seat": 0,
+            "payoff": -75,
+            "winner": 2
+          },
+          {
+            "seed": 35530,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35530,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35531,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35531,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35531,
+            "seat": 2,
+            "payoff": 20,
+            "winner": 2
+          },
+          {
+            "seed": 35532,
+            "seat": 0,
+            "payoff": 30,
+            "winner": 0
+          },
+          {
+            "seed": 35532,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35532,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35533,
+            "seat": 0,
+            "payoff": -40,
+            "winner": 1
+          },
+          {
+            "seed": 35533,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35533,
+            "seat": 2,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35534,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35534,
+            "seat": 1,
+            "payoff": -30,
+            "winner": 0
+          },
+          {
+            "seed": 35534,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35535,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 2
+          },
+          {
+            "seed": 35535,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35535,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35536,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35536,
+            "seat": 1,
+            "payoff": 280,
+            "winner": 1
+          },
+          {
+            "seed": 35536,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35537,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 2
+          },
+          {
+            "seed": 35537,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 2
+          },
+          {
+            "seed": 35537,
+            "seat": 2,
+            "payoff": 60,
+            "winner": 2
+          },
+          {
+            "seed": 35538,
+            "seat": 0,
+            "payoff": -40,
+            "winner": 2
+          },
+          {
+            "seed": 35538,
+            "seat": 1,
+            "payoff": -40,
+            "winner": 2
+          },
+          {
+            "seed": 35538,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35539,
+            "seat": 0,
+            "payoff": -30,
+            "winner": 1
+          },
+          {
+            "seed": 35539,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35539,
+            "seat": 2,
+            "payoff": -30,
+            "winner": 1
+          },
+          {
+            "seed": 35540,
+            "seat": 0,
+            "payoff": -140,
+            "winner": 1
+          },
+          {
+            "seed": 35540,
+            "seat": 1,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35540,
+            "seat": 2,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35541,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35541,
+            "seat": 1,
+            "payoff": -20,
+            "winner": 2
+          },
+          {
+            "seed": 35541,
+            "seat": 2,
+            "payoff": -50,
+            "winner": 0
+          },
+          {
+            "seed": 35542,
+            "seat": 0,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35542,
+            "seat": 1,
+            "payoff": 30,
+            "winner": 1
+          },
+          {
+            "seed": 35542,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35543,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35543,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35543,
+            "seat": 2,
+            "payoff": -60,
+            "winner": 0
+          },
+          {
+            "seed": 35544,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35544,
+            "seat": 1,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35544,
+            "seat": 2,
+            "payoff": 0,
+            "winner": null
+          },
+          {
+            "seed": 35545,
+            "seat": 0,
+            "payoff": -50,
+            "winner": 1
+          },
+          {
+            "seed": 35545,
+            "seat": 1,
+            "payoff": 60,
+            "winner": 1
+          },
+          {
+            "seed": 35545,
+            "seat": 2,
+            "payoff": -30,
+            "winner": 1
+          },
+          {
+            "seed": 35546,
+            "seat": 0,
+            "payoff": -10,
+            "winner": 1
+          },
+          {
+            "seed": 35546,
+            "seat": 1,
+            "payoff": 40,
+            "winner": 1
+          },
+          {
+            "seed": 35546,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 1
+          },
+          {
+            "seed": 35547,
+            "seat": 0,
+            "payoff": -30,
+            "winner": 1
+          },
+          {
+            "seed": 35547,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35547,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35548,
+            "seat": 0,
+            "payoff": -15,
+            "winner": 2
+          },
+          {
+            "seed": 35548,
+            "seat": 1,
+            "payoff": -20,
+            "winner": 0
+          },
+          {
+            "seed": 35548,
+            "seat": 2,
+            "payoff": -15,
+            "winner": 0
+          },
+          {
+            "seed": 35549,
+            "seat": 0,
+            "payoff": -20,
+            "winner": 1
+          },
+          {
+            "seed": 35549,
+            "seat": 1,
+            "payoff": -10,
+            "winner": 0
+          },
+          {
+            "seed": 35549,
+            "seat": 2,
+            "payoff": -10,
+            "winner": 0
+          }
+        ]
+      }
+    }
+  },
+  "paired": {
+    "random": {
+      "seed_clusters": 50,
+      "mean_payoff_difference": -12.566666666666668,
+      "paired_bootstrap_95_percent": [
+        -18.433333333333334,
+        -7.0
+      ],
+      "unit": "settlement currency per game",
+      "seats_clustered_by_seed": true
+    },
+    "teacher": {
+      "seed_clusters": 50,
+      "mean_payoff_difference": -1.9000000000000012,
+      "paired_bootstrap_95_percent": [
+        -11.334166666666665,
+        7.966666666666665
+      ],
+      "unit": "settlement currency per game",
+      "seats_clustered_by_seed": true
+    }
+  }
+}

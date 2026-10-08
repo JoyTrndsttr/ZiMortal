@@ -176,6 +176,7 @@ def build_game(seed=118, dealer=0, policy="random"):
             "huxi_warmup",
             "boundary",
             "boundary_warmup",
+            "planning",
         ):
             raise ValueError("unknown policy")
         filename = {
@@ -244,10 +245,68 @@ def build_game(seed=118, dealer=0, policy="random"):
     }
 
 
+def replay_frame(engine, state, frame):
+    from zimortal.engine import Action, ActionType, SourceType
+
+    a = frame["action"]
+    if a is None:
+        raise ValueError("规则未决状态，无法继续重放")
+    # The UI annotates DRAW with its revealed tile; the engine DRAW action
+    # intentionally has tile=None and obtains it from its own replayed wall.
+    action = Action(
+        ActionType(a["kind"]),
+        a["player"],
+        None if a["kind"] == "draw" else a["tile"],
+        tuple(a["chi"]),
+        tuple(tuple(g) for g in a["bi"]),
+        a["source_player"],
+        SourceType(a["source_type"]) if a["source_type"] else None,
+        a["forced"],
+    )
+    return engine.step(state, action)
+
+
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         url = urlparse(self.path)
-        if url.path == "/api/game":
+        if url.path == "/api/completion":
+            from zimortal.analysis.completion import SearchLimit, analyze_decision
+
+            try:
+                args = parse_qs(url.query)
+                seed = int(args.get("seed", ["118"])[0])
+                dealer = int(args.get("dealer", ["0"])[0])
+                step = int(args.get("step", ["0"])[0])
+                if not -(2**31) <= seed < 2**31 or dealer not in range(3) or not 0 <= step <= 1000:
+                    raise ValueError("seed/dealer/step out of range")
+                payload = build_game(seed, dealer, args.get("policy", ["random"])[0])
+                if step >= len(payload["frames"]):
+                    raise ValueError("step out of game range")
+                engine = RuleEngine()
+                state = engine.new_game(seed, dealer)
+                for frame in payload["frames"][1 : step + 1]:
+                    state = replay_frame(engine, state, frame)
+                actions = engine.legal_actions(state)
+                if not actions:
+                    raise ValueError("对局已结束，无未来进张")
+                result = analyze_decision(
+                    engine.observation(state, actions[0].player), max_nodes=2000
+                ).json()
+                result["player"] = actions[0].player
+            except SearchLimit:
+                result = {
+                    "status": "search_limited",
+                    "distance": None,
+                    "message": "搜索超出预算，未生成精确向听数",
+                }
+            except (ValueError, RuleClarificationRequired) as exc:
+                result = {"status": "resolve_pending", "message": str(exc)}
+            self.respond(
+                200,
+                json.dumps(result, ensure_ascii=False).encode(),
+                "application/json; charset=utf-8",
+            )
+        elif url.path == "/api/game":
             try:
                 args = parse_qs(url.query)
                 seed = int(args.get("seed", ["118"])[0])
