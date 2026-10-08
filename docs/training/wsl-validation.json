@@ -1,0 +1,28 @@
+{
+  "cpu_benchmark": "planning-cpu-benchmark.json",
+  "gpu_training": "planning-cuda-pilot.json",
+  "cpu_tests": {
+    "passed": 199,
+    "cuda_skipped": 1
+  },
+  "cuda_tests": {
+    "passed": 200
+  },
+  "gpu_recovery": {
+    "start_epoch": 12,
+    "completed_epoch": 13,
+    "formal_checkpoint_preserved": true
+  },
+  "wsl_init_scope_oom_kill_after": 0,
+  "isolated_service_memory_max_gib": 8,
+  "web_hu_check": {
+    "seed": 36000,
+    "dealer": 0,
+    "policy": "planning",
+    "step": 76,
+    "distance": 0,
+    "huxi": 22,
+    "amount_each": 20
+  },
+  "interpretation": "runtime stability verified in this workload; strategy payoff did not improve"
+}

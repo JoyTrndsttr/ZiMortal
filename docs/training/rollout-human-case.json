@@ -1,0 +1,26 @@
+{
+  "seed": 31000,
+  "dealer": 1,
+  "step": 34,
+  "rollouts_per_action": 128,
+  "actions": [
+    "chi",
+    "pass"
+  ],
+  "q_cash": [
+    8.0859375,
+    32.3046875
+  ],
+  "standard_errors": [
+    2.092915124526835,
+    5.911581521625958
+  ],
+  "soft_target": [
+    0.08151975597471893,
+    0.9184802440252811
+  ],
+  "sampling_attempts": 74960,
+  "not_a_training_root": true,
+  "continuation": "checkpoints/huxi-resnet.pt",
+  "posterior": "uniform history-consistent hidden assignments, not policy-weighted Bayesian belief"
+}

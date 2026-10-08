@@ -110,3 +110,21 @@ fix(engine): 禁止吃后无法出牌的方案
 - 第六轮入口 `zimortal.training.boundary`，报告见 `docs/training/boundary.md`。
 
 - 第六轮胡息预测改善但收益未证明提升，当前收益基线继续使用第五轮 `huxi`；不得把 `boundary` 描述为更强策略。
+
+## 第七轮规划与策略审查
+
+- 用户要求按精确completion distance、最终净收益EV、rollout teacher、belief的顺序推进。
+- “板”（一对大字吃小字）通常低优先级；足胡且明确接近听牌或抢速时可能合理，这是策略倾向，不是规则禁令。
+- solver必须明确来源和乐观口径，复用合法进张／出牌规则；搜索未完成不能产生精确标签。
+- rollout只接受Observation，采样世界必须满足公开历史；不许读取真实隐藏状态给搜索老师。
+- value金额单位和冻结后续策略明确，MC估计不等于最优EV；记录逐动作Q、不确定性和soft target。
+- belief的真实隐藏牌只作为训练标签，检查物理不可能类别，对照未知牌均匀分配基线的NLL与accuracy。
+- 详见 `docs/training/planning.md` 和 `docs/strategy/huxi-and-speed.md`。
+
+## WSL训练资源保护
+
+- 禁止逐行访问NPZ整数组；成员只读取一次，切片共享backing array。
+- 训练优先独立systemd用户服务，默认MemoryMax=8G、MemorySwapMax=1G；不通过增大WSL内存掩盖泄漏。
+- CPU环境`.venv`保留；CUDA使用独立`.venv-cuda`，训练启动须记录实际device、PyTorch及GPU。
+- 每轮原子保存模型、优化器、随机状态及数据校验值；恢复前验证数据与父模型未变化。
+- WSL故障导致进程消失时不得声称仍在训练，先检查服务、日志与checkpoint。

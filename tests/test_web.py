@@ -102,3 +102,19 @@ def test_last_actions_include_revealed_draw_tile():
     assert frame["players"][1]["last_action"]["kind"] == "draw"
     assert frame["players"][1]["last_action"]["tile"] == 15
     assert trace["frames"][7]["players"][1]["last_action"] == frame["players"][1]["last_action"]
+
+
+def test_analysis_replays_ui_annotated_draws():
+    from zimortal.engine import RuleEngine
+    from zimortal.web.server import replay_frame, snapshot
+
+    engine = RuleEngine()
+    trace = json.loads(json.dumps(build_game(42)))
+    state = engine.new_game(42)
+    for frame in trace["frames"][1:]:
+        state = replay_frame(engine, state, frame)
+        state.validate()
+        actual = json.loads(json.dumps(snapshot(engine, state)))
+        for key in ("remaining", "pending", "river", "legal", "phase", "terminal", "winner"):
+            assert actual[key] == frame[key]
+        assert [p["hand"] for p in actual["players"]] == [p["hand"] for p in frame["players"]]
