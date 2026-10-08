@@ -210,7 +210,14 @@ def datasets(directory):
             if digest(path) != meta["sha256"]:
                 raise ValueError("dataset changed")
             with np.load(path, allow_pickle=False) as data:
-                rows.append({k: data[k] for k in data.files})
+                # Adaptive shards also retain raw MC evidence. Never load it
+                # into the training corpus; only these compact targets matter.
+                rows.append(
+                    {
+                        k: data[k]
+                        for k in ("x", "actions", "q", "se", "paired_se", "soft", "reference")
+                    }
+                )
         splits.append(rows)
     return *splits, manifest
 
@@ -335,6 +342,16 @@ def train(args):
     torch.manual_seed(801)
     rng = random.Random(801)
     train_rows, valid, manifest = datasets(args.data)
+    if manifest.get("pipeline") == "active":
+        from .active import training_gate
+
+        training_gate(manifest, manifest["config"]["target"], manifest["config"]["validation"])
+        audit_path = Path(args.data) / "audit.json"
+        audited = json.loads(audit_path.read_text())
+        if not audited.get("passed") or audited["manifest_sha256"] != digest(
+            Path(args.data) / "manifest.json"
+        ):
+            raise ValueError("active corpus has no matching successful audit")
     device = training_device(args.device)
     selection = getattr(args, "selection", "policy_regret")
     parent = load_model(args.parent)
