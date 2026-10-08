@@ -42,6 +42,7 @@ class Meld:
     tiles: tuple[int, ...]
 
     def __post_init__(self):
+        object.__setattr__(self, "tiles", tuple(self.tiles))
         for tile in self.tiles:
             validate(tile)
         size = (
@@ -72,6 +73,10 @@ class Action:
     source_player: int | None = None
     source_type: SourceType | None = None
     forced: bool = False
+
+    def __post_init__(self):
+        object.__setattr__(self, "chi", tuple(self.chi))
+        object.__setattr__(self, "bi", tuple(tuple(group) for group in self.bi))
 
 
 @dataclass
@@ -153,7 +158,29 @@ class GameState:
     def clone(self):
         import copy
 
-        return copy.deepcopy(self)
+        # Actions, melds and pending tiles are immutable. Copy their containers
+        # while keeping every mutable hand, pass set and settlement isolated.
+        out = copy.copy(self)
+        out.players = [
+            PlayerState(
+                list(p.hand),
+                list(p.melds),
+                set(p.passed_peng),
+                set(p.passed_chi),
+                set(p.kans),
+                p.hu_disabled,
+                p.quad_count,
+                p.opening_double_ti_pending,
+            )
+            for p in self.players
+        ]
+        out.deck = list(self.deck)
+        out.passed = set(self.passed)
+        out.hu_passed = set(self.hu_passed)
+        out.history = list(self.history)
+        out.river = list(self.river)
+        out.settlement = copy.deepcopy(self.settlement)
+        return out
 
     def serialize(self) -> str:
         import json

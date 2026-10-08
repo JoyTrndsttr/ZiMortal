@@ -72,3 +72,6 @@ Early-stage research and engineering project. The first priority is correctness 
 第七轮试验加入[精确进张距离、现金rollout与belief](docs/training/planning.md)，以及[WSL训练隔离与断点恢复](docs/training/wsl.md)。收益基线仍为第五轮，试验模型须经独立评估。
 
 第八轮采用[无人工牌谱的模拟现金Q训练](docs/training/cashq.md)。网页 `policy=cashq` 展示实验模型每个合法动作的净收益预测与成员分歧；它们是模拟策略下的估计，不能视为精确EV或校准置信区间。
+
+下一阶段启动[主动状态挖掘与自适应rollout](docs/training/active.md)，优先高分歧与关键规则状态，
+依据共同粒子的收益差区间停止；至少5000个合格训练根后才训练下一代实验模型。

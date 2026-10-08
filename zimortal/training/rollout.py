@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from zimortal.belief.sampling import sample_world
-from zimortal.engine import RuleEngine
+from zimortal.engine import RuleClarificationRequired, RuleEngine
 
 from .runtime import choose, choose_batch
 
@@ -20,6 +20,7 @@ class RolloutTargets:
     rollouts_per_action: int
     sampling_attempts: int
     paired_standard_errors: tuple = ()
+    outcomes_cash: tuple = ()
 
 
 def soft_target(values, temperature):
@@ -41,22 +42,31 @@ def teacher(
     max_attempts=2000,
     batched=False,
     reference_index=0,
+    particle_offset=0,
+    world_sampler=None,
+    keep_outcomes=False,
 ):
     if rollouts < 2 or not obs.legal_actions:
         raise ValueError("two or more rollouts and legal actions required")
     if not 0 <= reference_index < len(obs.legal_actions):
         raise ValueError("invalid reference action")
     outcomes = [[] for _ in obs.legal_actions]
-    worlds, candidates = [], []
+    worlds, candidates, roots = [], [], []
     attempts = 0
     engine = RuleEngine()
     for i in range(rollouts):
-        world, used = sample_world(obs, seed + i * 104729, max_attempts)
+        particle_seed = seed + (particle_offset + i) * 104729
+        world, used = (
+            world_sampler.sample(particle_seed, max_attempts)
+            if world_sampler is not None
+            else sample_world(obs, particle_seed, max_attempts)
+        )
         attempts += used
+        roots.append(world)
         # Same hidden particle and random stream for all candidate actions.
         for j, action in enumerate(obs.legal_actions):
             state = engine.step(world, action)
-            rng = random.Random(seed + i)
+            rng = random.Random(seed + particle_offset + i)
             if batched and model is not None:
                 worlds.append(state)
                 candidates.append(j)
@@ -64,7 +74,16 @@ def teacher(
             for _ in range(1000):
                 if state.terminal:
                     break
-                acts = engine.legal_actions(state)
+                try:
+                    acts = engine.legal_actions(state)
+                except RuleClarificationRequired as exc:
+                    exc.rollout_context = {
+                        "particle": particle_offset + i,
+                        "action_index": j,
+                        "root_world": world.serialize(),
+                        "state": state.serialize(),
+                    }
+                    raise
                 visible = engine.observation(state, acts[0].player)
                 state = engine.step(
                     state, choose(visible, rng, model, policy="model" if model else "teacher")
@@ -81,7 +100,16 @@ def teacher(
                 if state.terminal:
                     continue
                 active = True
-                acts = engine.legal_actions(state)
+                try:
+                    acts = engine.legal_actions(state)
+                except RuleClarificationRequired as exc:
+                    exc.rollout_context = {
+                        "particle": particle_offset + index // len(obs.legal_actions),
+                        "action_index": candidates[index],
+                        "root_world": roots[index // len(obs.legal_actions)].serialize(),
+                        "state": state.serialize(),
+                    }
+                    raise
                 if len(acts) == 1:
                     worlds[index] = engine.step(state, acts[0])
                 else:
@@ -105,4 +133,5 @@ def teacher(
         )
         for x in outcomes
     )
-    return RolloutTargets(q, se, soft_target(q, temperature), rollouts, attempts, paired)
+    raw = tuple(tuple(x[i] for x in outcomes) for i in range(rollouts)) if keep_outcomes else ()
+    return RolloutTargets(q, se, soft_target(q, temperature), rollouts, attempts, paired, raw)

@@ -1,0 +1,118 @@
+{
+  "smoke": {
+    "status": "smoke_complete",
+    "target_training_roots": 8,
+    "target_validation_roots": 2,
+    "qualified": {},
+    "training_strata": {},
+    "quotas": {},
+    "queue": {
+      "budget_exhausted": 10,
+      "refine": 2,
+      "screen": 17
+    },
+    "qualified_particles": 0,
+    "qualified_terminal_rollouts": 0,
+    "confidence_method": "alpha-spent simultaneous empirical Bernstein",
+    "tie_cash": 1,
+    "training_started": false,
+    "timestamp": 1791439570.7175336,
+    "process_id": 114449,
+    "mined_games": 5,
+    "refinement_particles": 10880,
+    "refinement_terminal_rollouts": 38656,
+    "completed_tasks": 7,
+    "elapsed_seconds": 47.950366438000856
+  },
+  "smoke_configuration_sha256": "23f0fddcbbe84575df757658f3c3a48539360b03cb759af01f76914fffe24239",
+  "conditional_sampler_examples": [
+    {
+      "seed": 38065,
+      "dealer": 2,
+      "zero_based_step": 10,
+      "attempts": 1,
+      "seconds": 0.006846259000667487,
+      "observation_equal": true
+    },
+    {
+      "seed": 38065,
+      "dealer": 2,
+      "zero_based_step": 40,
+      "attempts": 1,
+      "seconds": 0.0023215780001919484,
+      "observation_equal": true
+    },
+    {
+      "seed": 38065,
+      "dealer": 2,
+      "zero_based_step": 70,
+      "attempts": 2,
+      "seconds": 0.0037019430001237197,
+      "observation_equal": true
+    }
+  ],
+  "clone_benchmark": {
+    "deepcopy_1000_seconds": 0.4837610530012171,
+    "clone_1000_seconds": 0.0035099140004604124
+  },
+  "clone_speed_is_not_end_to_end_speed": true,
+  "cpu_tests": {
+    "passed": 223,
+    "skipped": 1
+  },
+  "cuda_tests": {
+    "passed": 224,
+    "skipped": 0
+  },
+  "training_completed": false,
+  "qualified_5k_not_completed": true,
+  "champion": "huxi",
+  "certification": "alpha-spent empirical Bernstein, top_set, tie_cash=1",
+  "smoke_can_never_train": true,
+  "restart_continued_saved_queue": true,
+  "first_run_elapsed_seconds": 187.40891495300093,
+  "first_run_refinement_particles": 9728,
+  "first_run_terminal_rollouts": 30720,
+  "resume_added_particles": 1152,
+  "real_shards_intervals_and_hashes_recomputed": 12,
+  "smoke_peak_memory_observed_bytes": 820862976,
+  "web_checks": [
+    {
+      "seed": 118,
+      "dealer": 0,
+      "policy": "random",
+      "http_status": 200,
+      "fields": [
+        "seed",
+        "dealer",
+        "policy",
+        "player_policies",
+        "frames",
+        "replay_verified",
+        "actions"
+      ],
+      "frames": 75
+    },
+    {
+      "seed": 44501,
+      "dealer": 2,
+      "policy": "cashq",
+      "http_status": 200,
+      "fields": [
+        "seed",
+        "dealer",
+        "policy",
+        "player_policies",
+        "frames",
+        "replay_verified",
+        "actions"
+      ],
+      "frames": 69
+    }
+  ],
+  "gpu": {
+    "torch": "2.7.1+cu128",
+    "device": "NVIDIA GeForce RTX 5080",
+    "cuda_available": true
+  }
+}
