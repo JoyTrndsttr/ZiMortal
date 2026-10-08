@@ -118,3 +118,20 @@ def test_analysis_replays_ui_annotated_draws():
         for key in ("remaining", "pending", "river", "legal", "phase", "terminal", "winner"):
             assert actual[key] == frame[key]
         assert [p["hand"] for p in actual["players"]] == [p["hand"] for p in frame["players"]]
+
+
+def test_displayed_chi_places_offered_tile_last_and_keeps_bi_separate():
+    from zimortal.engine import Action, ActionType, Meld, MeldType, PlayerState
+    from zimortal.web.server import displayed_melds
+
+    chi = (10, 11, 12)
+    bi = (10, 10, 0)
+    player = PlayerState([], melds=[Meld(MeldType.CHI, chi), Meld(MeldType.CHI, bi)])
+    history = [Action(ActionType.CHI, 2, 10, chi=chi, bi=(bi,))]
+    main, extra = displayed_melds(player, history, 2)
+    assert main["display_tiles"] == [11, 12, 10]
+    assert main["claimed_tile"] == 10
+    assert main["tiles"] == chi
+    assert extra["claimed_tile"] is None
+    assert extra["display_tiles"] == list(bi)
+    assert player.melds[0].tiles == chi

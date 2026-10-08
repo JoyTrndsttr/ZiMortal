@@ -723,3 +723,39 @@ def test_low_huxi_structural_analysis_does_not_lower_legal_threshold():
     )
     assert structural and max(sum(meld_huxi(m) for m in g) for g in structural) < 15
     assert not evaluate_hand(hand, melds, quad_requires_pair=True, protected=(17,))
+
+
+def test_single_pair_wait_can_also_complete_a_different_chi():
+    from zimortal.engine import Meld, MeldType, evaluate_hand
+
+    groups = [
+        Meld(MeldType.PAO, (19,) * 4),
+        Meld(MeldType.CHI, (10, 11, 12)),
+        Meld(MeldType.CHI, (10, 11, 12)),
+        Meld(MeldType.CHI, (1, 6, 9)),
+        Meld(MeldType.CHI, (4, 5, 6)),
+    ]
+    hand = [0, 0, 10, 11]  # 一一壹＋贰：钓贰，也可胡叁。
+    wins = {t for t in (11, 12) if evaluate_hand(hand + [t], groups, quad_requires_pair=True)}
+    assert wins == {11, 12}
+    alternate = evaluate_hand(hand + [12], groups, quad_requires_pair=True)
+    assert any(Meld(MeldType.PAIR, (0, 0)) in structure for structure in alternate)
+
+
+def test_seven_consecutive_small_tiles_wait_on_one_four_seven_with_a_quad():
+    from zimortal.engine import Meld, MeldType, evaluate_hand
+
+    groups = [
+        Meld(MeldType.PAO, (19,) * 4),
+        Meld(MeldType.CHI, (10, 11, 12)),
+        Meld(MeldType.CHI, (10, 11, 12)),
+        Meld(MeldType.CHI, (1, 6, 9)),
+    ]
+    hand = list(range(7))
+    possible = [
+        t
+        for t in range(20)
+        if hand.count(t) + sum(g.tiles.count(t) for g in groups) < 4
+        and evaluate_hand(hand + [t], groups, quad_requires_pair=True)
+    ]
+    assert possible == [0, 3, 6]
