@@ -1,0 +1,145 @@
+{
+  "baseline": {
+    "status": "generating",
+    "target_training_roots": 5000,
+    "target_validation_roots": 500,
+    "qualified": {
+      "train": 2
+    },
+    "training_strata": {
+      "chi_bi": 1,
+      "hu_pass": 1
+    },
+    "quotas": {
+      "chi_bi": 1000,
+      "peng_pass": 500,
+      "hu_pass": 200,
+      "fan_boundary": 750,
+      "late": 1500
+    },
+    "queue": {
+      "qualified": 2,
+      "refine": 30,
+      "refine_running": 3,
+      "sampling_failed": 1
+    },
+    "qualified_particles": 65792,
+    "qualified_terminal_rollouts": 131584,
+    "confidence_method": "alpha-spent simultaneous empirical Bernstein",
+    "tie_cash": 1,
+    "training_started": false,
+    "timestamp": 1791448088.846639,
+    "process_id": 118289,
+    "mined_games": 6,
+    "refinement_particles": 590848,
+    "refinement_terminal_rollouts": 2344960
+  },
+  "first_smoke": {
+    "status": "smoke_complete",
+    "target_training_roots": 5000,
+    "target_validation_roots": 500,
+    "qualified": {
+      "train": 2
+    },
+    "training_strata": {
+      "chi_bi": 1,
+      "hu_pass": 1
+    },
+    "quotas": {
+      "chi_bi": 1000,
+      "peng_pass": 500,
+      "hu_pass": 200,
+      "fan_boundary": 750,
+      "late": 1500
+    },
+    "queue": {
+      "deferred": 33,
+      "qualified": 2,
+      "refine": 9,
+      "sampling_failed": 2,
+      "screen": 240
+    },
+    "qualified_particles": 65792,
+    "qualified_terminal_rollouts": 131584,
+    "confidence_method": "alpha-spent simultaneous empirical Bernstein",
+    "tie_cash": 1,
+    "training_started": false,
+    "timestamp": 1791448513.1458979,
+    "process_id": 196209,
+    "mined_games": 42,
+    "refinement_particles": 600192,
+    "refinement_terminal_rollouts": 2367744,
+    "scheduler": {
+      "source_sha256": "401dd9776f982ee30e376fce4a4ecf1e397dfdb1005da82950dbb395a439730c",
+      "source": "/home/wangke/project/ZiMortal/zimortal/training/active_schedule.py",
+      "fresh_limit": 1024,
+      "deep_limit": 2048,
+      "candidate_low_water": 256,
+      "mine_every_seconds": 2,
+      "max_deep_workers": 1,
+      "workers": 3
+    },
+    "completed_tasks": 38,
+    "elapsed_seconds": 110.52712860300016
+  },
+  "final_smoke": {
+    "status": "smoke_complete",
+    "target_training_roots": 5000,
+    "target_validation_roots": 500,
+    "qualified": {
+      "train": 2
+    },
+    "training_strata": {
+      "chi_bi": 1,
+      "hu_pass": 1
+    },
+    "quotas": {
+      "chi_bi": 1000,
+      "peng_pass": 500,
+      "hu_pass": 200,
+      "fan_boundary": 750,
+      "late": 1500
+    },
+    "queue": {
+      "deferred": 35,
+      "qualified": 2,
+      "refine": 11,
+      "sampling_failed": 2,
+      "screen": 244
+    },
+    "qualified_particles": 65792,
+    "qualified_terminal_rollouts": 131584,
+    "confidence_method": "alpha-spent simultaneous empirical Bernstein",
+    "tie_cash": 1,
+    "training_started": false,
+    "timestamp": 1791448768.9572546,
+    "process_id": 199311,
+    "mined_games": 43,
+    "refinement_particles": 604544,
+    "refinement_terminal_rollouts": 2378496,
+    "scheduler": {
+      "source_sha256": "06c15d100ccc5d262ed66bd3fc9f01d0060298b5b82718acf646fa748aa4afdb",
+      "source": "/home/wangke/project/ZiMortal/zimortal/training/active_schedule.py",
+      "fresh_limit": 1024,
+      "deep_limit": 2048,
+      "candidate_low_water": 256,
+      "mine_every_seconds": 2,
+      "max_deep_workers": 1,
+      "workers": 3
+    },
+    "completed_tasks": 8,
+    "elapsed_seconds": 23.3174857840022
+  },
+  "all_original_particle_prefixes_equal": 36,
+  "original_confidence_allocations_preserved": 36,
+  "qualified_npz_files_byte_identical": 2,
+  "producer_configuration_byte_identical": true,
+  "cpu_tests": {
+    "passed": 234,
+    "skipped": 1
+  },
+  "confidence_and_training_gate_unchanged": true,
+  "coverage_speedup_is_not_certification_speedup": true,
+  "production_workers": 5,
+  "production_deep_workers_max": 1
+}
