@@ -1,0 +1,125 @@
+{
+  "seed": 44501,
+  "dealer": 2,
+  "decision_step": 5,
+  "player": 3,
+  "training_use": false,
+  "continuation": "frozen huxi",
+  "rollouts_per_action": 64,
+  "analysis": {
+    "player": 2,
+    "changed_from_parent": false,
+    "margin_cash": 20.0,
+    "scope": "模拟后续策略下的净收益预测；模型分歧不是校准置信区间",
+    "candidates": [
+      {
+        "action": {
+          "kind": "chi",
+          "player": 2,
+          "tile": 10,
+          "chi": [
+            0,
+            0,
+            10
+          ],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "discard",
+          "forced": false
+        },
+        "cash_q": 3.3224377632141113,
+        "model_disagreement": 7.146862030029297,
+        "parent": true,
+        "selected": true
+      },
+      {
+        "action": {
+          "kind": "chi",
+          "player": 2,
+          "tile": 10,
+          "chi": [
+            10,
+            11,
+            12
+          ],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "discard",
+          "forced": false
+        },
+        "cash_q": -3.1407642364501953,
+        "model_disagreement": 6.104715347290039,
+        "parent": false,
+        "selected": false
+      },
+      {
+        "action": {
+          "kind": "pass",
+          "player": 2,
+          "tile": 10,
+          "chi": [],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "discard",
+          "forced": false
+        },
+        "cash_q": -1.168812870979309,
+        "model_disagreement": 5.441164493560791,
+        "parent": false,
+        "selected": false
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "action": {
+        "kind": "chi",
+        "player": 2,
+        "tile": 10,
+        "chi": [
+          0,
+          0,
+          10
+        ],
+        "bi": [],
+        "source_player": 1,
+        "source_type": "discard",
+        "forced": false
+      },
+      "mc_cash_q": -7.96875,
+      "paired_se_cash": 0.0
+    },
+    {
+      "action": {
+        "kind": "chi",
+        "player": 2,
+        "tile": 10,
+        "chi": [
+          10,
+          11,
+          12
+        ],
+        "bi": [],
+        "source_player": 1,
+        "source_type": "discard",
+        "forced": false
+      },
+      "mc_cash_q": -3.125,
+      "paired_se_cash": 6.172102605306923
+    },
+    {
+      "action": {
+        "kind": "pass",
+        "player": 2,
+        "tile": 10,
+        "chi": [],
+        "bi": [],
+        "source_player": 1,
+        "source_type": "discard",
+        "forced": false
+      },
+      "mc_cash_q": -12.8125,
+      "paired_se_cash": 7.314987155038143
+    }
+  ]
+}

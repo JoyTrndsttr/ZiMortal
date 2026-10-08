@@ -164,6 +164,45 @@ def explain(action, before, after):
     return "碰可选择放弃，优先于吃；碰后按出牌义务继续。"
 
 
+def cashq_analysis(engine, state, model):
+    if model is None or model.architecture != "cashq" or state.terminal:
+        return None
+    actions = engine.legal_actions(state)
+    if len(actions) < 2:
+        return None
+    import numpy as np
+    import torch
+
+    from zimortal.model.encoding import encode_action, encode_observation
+
+    obs = engine.observation(state, actions[0].player)
+    x = torch.from_numpy(encode_observation(obs, "huxi")[None])
+    a = torch.from_numpy(np.stack([encode_action(t, obs.player) for t in actions])[None])
+    mask = torch.ones(a.shape[:2], dtype=torch.bool)
+    with torch.inference_mode():
+        values, original = model.forward_q(x, a, mask)
+        selected = int(model(x, a, mask)[0].argmax())
+        baseline = int(original[0].argmax())
+        mean = values[0].mean(-1) * 100
+        deviation = values[0].std(-1) * 100
+    return {
+        "player": obs.player,
+        "changed_from_parent": selected != baseline,
+        "margin_cash": float(model.margin_cash),
+        "scope": "模拟后续策略下的净收益预测；模型分歧不是校准置信区间",
+        "candidates": [
+            {
+                "action": asdict(action),
+                "cash_q": float(mean[i]),
+                "model_disagreement": float(deviation[i]),
+                "parent": i == baseline,
+                "selected": i == selected,
+            }
+            for i, action in enumerate(actions)
+        ],
+    }
+
+
 def build_game(seed=118, dealer=0, policy="random"):
     model = None
     if policy != "random":
@@ -177,11 +216,15 @@ def build_game(seed=118, dealer=0, policy="random"):
             "boundary",
             "boundary_warmup",
             "planning",
+            "cashq",
+            "cashq_rmse",
         ):
             raise ValueError("unknown policy")
         filename = {
             "huxi_warmup": "huxi-warmup.pt",
             "boundary_warmup": "boundary-calibrated.pt",
+            "cashq": "cashq-regret.gated.pt",
+            "cashq_rmse": "cashq-resnet.gated.pt",
         }.get(policy, f"{policy}-resnet.pt")
         checkpoint = Path(__file__).resolve().parents[2] / "checkpoints" / filename
         if not checkpoint.is_file():
@@ -204,6 +247,7 @@ def build_game(seed=118, dealer=0, policy="random"):
             "action": None,
             "note": "发牌完成，先处理起手提与庄家天胡。",
             "verified": True,
+            "cashq_analysis": cashq_analysis(engine, initial, model),
         }
     ]
     for index in range(1, 1001):
@@ -219,6 +263,7 @@ def build_game(seed=118, dealer=0, policy="random"):
         state = engine.step(state, action)
         state.validate()
         frame = snapshot(engine, state, include_huxi=policy != "random")
+        frame["cashq_analysis"] = cashq_analysis(engine, state, model)
         shown = asdict(action)
         if action.kind == A.DRAW and state.pending:
             shown["tile"] = state.pending.tile

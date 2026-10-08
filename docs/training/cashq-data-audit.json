@@ -1,0 +1,103 @@
+{
+  "unique_roots": {
+    "train": 256,
+    "valid": 64
+  },
+  "reconstructed": [
+    {
+      "split": "train",
+      "seed": 38000,
+      "step": 7
+    },
+    {
+      "split": "train",
+      "seed": 38033,
+      "step": 7
+    },
+    {
+      "split": "train",
+      "seed": 38065,
+      "step": 84
+    },
+    {
+      "split": "train",
+      "seed": 38097,
+      "step": 35
+    },
+    {
+      "split": "train",
+      "seed": 38129,
+      "step": 3
+    },
+    {
+      "split": "train",
+      "seed": 38161,
+      "step": 6
+    },
+    {
+      "split": "train",
+      "seed": 38193,
+      "step": 13
+    },
+    {
+      "split": "train",
+      "seed": 38225,
+      "step": 13
+    },
+    {
+      "split": "valid",
+      "seed": 39800,
+      "step": 4
+    },
+    {
+      "split": "valid",
+      "seed": 39808,
+      "step": 2
+    },
+    {
+      "split": "valid",
+      "seed": 39816,
+      "step": 29
+    },
+    {
+      "split": "valid",
+      "seed": 39824,
+      "step": 2
+    },
+    {
+      "split": "valid",
+      "seed": 39833,
+      "step": 4
+    },
+    {
+      "split": "valid",
+      "seed": 39841,
+      "step": 45
+    },
+    {
+      "split": "valid",
+      "seed": 39849,
+      "step": 31
+    },
+    {
+      "split": "valid",
+      "seed": 39857,
+      "step": 12
+    }
+  ],
+  "cash_labels_recomputed_exactly": [
+    {
+      "split": "train",
+      "seed": 38000,
+      "step": 7
+    },
+    {
+      "split": "valid",
+      "seed": 39800,
+      "step": 4
+    }
+  ],
+  "input_is_observation_only": true,
+  "cross_split_duplicates": 0,
+  "root_games_replay_and_conservation_verified": true
+}
