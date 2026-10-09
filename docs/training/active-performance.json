@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-09",
+  "particles_per_root": 32,
+  "method": "CPU, single torch thread; cold evaluator caches each run; wall timers without cProfile; optimized timing before baseline timing; complete raw outcomes equality",
+  "roots": [
+    {
+      "root": "000158556984541d89ccbf857ff8ca730582a7874200609d0c2e856344d9d674",
+      "tags": [
+        "fan_boundary",
+        "late"
+      ],
+      "actions": 6,
+      "baseline_seconds": 3.681118463005987,
+      "cached_seconds": 3.3126637329987716,
+      "speedup": 1.1112261188290529,
+      "identical_outcomes": true,
+      "payoff_bounds": [
+        -1500,
+        320
+      ]
+    },
+    {
+      "root": "000902e38b86e8b3d550e70725a499f9b5194071a2a2de73abd119a0b046af15",
+      "tags": [
+        "chi_bi",
+        "fan_boundary"
+      ],
+      "actions": 3,
+      "baseline_seconds": 3.0069712299882667,
+      "cached_seconds": 2.7744295299926307,
+      "speedup": 1.083816041273268,
+      "identical_outcomes": true,
+      "payoff_bounds": [
+        -2415,
+        2720
+      ]
+    },
+    {
+      "root": "00362eb4bc16265dd15ee954647a9ffa703543ab83c6ffb5ac7099d070b2e240",
+      "tags": [
+        "peng_pass"
+      ],
+      "actions": 2,
+      "baseline_seconds": 0.805824565992225,
+      "cached_seconds": 0.6866033830010565,
+      "speedup": 1.1736390847217615,
+      "identical_outcomes": true,
+      "payoff_bounds": [
+        -3780,
+        7800
+      ]
+    }
+  ],
+  "scope": "Three fixed roots are a diagnostic, not a throughput or playing-strength evaluation",
+  "baseline_training_roots": 154,
+  "baseline_validation_roots": 29,
+  "tests": "241 passed, 1 skipped"
+}
