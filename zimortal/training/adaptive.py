@@ -109,6 +109,10 @@ def payoff_bounds(obs):
 
 def empirical_bernstein(mean, variance, n, low, high, delta):
     """Two-sided Maurer-Pontil bound, union of the two one-sided bounds."""
+    # HU support endpoints can originate from lossless int16 cash evidence.
+    # Promote BEFORE subtracting or multiplying, not after an overflow.
+    mean, variance, low, high, delta = map(float, (mean, variance, low, high, delta))
+    n = int(n)
     if n < 2 or not 0 < delta < 1 or high < low:
         raise ValueError("invalid bound inputs")
     log = math.log(4 / delta)

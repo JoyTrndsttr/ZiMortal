@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-10",
+  "recomputed_roots": 9525,
+  "historical_qualified_flags": 317,
+  "revoked_flags": 127,
+  "new_qualified_flags": 16,
+  "actual_progress": {
+    "status": "generating",
+    "target_training_roots": 5000,
+    "target_validation_roots": 500,
+    "qualified": {
+      "train": 172,
+      "valid": 33
+    },
+    "training_strata": {
+      "chi_bi": 36,
+      "fan_boundary": 110,
+      "hu_pass": 61,
+      "late": 97,
+      "peng_pass": 13
+    },
+    "quotas": {
+      "chi_bi": 1000,
+      "peng_pass": 500,
+      "hu_pass": 200,
+      "fan_boundary": 750,
+      "late": 1500
+    },
+    "queue": {
+      "deep_running": 3,
+      "deferred": 8781,
+      "qualified": 205,
+      "refine": 371,
+      "refine_running": 1,
+      "sampling_failed": 1036
+    },
+    "qualified_particles": 6836736,
+    "qualified_terminal_rollouts": 23172096,
+    "confidence_method": "alpha-spent simultaneous empirical Bernstein",
+    "tie_cash": 1,
+    "training_started": false,
+    "timestamp": 1791610937.1050074,
+    "process_id": 1323607,
+    "mined_games": 1508,
+    "refinement_particles": 18132096,
+    "refinement_terminal_rollouts": 67288448,
+    "scheduler": {
+      "source_sha256": "64b618331a710b36e57194a8a13156dbef98dcc1756d497b5c45f00c3eab6cde",
+      "source": "/home/wangke/project/ZiMortal/zimortal/training/active_schedule_v5.py",
+      "fresh_limit": 1024,
+      "deep_limit": 262144,
+      "candidate_low_water": 256,
+      "mine_every_seconds": 2,
+      "max_deep_workers": 3,
+      "workers": 5,
+      "rollout_engine_sha256": "e6f630e89c3fb4bdd37778672f695b58b29fb7dedc4cd9862ae86657e3975de0",
+      "payoff_envelope_sha256": "e345d1dd8be61be68d8ae125c9fb44ef4584eb5a848f1f44ba16a56259c33cf6",
+      "envelope_evidence_sha256": "4495ae98f3ddfc66573ab0b907f86fa4103870dfcc157115d2d94217a1315f56",
+      "legacy_roots_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "completed_tasks": 33,
+    "elapsed_seconds": 106.94100709800841
+  },
+  "partial_audit": {
+    "checked": 32,
+    "legacy_checked": 0,
+    "new_envelope_checked": 32,
+    "training_gate_passed": false
+  },
+  "tests": "250 passed, 1 skipped",
+  "note": "Flags include excluded roots; actual admitted roots come only from queue qualified status. Historical counts are superseded after numeric repair."
+}

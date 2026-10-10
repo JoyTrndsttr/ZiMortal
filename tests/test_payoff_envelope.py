@@ -1,11 +1,22 @@
 import random
 from dataclasses import replace
 
+import numpy as np
+
 from zimortal.engine import Meld, MeldType, RuleEngine
 from zimortal.engine.observation import PublicPlayer
 from zimortal.engine.scoring import settle
+from zimortal.training.adaptive import empirical_bernstein
 from zimortal.training.adaptive import payoff_bounds as original_bounds
 from zimortal.training.payoff_envelope import group_huxi_upper, payoff_bounds
+
+
+def test_bernstein_promotes_int16_support_before_range_multiplication():
+    expected = empirical_bernstein(20, 0, 128, -8000, 10000, 0.001)
+    with np.errstate(over="raise"):
+        actual = empirical_bernstein(20, 0, np.int64(128), np.int16(-8000), np.int16(10000), 0.001)
+    assert actual == expected
+    assert actual[0] < 0 < actual[1]
 
 
 def test_relaxed_group_capacity_conserves_size_and_distinct_quad_types():

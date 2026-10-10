@@ -20,6 +20,9 @@ def test_legacy_certificates_stay_byte_identical_and_dispatch_original_bound(tmp
     atomic_json(tmp_path / "candidates/root.json", {"observation": serialize_observation(obs)})
     atomic_json(tmp_path / "labels/root.json", {"qualified": True})
     atomic_npz(tmp_path / "labels/root.npz", sentinel=np.array([123]))
+    # Explicit whitelist models an already re-audited legacy family. Default
+    # migration creates an empty whitelist because historical math was unsafe.
+    atomic_json(tmp_path / "legacy-certified-roots.json", ["root"])
     before_json = (tmp_path / "labels/root.json").read_bytes()
     before_npz = (tmp_path / "labels/root.npz").read_bytes()
     envelope_evidence.migrate(tmp_path, write=True)
@@ -32,9 +35,10 @@ def test_legacy_certificates_stay_byte_identical_and_dispatch_original_bound(tmp
     assert envelope_evidence.dataset_bounds(replace(obs, remaining_tiles=0)) == (-10, 10)
 
 
+@pytest.mark.parametrize("revoke", [False, True])
 @pytest.mark.parametrize("excluded", [False, True])
 def test_recertification_keeps_raw_particles_alpha_and_excluded_roots(
-    tmp_path, monkeypatch, excluded
+    tmp_path, monkeypatch, excluded, revoke
 ):
     engine = RuleEngine()
     state = engine.new_game(118)
@@ -52,23 +56,26 @@ def test_recertification_keeps_raw_particles_alpha_and_excluded_roots(
     atomic_json(tmp_path / "candidates/root.json", {"observation": serialize_observation(obs)})
     atomic_json(
         tmp_path / "labels/root.json",
-        {"alpha": 0.001, "qualified": False, "tags": ["late"], "rollouts_per_action": 1024},
+        {"alpha": 0.001, "qualified": revoke, "tags": ["late"], "rollouts_per_action": 1024},
     )
     with sqlite3.connect(tmp_path / "queue.sqlite") as db:
         db.execute("CREATE TABLE roots (input_hash TEXT, status TEXT)")
         db.execute(
-            "INSERT INTO roots VALUES ('root', ?)", ("rule_unresolved" if excluded else "deferred",)
+            "INSERT INTO roots VALUES ('root', ?)",
+            ("rule_unresolved" if excluded else "qualified" if revoke else "deferred",),
         )
     monkeypatch.setattr(adaptive, "payoff_bounds", lambda _: (-100, 100))
-    monkeypatch.setattr(envelope_evidence, "payoff_bounds", lambda _: (-1, 1))
+    monkeypatch.setattr(
+        envelope_evidence, "payoff_bounds", lambda _: (-1000, 1000) if revoke else (-1, 1)
+    )
     envelope_evidence.migrate(tmp_path, write=True)
     meta = json.loads((tmp_path / "labels/root.json").read_text())
     assert meta["alpha"] == 0.001
-    assert meta["qualified"]
+    assert meta["qualified"] == (not revoke)
     with np.load(tmp_path / "labels/root.npz") as saved:
         np.testing.assert_array_equal(saved["outcomes"], raw)
         assert str(saved["outcomes_hash"]) == raw_hash
     with sqlite3.connect(tmp_path / "queue.sqlite") as db:
         assert db.execute("SELECT status FROM roots").fetchone()[0] == (
-            "rule_unresolved" if excluded else "qualified"
+            "rule_unresolved" if excluded else "deferred" if revoke else "qualified"
         )

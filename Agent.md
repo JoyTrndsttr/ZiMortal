@@ -171,3 +171,9 @@ fix(engine): 禁止吃后无法出牌的方案
   及旧界审计；更窄区间可能触发tie边界变化，不能假定分类／稳定性单调。
   新证据重算必须守恒原始outcomes及预算编号，不能复活规则或采样失败根。
   完整训练审计和worker必须使用相同按根分派规则；部分审计不代表5k门槛达标。
+
+- 2026-10-10数值修复优先于前条：发现HU int16支持端点使Bernstein范围乘法溢出。
+  adaptive必须在算术前提升为Python float；active-v8默认旧认证豁免名单为空，
+  所有根安全重审，旧qualified失败须撤销，不保留未经修复验证的合格数量。
+  新config显式升级adaptive源码与numeric_evidence_version，重签派生配置哈希，
+  原收益粒子、alpha和预算编号不变。active-v6/v7不用于训练，旧计数仅属历史记录。
