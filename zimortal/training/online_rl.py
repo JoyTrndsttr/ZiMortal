@@ -269,7 +269,7 @@ def ppo_update(model, anchor, optimizer, rows, rng, *, device, epochs=3, batch_s
     }
 
 
-def paired_summary(candidate, reference, seed):
+def paired_summary(candidate, reference, seed, alpha=0.05):
     left = {(r["seed"], r["seat"], r["opponent"]): r for r in candidate}
     right = {(r["seed"], r["seat"], r["opponent"]): r for r in reference}
     if left.keys() != right.keys():
@@ -289,12 +289,16 @@ def paired_summary(candidate, reference, seed):
             ]
         )
         rng = np.random.default_rng(seed + opponent)
-        boot = np.mean(rng.choice(delta, (2000, len(delta)), replace=True), axis=1)
+        boot = np.mean(rng.choice(delta, (10000, len(delta)), replace=True), axis=1)
         summaries[str(opponent)] = {
             "seeds": len(seeds),
             "games": 3 * len(seeds),
             "mean_cash_delta": float(delta.mean()),
             "paired_seed_bootstrap_95": np.quantile(boot, [0.025, 0.975]).tolist(),
+            "paired_seed_bootstrap_interval": np.quantile(
+                boot, [alpha / 2, 1 - alpha / 2]
+            ).tolist(),
+            "alpha": alpha,
             "candidate_mean_cash": float(
                 np.mean([r["cash"] for k, r in left.items() if k[2] == opponent])
             ),
@@ -310,7 +314,35 @@ def paired_summary(candidate, reference, seed):
     return summaries
 
 
-def evaluation(model, base, opponents, start, count, device, slots, *, audit=False):
+def aggregate_summary(candidate, reference, seed, alpha=0.05):
+    """Cluster all seats AND opponents by seed; bootstrap is approximate."""
+    paired_summary(candidate, reference, seed)  # Reject incomplete pairs.
+    right = {(r["seed"], r["seat"], r["opponent"]): r["cash"] for r in reference}
+    seeds = sorted({r["seed"] for r in candidate})
+    values = np.array(
+        [
+            np.mean(
+                [
+                    r["cash"] - right[(s, r["seat"], r["opponent"])]
+                    for r in candidate
+                    if r["seed"] == s
+                ]
+            )
+            for s in seeds
+        ]
+    )
+    rng = np.random.default_rng(seed)
+    samples = np.mean(rng.choice(values, (10000, len(values)), replace=True), axis=1)
+    return {
+        "independent_seeds": len(seeds),
+        "mean_cash_delta": float(values.mean()),
+        "paired_seed_bootstrap_interval": np.quantile(samples, [alpha / 2, 1 - alpha / 2]).tolist(),
+        "alpha": alpha,
+        "interval_method": "approximate seed-cluster bootstrap",
+    }
+
+
+def evaluation(model, base, opponents, start, count, device, slots, *, audit=False, alpha=0.05):
     specs = [
         (s, s % 3, seat, opponent)
         for opponent in range(len(opponents))
@@ -332,7 +364,8 @@ def evaluation(model, base, opponents, start, count, device, slots, *, audit=Fal
     )
     if questions or other_questions:
         return {"valid": False, "questions": questions + other_questions}
-    result = {"valid": True, "opponents": paired_summary(candidate, reference, start)}
+    result = {"valid": True, "opponents": paired_summary(candidate, reference, start, alpha)}
+    result["aggregate"] = aggregate_summary(candidate, reference, start, alpha)
     if audit:
         result["candidate_decisions"] = decision_audit.summarize(candidate_audit, stochastic=False)
         result["parent_decisions"] = decision_audit.summarize(reference_audit, stochastic=False)
@@ -369,6 +402,8 @@ def commit_report(path, iteration, title=None):
     if subprocess.run(["git", "diff", "--cached", "--quiet"], check=False).returncode:
         return "skipped: existing staged changes"
     subprocess.run(["git", "add", "--", str(path)], check=True)
+    if not subprocess.run(["git", "diff", "--cached", "--quiet"], check=False).returncode:
+        return "unchanged report already committed"
     subprocess.run(
         ["git", "commit", "-m", title or f"train(rl): 记录现金PPO第{iteration}代训练与评估"],
         check=True,
@@ -390,6 +425,10 @@ def run(args):
         sources=source_hashes(),
         base_sha256=digest(args.base),
         historical_sha256=digest(args.historical),
+        initialize_sha256=digest(args.initialize) if args.initialize else None,
+        optimizer_checkpoint_sha256=digest(args.optimizer_checkpoint)
+        if args.optimizer_checkpoint
+        else None,
         opponent_sha256={p: digest(p) for p in args.opponents},
         torch=torch.__version__,
         gpu=torch.cuda.get_device_name(0) if args.device == "cuda" else None,
@@ -398,21 +437,41 @@ def run(args):
     if config_path.exists() and json.loads(config_path.read_text()) != configuration:
         raise ValueError("frozen RL config, sources, environment or parents changed")
     atomic_json(config_path, configuration)
-    model = load_model(args.base, args.device)
+    model = load_model(args.initialize or args.base, args.device)
     if model.architecture not in ("resnet", "mlp"):
         raise ValueError("cash PPO requires a policy/value network")
-    base = copy.deepcopy(model).eval()
+    base = load_model(args.base, args.device)
+    if (model.architecture, model.feature_version, model.width) != (
+        base.architecture,
+        base.feature_version,
+        base.width,
+    ):
+        raise ValueError("warm-start model and cash anchor must have matching encoders")
     historical = load_model(args.historical, args.device)
     frozen_paths = [args.base, args.historical] + args.opponents
     if len(set(frozen_paths)) != len(frozen_paths):
         raise ValueError("opponent paths must be distinct")
     frozen_opponents = [base, historical] + [load_model(p, args.device) for p in args.opponents]
-    metadata = torch.load(args.base, map_location="cpu", weights_only=True).get("metadata", {})
+    metadata = torch.load(args.initialize or args.base, map_location="cpu", weights_only=True).get(
+        "metadata", {}
+    )
     value_reset = "payments/100" not in metadata.get("value_target", "")
     if value_reset:
         nn.init.zeros_(model.value[-1].weight)
         nn.init.zeros_(model.value[-1].bias)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
+    if args.optimizer_checkpoint:
+        previous = torch.load(
+            args.optimizer_checkpoint, map_location=args.device, weights_only=False
+        )
+        state_key = "best_state" if args.optimizer_best else "model"
+        if not all(torch.equal(v, previous[state_key][k]) for k, v in model.state_dict().items()):
+            raise ValueError("continued optimizer must correspond exactly to initial weights")
+        optimizer.load_state_dict(
+            previous["best_optimizer" if args.optimizer_best else "optimizer"]
+        )
+        for group in optimizer.param_groups:
+            group["lr"] = args.lr
     rng = random.Random(args.seed)
     start, best_score = 0, -float("inf")
     best_state, best_optimizer = (
@@ -438,6 +497,12 @@ def run(args):
             or digest(args.base) != configuration["base_sha256"]
             or digest(args.historical) != configuration["historical_sha256"]
             or any(digest(p) != sha for p, sha in configuration["opponent_sha256"].items())
+            or (args.initialize and digest(args.initialize) != configuration["initialize_sha256"])
+            or (
+                args.optimizer_checkpoint
+                and digest(args.optimizer_checkpoint)
+                != configuration["optimizer_checkpoint_sha256"]
+            )
         ):
             raise ValueError("frozen RL producer or opponents changed")
         started = time.monotonic()
@@ -606,6 +671,7 @@ def run(args):
         args.device,
         args.slots,
         audit=args.audit_decisions,
+        alpha=args.holdout_alpha,
     )
     atomic_json(
         reports / "holdout.json",
@@ -637,6 +703,10 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", default="checkpoints/huxi-resnet.pt")
+    parser.add_argument("--initialize")
+    parser.add_argument("--optimizer-checkpoint")
+    parser.add_argument("--optimizer-best", action="store_true")
+    parser.add_argument("--holdout-alpha", type=float, default=0.05)
     parser.add_argument("--historical", default="checkpoints/scale100k-resnet.pt")
     parser.add_argument("--opponents", nargs="*", default=[])
     parser.add_argument("--snapshot-pool", type=int, default=0)
@@ -659,6 +729,8 @@ def main():
     parser.add_argument("--holdout-seeds", type=int, default=100)
     parser.add_argument("--commit-reports", action="store_true")
     args = parser.parse_args()
+    if not 0 < args.holdout_alpha < 1:
+        parser.error("holdout alpha must be in (0,1)")
     if not 0 <= args.selfplay_fraction <= 1 or args.snapshot_pool < 0:
         parser.error("selfplay fraction must be in [0,1] and snapshot pool nonnegative")
     if (
