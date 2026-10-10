@@ -1,0 +1,29 @@
+{
+  "payoff_envelope_sha256": "e345d1dd8be61be68d8ae125c9fb44ef4584eb5a848f1f44ba16a56259c33cf6",
+  "write": false,
+  "raw_particles_unchanged": true,
+  "old_qualified": 53,
+  "new_qualified": 54,
+  "selection": "64 largest existing particle budgets; reused raw outcomes, no new simulation",
+  "scope": "Diagnostic only; does not prove general certification throughput improvement",
+  "newly_certified": [
+    {
+      "root": "b38d91516bd22e6dbaa00cb89199daef8c6a7cabf299efed7d578f41f0d600be",
+      "tags": [
+        "late"
+      ],
+      "n": 65536,
+      "old_qualified": false,
+      "new_qualified": true,
+      "earliest_new_qualified_n": 65536,
+      "old_bounds": [
+        -480,
+        650
+      ],
+      "new_bounds": [
+        -480,
+        550
+      ]
+    }
+  ]
+}
