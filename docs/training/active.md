@@ -234,3 +234,38 @@ worker及最终审计都使用同一按根分派的收益界。原始core生产�
 边界、多公开偎升级、原始粒子及alpha守恒和被排除根不复活；完整测试247通过、
 1跳过。下一步观察吃比／碰过和晚局的新增认证数；若收紧仍有限，继续降低历史
 重放成本与优化候选比较，而不是继续提高单根粒子上限或放宽质量门槛。
+
+## 2026-10-10后续：修复int16置信范围溢出，撤销未经安全重审的认证
+
+混合方法审计出现`RuntimeWarning: overflow encountered in scalar multiply`，
+定位到empirical_bernstein的`7 * (high - low)`。HU固定金额来自int16原始粒子，
+因此支持端点可携带numpy.int16类型；范围乘7在转换到浮点前可能溢出，产生
+不可靠的区间。这是置信计算错误，先前合格计数不能继续作为严格认证数量。
+前节53→54的历史诊断摘要已标记失效，active-v7停止且不用于训练。
+
+修复在算术开始前把mean、variance、low、high和delta提升为Python float，
+不是放宽公式或降低alpha。回归测试在np.errstate(over='raise')下检查int16
+端点与Python数值完全一致。迁移测试覆盖旧qualified根重新判不合格时退回
+延期，原始outcomes/alpha守恒，被规则排除根不复活。
+
+新入口为 `scripts/train-active-scheduled-v5-wsl.sh --data data/generated/active-v8
+--from-data data/generated/active-v5 --workers 5 --train-after`（一行）。
+仅允许从已知旧adaptive.py哈希迁移到已知修复哈希，其他生产源码或权重变化
+仍被拒绝。新config记录旧配置哈希和numeric_evidence_version=2，所有NPZ
+configuration_hash重签新配置，原始粒子及其哈希不变。逐根alpha编号不改。
+
+修复版默认legacy名单为空；prior-certified-roots.json仅记载历史合格标记。
+全部现有根按安全浮点与新收益界重新计算每个档位，不能豁免旧认证；不再达标
+的根撤销qualified并保留原粒子待续算。旧版本保留供调查，不进入训练。
+生产worker及审计必须读同一新配置和源码。达标仍须5k训练、500验证与类别配额，
+冠军huxi不变，未训练或晋级。完整测试250通过、1跳过。
+
+部分审计命令：`.venv/bin/python -m zimortal.training.envelope_evidence
+--data data/generated/active-v8 --audit-only`（一行）。这不代替完整训练门槛审计。
+重审后的数量优先于此前任何进度数字；收益界效果需在数值正确的基线上重新测量。
+
+修复后的完整迁移检查9525根，撤销127个历史qualified标记，新增16个标记；
+标记包括被规则或采样排除的根，实际入集仍以队列状态为准。首次可信运行快照
+为172训练根、33验证根。PYTHONWARNINGS=error下32个正式合格根的原粒子、
+区间、关系和两档稳定性审计通过；详见[安全数值重审报告](active-numeric-audit.json)。
+这些数量仍未达训练门槛，后续提速必须以这个修复基线评估。

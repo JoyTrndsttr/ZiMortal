@@ -27,7 +27,10 @@ def prepare_legacy(root):
             for p in (root / "labels").glob("*.json")
             if json.loads(p.read_text())["qualified"]
         ]
-        active.atomic_json(path, sorted(keys))
+        active.atomic_json(root / "prior-certified-roots.json", sorted(keys))
+        # Previous certificates may have used overflowing int16 arithmetic.
+        # No old certificate is exempted from re-audit in the repaired dataset.
+        active.atomic_json(path, [])
     return set(json.loads(path.read_text()))
 
 
@@ -95,6 +98,9 @@ def migrate(root, *, write=False, limit=None):
         with np.load(path.with_suffix(".npz"), allow_pickle=False) as saved:
             # One root at a time, bounded by the existing 128 MiB evidence cap.
             arrays = {k: saved[k] for k in saved.files}
+        arrays["configuration_hash"] = np.array(
+            hashlib.sha256(json.dumps(configuration, sort_keys=True).encode()).hexdigest()
+        )
         raw = arrays["outcomes"]
         if str(arrays["outcomes_hash"]) != hashlib.sha256(raw.tobytes()).hexdigest():
             raise ValueError("raw evidence checksum mismatch")
@@ -135,6 +141,12 @@ def migrate(root, *, write=False, limit=None):
             )
             active.atomic_json(path, meta)
             # Roots excluded after undefined rules or sampling failure remain excluded.
+            if not qualified:
+                db.execute(
+                    "UPDATE roots SET status='deferred' WHERE input_hash=? AND status='qualified'",
+                    (path.stem,),
+                )
+                db.commit()
             if qualified:
                 db.execute(
                     "UPDATE roots SET status='qualified' WHERE input_hash=? AND status IN ('qualified','deferred','refine','refine_running','deep_running')",
