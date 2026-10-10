@@ -137,3 +137,6 @@ def test_hu_pass_audit_uses_net_cash_and_labels_descriptive_outcomes():
     assert hu["mean_realized_cash_minus_immediate_hu"] == -300
     assert hu["parent_to_chosen"] == {"hu->pass": 1}
     assert "not causal" in summary["interpretation"]
+    rotated = [{**row, "learner_seat": seat, "player": seat} for seat in range(3)]
+    count = decision_audit.summarize(rotated, stochastic=False)["categories"]["hu_pass"]
+    assert count["distinct_games"] == 3 and count["independent_seeds"] == 1

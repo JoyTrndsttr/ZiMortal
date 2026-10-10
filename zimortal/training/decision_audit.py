@@ -86,10 +86,17 @@ def summarize(records, *, stochastic, examples=6):
                 cases.append(row)
         result["categories"][name] = {
             "decisions": len(rows),
-            "distinct_games": len({(r["seed"], r["opponent"]) for r in rows}),
+            "distinct_games": len(
+                {(r["seed"], r.get("learner_seat"), r["opponent"]) for r in rows}
+            ),
+            "independent_seeds": len({r["seed"] for r in rows}),
             "different_from_parent": len(differences),
             "parent_to_chosen": dict(
-                Counter(f"{r['parent']['kind']}->{r['chosen']['kind']}" for r in differences)
+                Counter(
+                    f"{getattr(r['parent']['kind'], 'value', r['parent']['kind'])}"
+                    f"->{getattr(r['chosen']['kind'], 'value', r['chosen']['kind'])}"
+                    for r in differences
+                )
             ),
             "actions": by_action,
             "passed_hu": len(passed_hu),
