@@ -1,0 +1,60 @@
+{
+  "decision_sha256": "932e97597991980374b8a678a058f90e2abbf05ac4b5934f56fc6c9e4d837947",
+  "value_output_reset": false,
+  "generation": 8,
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 5080",
+  "completed_games": 256,
+  "training_wins": 60,
+  "training_draws": 59,
+  "training_cash_per_game": -5.4296875,
+  "excluded_rule_games": 0,
+  "decisions": 3788,
+  "nonzero_return_decisions": 2881,
+  "reward": "undiscounted terminal net cash / 100; no reward clipping",
+  "selfplay_and_frozen_opponents": true,
+  "replay_verified": true,
+  "training_start": 4001792,
+  "metrics": {
+    "updates": 45,
+    "kl_stopped": false,
+    "loss": 0.3089296693603198,
+    "critic": 0.6348894072903527,
+    "kl": 0.006448389576796545
+  },
+  "development": {
+    "valid": true,
+    "opponents": {
+      "0": {
+        "seeds": 30,
+        "games": 90,
+        "mean_cash_delta": -0.055555555555554845,
+        "paired_seed_bootstrap_95": [
+          -5.223611111111112,
+          4.556944444444437
+        ],
+        "candidate_mean_cash": -0.05555555555555555,
+        "base_mean_cash": 0.0,
+        "changed_trajectory_games": 41
+      },
+      "1": {
+        "seeds": 30,
+        "games": 90,
+        "mean_cash_delta": -3.722222222222222,
+        "paired_seed_bootstrap_95": [
+          -25.175000000000004,
+          12.612499999999994
+        ],
+        "candidate_mean_cash": 8.5,
+        "base_mean_cash": 12.222222222222221,
+        "changed_trajectory_games": 42
+      }
+    }
+  },
+  "selected_on_development": false,
+  "cumulative_training": true,
+  "formal_champion_changed": false,
+  "checkpoint": "data/generated/online-rl-v1/generation-008.pt",
+  "sha256": "ca33fd15ed6d55bf586c3f8b060489450f783fcc7608601cafc843465295a11a",
+  "elapsed_seconds": 13.778489006974269
+}
