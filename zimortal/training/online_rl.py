@@ -17,6 +17,7 @@ from torch import nn
 from zimortal.engine import RuleClarificationRequired
 from zimortal.model.encoding import encode_action, encode_observation
 
+from . import decision_audit
 from .active import atomic_json
 from .cashq import digest
 from .rollout_engine import RolloutEngine
@@ -37,7 +38,7 @@ def pack(features, actions, device):
     )
 
 
-def infer(model, observations, device, generator=None):
+def infer(model, observations, device, generator=None, details=None):
     features = [encode_observation(obs, model.feature_version) for obs in observations]
     actions = [
         np.stack([encode_action(a, obs.player) for a in obs.legal_actions]) for obs in observations
@@ -51,6 +52,8 @@ def infer(model, observations, device, generator=None):
             else logits.argmax(-1)
         )
         chosen_logp = logp.gather(1, indices[:, None]).squeeze(1)
+        if details is not None:
+            details["probabilities"] = logp.exp().cpu().tolist()
     return (
         indices.cpu().tolist(),
         chosen_logp.cpu().tolist(),
@@ -60,7 +63,18 @@ def infer(model, observations, device, generator=None):
     )
 
 
-def play(model, opponents, specs, *, device="cpu", slots=32, seed=0, training=False):
+def play(
+    model,
+    opponents,
+    specs,
+    *,
+    device="cpu",
+    slots=32,
+    seed=0,
+    training=False,
+    audit=None,
+    audit_parent=None,
+):
     """Each spec is seed, dealer, learner seat, opponent index (-1=self-play).
 
     Complete games are committed together; undefined-rule games contribute no
@@ -83,6 +97,11 @@ def play(model, opponents, specs, *, device="cpu", slots=32, seed=0, training=Fa
         if replay_engine.replay(initial, state.history).serialize() != state.serialize():
             raise RuntimeError("RL terminal replay mismatch")
         payments = state.settlement.payments if state.settlement else (0, 0, 0)
+        if audit is not None:
+            audit.extend(
+                {**r, "terminal_cash": payments[r["player"]], "winner": state.winner}
+                for r in active[index][4]
+            )
         for seat, trajectory in enumerate(trajectories):
             rows.extend((*row, payments[seat] / 100.0) for row in trajectory)
         results.append(
@@ -105,10 +124,10 @@ def play(model, opponents, specs, *, device="cpu", slots=32, seed=0, training=Fa
         for index in range(slots):
             if index not in active and cursor < len(specs):
                 spec = specs[cursor]
-                active[index] = [engine.new_game(spec[0], spec[1]), spec, [[], [], []], 0]
+                active[index] = [engine.new_game(spec[0], spec[1]), spec, [[], [], []], 0, []]
                 cursor += 1
         waiting = {}
-        for index, (state, spec, trajectories, steps) in list(active.items()):
+        for index, (state, spec, trajectories, steps, _) in list(active.items()):
             if state.terminal:
                 finish(index, state, spec, trajectories)
                 continue
@@ -137,15 +156,42 @@ def play(model, opponents, specs, *, device="cpu", slots=32, seed=0, training=Fa
                 del active[index]
         for owner, items in waiting.items():
             observations = [obs for _, obs in items]
+            details = {} if audit is not None and owner == -1 else None
             indices, logp, values, features, actions = infer(
                 model if owner == -1 else opponents[owner],
                 observations,
                 device,
                 generator if training and owner == -1 else None,
+                details,
             )
+            relevant = [
+                j
+                for j, obs in enumerate(observations)
+                if details is not None and decision_audit.category(obs)
+            ]
+            parent_choices = {}
+            if relevant:
+                choices = infer(audit_parent or model, [observations[j] for j in relevant], device)[
+                    0
+                ]
+                parent_choices = dict(zip(relevant, choices, strict=True))
             for j, (index, obs) in enumerate(items):
-                state, spec, trajectories, _ = active[index]
+                state, spec, trajectories, steps, audit_trail = active[index]
                 action = obs.legal_actions[indices[j]]
+                if j in parent_choices:
+                    hu = next((a for a in obs.legal_actions if a.kind.value == "hu"), None)
+                    cash = engine.step(state, hu).settlement.payments[obs.player] if hu else None
+                    audit_trail.append(
+                        decision_audit.record(
+                            obs,
+                            indices[j],
+                            parent_choices[j],
+                            details["probabilities"][j][: len(obs.legal_actions)],
+                            spec=spec,
+                            step=steps + 1,
+                            immediate_hu_cash=cash,
+                        )
+                    )
                 if training and owner == -1:
                     trajectories[obs.player].append(
                         (features[j], actions[j], indices[j], logp[j], values[j])
@@ -264,18 +310,41 @@ def paired_summary(candidate, reference, seed):
     return summaries
 
 
-def evaluation(model, base, opponents, start, count, device, slots):
+def evaluation(model, base, opponents, start, count, device, slots, *, audit=False):
     specs = [
         (s, s % 3, seat, opponent)
         for opponent in range(len(opponents))
         for s in range(start, start + count)
         for seat in range(3)
     ]
-    _, candidate, questions = play(model, opponents, specs, device=device, slots=slots)
-    _, reference, other_questions = play(base, opponents, specs, device=device, slots=slots)
+    candidate_audit, reference_audit = ([] if audit else None), ([] if audit else None)
+    _, candidate, questions = play(
+        model,
+        opponents,
+        specs,
+        device=device,
+        slots=slots,
+        audit=candidate_audit,
+        audit_parent=base,
+    )
+    _, reference, other_questions = play(
+        base, opponents, specs, device=device, slots=slots, audit=reference_audit, audit_parent=base
+    )
     if questions or other_questions:
         return {"valid": False, "questions": questions + other_questions}
-    return {"valid": True, "opponents": paired_summary(candidate, reference, start)}
+    result = {"valid": True, "opponents": paired_summary(candidate, reference, start)}
+    if audit:
+        result["candidate_decisions"] = decision_audit.summarize(candidate_audit, stochastic=False)
+        result["parent_decisions"] = decision_audit.summarize(reference_audit, stochastic=False)
+    return result
+
+
+def training_specs(start, count, opponents, selfplay_fraction, seed):
+    """Assign match types independently of dealer/seat, with balanced pool coverage."""
+    selfplay = round(count * selfplay_fraction)
+    owners = [-1] * selfplay + [i % opponents for i in range(count - selfplay)]
+    random.Random(seed).shuffle(owners)
+    return [(start + i, i % 3, (i // 3) % 3, owner) for i, owner in enumerate(owners)]
 
 
 def atomic_checkpoint(path, payload):
@@ -321,6 +390,7 @@ def run(args):
         sources=source_hashes(),
         base_sha256=digest(args.base),
         historical_sha256=digest(args.historical),
+        opponent_sha256={p: digest(p) for p in args.opponents},
         torch=torch.__version__,
         gpu=torch.cuda.get_device_name(0) if args.device == "cuda" else None,
     )
@@ -333,6 +403,10 @@ def run(args):
         raise ValueError("cash PPO requires a policy/value network")
     base = copy.deepcopy(model).eval()
     historical = load_model(args.historical, args.device)
+    frozen_paths = [args.base, args.historical] + args.opponents
+    if len(set(frozen_paths)) != len(frozen_paths):
+        raise ValueError("opponent paths must be distinct")
+    frozen_opponents = [base, historical] + [load_model(p, args.device) for p in args.opponents]
     metadata = torch.load(args.base, map_location="cpu", weights_only=True).get("metadata", {})
     value_reset = "payments/100" not in metadata.get("value_target", "")
     if value_reset:
@@ -363,6 +437,7 @@ def run(args):
             source_hashes() != configuration["sources"]
             or digest(args.base) != configuration["base_sha256"]
             or digest(args.historical) != configuration["historical_sha256"]
+            or any(digest(p) != sha for p, sha in configuration["opponent_sha256"].items())
         ):
             raise ValueError("frozen RL producer or opponents changed")
         started = time.monotonic()
@@ -375,16 +450,20 @@ def run(args):
                 "device": args.device,
             },
         )
-        opponents = [base, historical]
-        specs = [
-            (
-                args.train_start + iteration * args.games + i,
-                i % 3,
-                (i // 3) % 3,
-                -1 if i % 3 == 0 else (i % 3 - 1),
-            )
-            for i in range(args.games)
+        snapshots = [
+            root / f"generation-{n:03d}.pt"
+            for n in range(max(1, iteration - args.snapshot_pool + 1), iteration + 1)
         ]
+        opponents = frozen_opponents + [load_model(p, args.device) for p in snapshots]
+        opponent_names = frozen_paths + [str(p) for p in snapshots]
+        specs = training_specs(
+            args.train_start + iteration * args.games,
+            args.games,
+            len(opponents),
+            args.selfplay_fraction,
+            args.seed + iteration,
+        )
+        training_audit = [] if args.audit_decisions else None
         rows, games, questions = play(
             model,
             opponents,
@@ -393,6 +472,8 @@ def run(args):
             slots=args.slots,
             seed=args.seed + iteration,
             training=True,
+            audit=training_audit,
+            audit_parent=base,
         )
         if questions:
             atomic_json(root / f"questions-{iteration + 1:03d}.json", questions)
@@ -417,7 +498,14 @@ def run(args):
             generation=iteration + 1,
         )
         dev = evaluation(
-            model, base, opponents, args.dev_start, args.dev_seeds, args.device, args.slots
+            model,
+            base,
+            frozen_opponents,
+            args.dev_start,
+            args.dev_seeds,
+            args.device,
+            args.slots,
+            audit=args.audit_decisions,
         )
         score = (
             np.mean([r["mean_cash_delta"] for r in dev["opponents"].values()])
@@ -452,6 +540,12 @@ def run(args):
             "device": args.device,
             "gpu": configuration["gpu"],
             "completed_games": len(games),
+            "opponent_pool": opponent_names,
+            "opponent_sha256": {str(p): digest(p) for p in snapshots},
+            "games_by_opponent": {
+                str(owner): sum(r["opponent"] == owner for r in games)
+                for owner in range(-1, len(opponents))
+            },
             "training_wins": sum(r["winner"] == r["seat"] for r in games),
             "training_draws": sum(r["winner"] is None for r in games),
             "training_cash_per_game": sum(r["cash"] for r in games) / max(1, len(games)),
@@ -463,6 +557,9 @@ def run(args):
             "replay_verified": True,
             "training_start": args.train_start + iteration * args.games,
             "metrics": metrics,
+            "decision_audit": decision_audit.summarize(training_audit, stochastic=True)
+            if training_audit is not None
+            else None,
             "development": dev,
             "selected_on_development": selected,
             "cumulative_training": True,
@@ -503,11 +600,12 @@ def run(args):
     holdout = evaluation(
         model,
         base,
-        [base, historical],
+        frozen_opponents,
         args.holdout_start,
         args.holdout_seeds,
         args.device,
         args.slots,
+        audit=args.audit_decisions,
     )
     atomic_json(
         reports / "holdout.json",
@@ -516,6 +614,7 @@ def run(args):
             "checkpoint": str(root / "best-dev.pt"),
             "formal_champion_changed": False,
             "selected_by_development_only": True,
+            "opponent_pool": frozen_paths,
         },
     )
     if args.commit_reports:
@@ -539,6 +638,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", default="checkpoints/huxi-resnet.pt")
     parser.add_argument("--historical", default="checkpoints/scale100k-resnet.pt")
+    parser.add_argument("--opponents", nargs="*", default=[])
+    parser.add_argument("--snapshot-pool", type=int, default=0)
+    parser.add_argument("--selfplay-fraction", type=float, default=1 / 3)
+    parser.add_argument("--audit-decisions", action="store_true")
     parser.add_argument("--directory", default="data/generated/online-rl-v1")
     parser.add_argument("--reports", default="docs/training/online-rl-v1")
     parser.add_argument("--device", choices=["cpu", "cuda"], default="cuda")
@@ -556,6 +659,8 @@ def main():
     parser.add_argument("--holdout-seeds", type=int, default=100)
     parser.add_argument("--commit-reports", action="store_true")
     args = parser.parse_args()
+    if not 0 <= args.selfplay_fraction <= 1 or args.snapshot_pool < 0:
+        parser.error("selfplay fraction must be in [0,1] and snapshot pool nonnegative")
     if (
         min(
             args.games,
