@@ -1,0 +1,3301 @@
+{
+  "purpose": "diagnostic only; seeds excluded from future unseen evaluation",
+  "checkpoint": "data/generated/online-rl-v1/best-dev.pt",
+  "opponent_pool": [
+    "huxi",
+    "scale100k"
+  ],
+  "evaluation": {
+    "valid": true,
+    "opponents": {
+      "0": {
+        "seeds": 30,
+        "games": 90,
+        "mean_cash_delta": 1.4444444444444442,
+        "paired_seed_bootstrap_95": [
+          -2.5000000000000004,
+          5.333333333333333
+        ],
+        "candidate_mean_cash": 1.4444444444444444,
+        "base_mean_cash": 0.0,
+        "changed_trajectory_games": 34
+      },
+      "1": {
+        "seeds": 30,
+        "games": 90,
+        "mean_cash_delta": 1.277777777777778,
+        "paired_seed_bootstrap_95": [
+          -1.0555555555555554,
+          3.7791666666666592
+        ],
+        "candidate_mean_cash": 5.055555555555555,
+        "base_mean_cash": 3.7777777777777777,
+        "changed_trajectory_games": 25
+      }
+    },
+    "candidate_decisions": {
+      "sampling": "greedy evaluation",
+      "interpretation": "descriptive outcomes; action groups are not causal Q or EV labels",
+      "categories": {
+        "chi_bi_pass": {
+          "decisions": 375,
+          "distinct_games": 154,
+          "independent_seeds": 30,
+          "different_from_parent": 22,
+          "parent_to_chosen": {
+            "pass->chi": 11,
+            "chi->pass": 9,
+            "chi->chi": 2
+          },
+          "actions": {
+            "chi": {
+              "decisions": 245,
+              "mean_terminal_cash": 2.8979591836734695,
+              "win_rate": 0.2979591836734694
+            },
+            "pass": {
+              "decisions": 130,
+              "mean_terminal_cash": 3.0384615384615383,
+              "win_rate": 0.35384615384615387
+            }
+          },
+          "passed_hu": 0,
+          "pass_hu_worse_than_immediate": 0,
+          "mean_realized_cash_minus_immediate_hu": null,
+          "examples": [
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500003,
+              "dealer": 2,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 39,
+              "phase": "respond",
+              "remaining_tiles": 11,
+              "hand": [
+                0,
+                1,
+                1,
+                2,
+                5,
+                6,
+                7,
+                12,
+                15,
+                15,
+                16,
+                17,
+                18,
+                18
+              ],
+              "exposed_huxi": 3,
+              "chosen": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 6,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 6,
+                "chi": [
+                  6,
+                  6,
+                  16
+                ],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 6,
+                    "chi": [
+                      6,
+                      6,
+                      16
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.33991965651512146
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 6,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.6600803732872009
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -20,
+              "winner": 0
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500027,
+              "dealer": 2,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 1,
+              "step": 17,
+              "phase": "respond",
+              "remaining_tiles": 18,
+              "hand": [
+                3,
+                3,
+                4,
+                6,
+                6,
+                7,
+                7,
+                11,
+                12,
+                14,
+                14,
+                16,
+                17,
+                19
+              ],
+              "exposed_huxi": 4,
+              "chosen": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 17,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 0,
+                "tile": 17,
+                "chi": [
+                  7,
+                  17,
+                  17
+                ],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 17,
+                    "chi": [
+                      7,
+                      17,
+                      17
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.30237334966659546
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 17,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.6976265907287598
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -20,
+              "winner": 2
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500027,
+              "dealer": 2,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 43,
+              "phase": "respond",
+              "remaining_tiles": 12,
+              "hand": [
+                1,
+                1,
+                5,
+                6,
+                7,
+                8,
+                9,
+                13,
+                13,
+                13,
+                14,
+                15,
+                15,
+                15
+              ],
+              "exposed_huxi": 4,
+              "chosen": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 11,
+                "chi": [
+                  1,
+                  1,
+                  11
+                ],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 11,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 11,
+                    "chi": [
+                      1,
+                      1,
+                      11
+                    ],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.6938939094543457
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 11,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.3061060607433319
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -20,
+              "winner": 1
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500005,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 0,
+              "step": 15,
+              "phase": "respond",
+              "remaining_tiles": 18,
+              "hand": [
+                0,
+                2,
+                5,
+                5,
+                6,
+                10,
+                11,
+                12,
+                12,
+                13,
+                14,
+                14,
+                14,
+                16
+              ],
+              "exposed_huxi": 6,
+              "chosen": {
+                "kind": "chi",
+                "player": 0,
+                "tile": 10,
+                "chi": [
+                  0,
+                  10,
+                  10
+                ],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 10,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 10,
+                    "chi": [
+                      0,
+                      10,
+                      10
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.7255666851997375
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 10,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.27443328499794006
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -15,
+              "winner": 1
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500008,
+              "dealer": 1,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 32,
+              "phase": "respond",
+              "remaining_tiles": 15,
+              "hand": [
+                1,
+                6,
+                6,
+                8,
+                9,
+                11,
+                13,
+                13,
+                18,
+                19
+              ],
+              "exposed_huxi": 7,
+              "chosen": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 7,
+                "chi": [
+                  6,
+                  7,
+                  8
+                ],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 7,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 7,
+                    "chi": [
+                      6,
+                      7,
+                      8
+                    ],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.3662923276424408
+                },
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 7,
+                    "chi": [
+                      7,
+                      8,
+                      9
+                    ],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.3094688057899475
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 7,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.3242388963699341
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -15,
+              "winner": 1
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500025,
+              "dealer": 0,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 0,
+              "step": 19,
+              "phase": "respond",
+              "remaining_tiles": 17,
+              "hand": [
+                0,
+                0,
+                1,
+                1,
+                2,
+                3,
+                4,
+                6,
+                7,
+                8,
+                8,
+                9,
+                11,
+                13,
+                13,
+                15,
+                16,
+                17,
+                17,
+                18
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 14,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 0,
+                "tile": 14,
+                "chi": [
+                  13,
+                  14,
+                  15
+                ],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 14,
+                    "chi": [
+                      13,
+                      14,
+                      15
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.302164763212204
+                },
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 14,
+                    "chi": [
+                      14,
+                      15,
+                      16
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.26855581998825073
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 14,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.4292793273925781
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -15,
+              "winner": 1
+            }
+          ]
+        },
+        "peng_pass": {
+          "decisions": 337,
+          "distinct_games": 156,
+          "independent_seeds": 30,
+          "different_from_parent": 8,
+          "parent_to_chosen": {
+            "pass->peng": 7,
+            "peng->pass": 1
+          },
+          "actions": {
+            "pass": {
+              "decisions": 15,
+              "mean_terminal_cash": -6.333333333333333,
+              "win_rate": 0.26666666666666666
+            },
+            "peng": {
+              "decisions": 322,
+              "mean_terminal_cash": 5.108695652173913,
+              "win_rate": 0.3385093167701863
+            }
+          },
+          "passed_hu": 0,
+          "pass_hu_worse_than_immediate": 0,
+          "mean_realized_cash_minus_immediate_hu": null,
+          "examples": [
+            {
+              "category": "peng_pass",
+              "seed": 6500010,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 10,
+              "phase": "respond",
+              "remaining_tiles": 18,
+              "hand": [
+                2,
+                2,
+                2,
+                5,
+                7,
+                8,
+                9,
+                9,
+                10,
+                11,
+                11,
+                12,
+                14,
+                14,
+                14,
+                15,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "peng",
+                "player": 2,
+                "tile": 11,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 11,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 2,
+                    "tile": 11,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.6319297552108765
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 11,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.36807024478912354
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -25,
+              "winner": 1
+            },
+            {
+              "category": "peng_pass",
+              "seed": 6500010,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 1,
+              "step": 12,
+              "phase": "respond",
+              "remaining_tiles": 17,
+              "hand": [
+                2,
+                2,
+                2,
+                5,
+                7,
+                8,
+                9,
+                9,
+                10,
+                11,
+                11,
+                12,
+                14,
+                14,
+                14,
+                15,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "peng",
+                "player": 2,
+                "tile": 11,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 11,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 2,
+                    "tile": 11,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.6567407846450806
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 11,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.34325915575027466
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -20,
+              "winner": 0
+            },
+            {
+              "category": "peng_pass",
+              "seed": 6500004,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 1,
+              "step": 16,
+              "phase": "respond",
+              "remaining_tiles": 16,
+              "hand": [
+                0,
+                1,
+                1,
+                6,
+                6,
+                7,
+                8,
+                9,
+                9,
+                10,
+                11,
+                11,
+                11,
+                14,
+                16,
+                18,
+                19
+              ],
+              "exposed_huxi": 3,
+              "chosen": {
+                "kind": "peng",
+                "player": 2,
+                "tile": 1,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 1,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 2,
+                    "tile": 1,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.5638132095336914
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 1,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.43618687987327576
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -15,
+              "winner": 1
+            },
+            {
+              "category": "peng_pass",
+              "seed": 6500008,
+              "dealer": 1,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 7,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                0,
+                0,
+                1,
+                2,
+                4,
+                5,
+                5,
+                5,
+                6,
+                6,
+                7,
+                8,
+                9,
+                11,
+                13,
+                13,
+                15,
+                17,
+                18,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "peng",
+                "player": 2,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 2,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.5098755955696106
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.490124374628067
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -15,
+              "winner": 1
+            },
+            {
+              "category": "peng_pass",
+              "seed": 6500027,
+              "dealer": 2,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 1,
+              "step": 61,
+              "phase": "respond",
+              "remaining_tiles": 7,
+              "hand": [
+                1,
+                1,
+                5,
+                6,
+                7,
+                8,
+                9,
+                13,
+                13,
+                13
+              ],
+              "exposed_huxi": 13,
+              "chosen": {
+                "kind": "peng",
+                "player": 2,
+                "tile": 1,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 1,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 2,
+                    "tile": 1,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.6431692242622375
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 1,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.3568308353424072
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": 30,
+              "winner": 2
+            },
+            {
+              "category": "peng_pass",
+              "seed": 6500018,
+              "dealer": 2,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 0,
+              "step": 17,
+              "phase": "respond",
+              "remaining_tiles": 16,
+              "hand": [
+                0,
+                1,
+                2,
+                2,
+                3,
+                3,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                16,
+                17,
+                17,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "peng",
+                "player": 1,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 1,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.4625016450881958
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.5374982953071594
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": 40,
+              "winner": 1
+            }
+          ]
+        },
+        "hu_pass": {
+          "decisions": 63,
+          "distinct_games": 61,
+          "independent_seeds": 30,
+          "different_from_parent": 1,
+          "parent_to_chosen": {
+            "hu->pass": 1
+          },
+          "actions": {
+            "hu": {
+              "decisions": 60,
+              "mean_terminal_cash": 47.5,
+              "win_rate": 1.0
+            },
+            "pass": {
+              "decisions": 3,
+              "mean_terminal_cash": 23.333333333333332,
+              "win_rate": 0.6666666666666666
+            }
+          },
+          "passed_hu": 3,
+          "pass_hu_worse_than_immediate": 1,
+          "mean_realized_cash_minus_immediate_hu": -13.333333333333334,
+          "examples": [
+            {
+              "category": "hu_pass",
+              "seed": 6500004,
+              "dealer": 0,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 1,
+              "step": 36,
+              "phase": "respond",
+              "remaining_tiles": 12,
+              "hand": [
+                1,
+                6,
+                9,
+                15,
+                15,
+                18,
+                18
+              ],
+              "exposed_huxi": 18,
+              "chosen": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 8,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 8,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.3340505063533783
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.6659494638442993
+                }
+              ],
+              "immediate_hu_cash": 40,
+              "terminal_cash": 50,
+              "winner": 1
+            },
+            {
+              "category": "hu_pass",
+              "seed": 6500004,
+              "dealer": 0,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 0,
+              "step": 33,
+              "phase": "respond",
+              "remaining_tiles": 12,
+              "hand": [
+                1,
+                6,
+                9,
+                14,
+                14,
+                14,
+                15,
+                15,
+                18,
+                18
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 8,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 8,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.24456319212913513
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.7554368376731873
+                }
+              ],
+              "immediate_hu_cash": 30,
+              "terminal_cash": -30,
+              "winner": 0
+            },
+            {
+              "category": "hu_pass",
+              "seed": 6500000,
+              "dealer": 2,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 1,
+              "step": 41,
+              "phase": "respond",
+              "remaining_tiles": 14,
+              "hand": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                6,
+                9
+              ],
+              "exposed_huxi": 13,
+              "chosen": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 1,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 1,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 1,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9806842803955078
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 1,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.01931563764810562
+                }
+              ],
+              "immediate_hu_cash": 20,
+              "terminal_cash": 20,
+              "winner": 1
+            },
+            {
+              "category": "hu_pass",
+              "seed": 6500000,
+              "dealer": 2,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 1,
+              "step": 66,
+              "phase": "respond",
+              "remaining_tiles": 5,
+              "hand": [
+                4,
+                5,
+                6,
+                7,
+                7,
+                12,
+                12
+              ],
+              "exposed_huxi": 16,
+              "chosen": {
+                "kind": "hu",
+                "player": 2,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 2,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 2,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9998494982719421
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.00015057587006594986
+                }
+              ],
+              "immediate_hu_cash": 20,
+              "terminal_cash": 20,
+              "winner": 2
+            },
+            {
+              "category": "hu_pass",
+              "seed": 6500001,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 18,
+              "phase": "post_meld",
+              "remaining_tiles": 18,
+              "hand": [
+                4,
+                4,
+                12,
+                13,
+                14,
+                19,
+                19,
+                19
+              ],
+              "exposed_huxi": 14,
+              "chosen": {
+                "kind": "hu",
+                "player": 2,
+                "tile": null,
+                "chi": [],
+                "bi": [],
+                "source_player": null,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 2,
+                "tile": null,
+                "chi": [],
+                "bi": [],
+                "source_player": null,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 2,
+                    "tile": null,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": null,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999977350234985
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": null,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": null,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 2.258534550492186e-06
+                }
+              ],
+              "immediate_hu_cash": 30,
+              "terminal_cash": 30,
+              "winner": 2
+            },
+            {
+              "category": "hu_pass",
+              "seed": 6500001,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 1,
+              "step": 18,
+              "phase": "post_meld",
+              "remaining_tiles": 18,
+              "hand": [
+                4,
+                4,
+                12,
+                13,
+                14,
+                19,
+                19,
+                19
+              ],
+              "exposed_huxi": 14,
+              "chosen": {
+                "kind": "hu",
+                "player": 2,
+                "tile": null,
+                "chi": [],
+                "bi": [],
+                "source_player": null,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 2,
+                "tile": null,
+                "chi": [],
+                "bi": [],
+                "source_player": null,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 2,
+                    "tile": null,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": null,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999977350234985
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": null,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": null,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 2.258534550492186e-06
+                }
+              ],
+              "immediate_hu_cash": 30,
+              "terminal_cash": 30,
+              "winner": 2
+            }
+          ]
+        }
+      }
+    },
+    "parent_decisions": {
+      "sampling": "greedy evaluation",
+      "interpretation": "descriptive outcomes; action groups are not causal Q or EV labels",
+      "categories": {
+        "chi_bi_pass": {
+          "decisions": 375,
+          "distinct_games": 152,
+          "independent_seeds": 30,
+          "different_from_parent": 0,
+          "parent_to_chosen": {},
+          "actions": {
+            "chi": {
+              "decisions": 244,
+              "mean_terminal_cash": 0.9426229508196722,
+              "win_rate": 0.29098360655737704
+            },
+            "pass": {
+              "decisions": 131,
+              "mean_terminal_cash": -3.7404580152671754,
+              "win_rate": 0.2366412213740458
+            }
+          },
+          "passed_hu": 0,
+          "pass_hu_worse_than_immediate": 0,
+          "mean_realized_cash_minus_immediate_hu": null,
+          "examples": [
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500025,
+              "dealer": 0,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 1,
+              "step": 8,
+              "phase": "respond",
+              "remaining_tiles": 18,
+              "hand": [
+                0,
+                0,
+                1,
+                1,
+                2,
+                3,
+                4,
+                6,
+                7,
+                8,
+                8,
+                9,
+                11,
+                13,
+                13,
+                15,
+                16,
+                17,
+                17,
+                18
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [
+                      6,
+                      16,
+                      16
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.3417854309082031
+                },
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [
+                      15,
+                      16,
+                      17
+                    ],
+                    "bi": [
+                      [
+                        16,
+                        17,
+                        18
+                      ]
+                    ],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.01468510553240776
+                },
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [
+                      16,
+                      17,
+                      18
+                    ],
+                    "bi": [
+                      [
+                        15,
+                        16,
+                        17
+                      ]
+                    ],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.0011287882225587964
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.6424006819725037
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -125,
+              "winner": 1
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500010,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 6,
+              "phase": "respond",
+              "remaining_tiles": 18,
+              "hand": [
+                2,
+                2,
+                2,
+                3,
+                5,
+                7,
+                8,
+                9,
+                9,
+                10,
+                11,
+                11,
+                12,
+                14,
+                14,
+                14,
+                15,
+                18,
+                19,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 17,
+                "chi": [
+                  17,
+                  18,
+                  19
+                ],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 17,
+                "chi": [
+                  17,
+                  18,
+                  19
+                ],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 17,
+                    "chi": [
+                      17,
+                      18,
+                      19
+                    ],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.8925150632858276
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 17,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.10748498141765594
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -80,
+              "winner": 0
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500014,
+              "dealer": 1,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 62,
+              "phase": "respond",
+              "remaining_tiles": 4,
+              "hand": [
+                2,
+                3,
+                4,
+                9,
+                9,
+                14,
+                15
+              ],
+              "exposed_huxi": 22,
+              "chosen": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 4,
+                "chi": [
+                  4,
+                  4,
+                  14
+                ],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 4,
+                "chi": [
+                  4,
+                  4,
+                  14
+                ],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 4,
+                    "chi": [
+                      4,
+                      4,
+                      14
+                    ],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9732874631881714
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 4,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.026712529361248016
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -80,
+              "winner": 1
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500013,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 1,
+              "step": 5,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                0,
+                1,
+                2,
+                2,
+                3,
+                3,
+                4,
+                6,
+                6,
+                7,
+                9,
+                10,
+                10,
+                10,
+                11,
+                12,
+                14,
+                18,
+                18,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 8,
+                "chi": [
+                  8,
+                  18,
+                  18
+                ],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 8,
+                "chi": [
+                  8,
+                  18,
+                  18
+                ],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 8,
+                    "chi": [
+                      6,
+                      7,
+                      8
+                    ],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.006776777096092701
+                },
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 8,
+                    "chi": [
+                      7,
+                      8,
+                      9
+                    ],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.009015006013214588
+                },
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 8,
+                    "chi": [
+                      8,
+                      18,
+                      18
+                    ],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9821279048919678
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.0020803462248295546
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -75,
+              "winner": 0
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500029,
+              "dealer": 1,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 14,
+              "phase": "respond",
+              "remaining_tiles": 18,
+              "hand": [
+                0,
+                2,
+                2,
+                2,
+                4,
+                5,
+                6,
+                7,
+                8,
+                8,
+                11,
+                11,
+                12,
+                13,
+                15,
+                17,
+                17,
+                18,
+                19,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 9,
+                "chi": [
+                  9,
+                  19,
+                  19
+                ],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 9,
+                "chi": [
+                  9,
+                  19,
+                  19
+                ],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 9,
+                    "chi": [
+                      7,
+                      8,
+                      9
+                    ],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.23628592491149902
+                },
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 9,
+                    "chi": [
+                      9,
+                      19,
+                      19
+                    ],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.7249806523323059
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 9,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.038733482360839844
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -70,
+              "winner": 1
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 6500029,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 0,
+              "step": 32,
+              "phase": "respond",
+              "remaining_tiles": 16,
+              "hand": [
+                7,
+                8,
+                9,
+                11,
+                13,
+                14,
+                15,
+                16,
+                16,
+                18,
+                19
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 9,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 9,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 9,
+                    "chi": [
+                      9,
+                      9,
+                      19
+                    ],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.06168605014681816
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 9,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9383139610290527
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -70,
+              "winner": 1
+            }
+          ]
+        },
+        "peng_pass": {
+          "decisions": 337,
+          "distinct_games": 157,
+          "independent_seeds": 30,
+          "different_from_parent": 0,
+          "parent_to_chosen": {},
+          "actions": {
+            "pass": {
+              "decisions": 20,
+              "mean_terminal_cash": -17.75,
+              "win_rate": 0.1
+            },
+            "peng": {
+              "decisions": 317,
+              "mean_terminal_cash": 3.9905362776025237,
+              "win_rate": 0.29337539432176657
+            }
+          },
+          "passed_hu": 0,
+          "pass_hu_worse_than_immediate": 0,
+          "mean_realized_cash_minus_immediate_hu": null,
+          "examples": [
+            {
+              "category": "peng_pass",
+              "seed": 6500025,
+              "dealer": 0,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 1,
+              "step": 5,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                0,
+                0,
+                1,
+                1,
+                2,
+                3,
+                4,
+                6,
+                7,
+                8,
+                8,
+                9,
+                11,
+                13,
+                13,
+                15,
+                16,
+                17,
+                17,
+                18
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 0,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.015728922560811043
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9842711091041565
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -125,
+              "winner": 1
+            },
+            {
+              "category": "peng_pass",
+              "seed": 6500010,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 10,
+              "phase": "respond",
+              "remaining_tiles": 18,
+              "hand": [
+                2,
+                2,
+                2,
+                5,
+                7,
+                8,
+                9,
+                9,
+                10,
+                11,
+                11,
+                12,
+                14,
+                14,
+                14,
+                15,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 11,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 11,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 2,
+                    "tile": 11,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.28085747361183167
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 11,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.7191426157951355
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -80,
+              "winner": 0
+            },
+            {
+              "category": "peng_pass",
+              "seed": 6500010,
+              "dealer": 0,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 0,
+              "step": 33,
+              "phase": "respond",
+              "remaining_tiles": 12,
+              "hand": [
+                0,
+                4,
+                4,
+                7,
+                8,
+                9,
+                12,
+                12,
+                18,
+                18,
+                18,
+                19,
+                19
+              ],
+              "exposed_huxi": 18,
+              "chosen": {
+                "kind": "peng",
+                "player": 1,
+                "tile": 19,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "peng",
+                "player": 1,
+                "tile": 19,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 1,
+                    "tile": 19,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9999822974205017
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 19,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 1.774788324837573e-05
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -80,
+              "winner": 0
+            },
+            {
+              "category": "peng_pass",
+              "seed": 6500014,
+              "dealer": 1,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 3,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                3,
+                4,
+                5,
+                5,
+                7,
+                8,
+                9,
+                9,
+                12,
+                14,
+                15,
+                17,
+                18,
+                18
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "peng",
+                "player": 2,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "peng",
+                "player": 2,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 2,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9597861170768738
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.04021398350596428
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -80,
+              "winner": 1
+            },
+            {
+              "category": "peng_pass",
+              "seed": 6500014,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 0,
+              "step": 11,
+              "phase": "respond",
+              "remaining_tiles": 18,
+              "hand": [
+                2,
+                2,
+                3,
+                3,
+                8,
+                8,
+                11,
+                13,
+                13,
+                14,
+                14,
+                15,
+                16,
+                17,
+                19,
+                19
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 13,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 13,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 0,
+                    "tile": 13,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9982450604438782
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 13,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.0017550052143633366
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -80,
+              "winner": 1
+            },
+            {
+              "category": "peng_pass",
+              "seed": 6500029,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 0,
+              "step": 3,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                3,
+                5,
+                7,
+                7,
+                8,
+                9,
+                10,
+                10,
+                11,
+                12,
+                12,
+                13,
+                14,
+                15,
+                16,
+                16,
+                17,
+                17,
+                18,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 10,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 10,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 0,
+                    "tile": 10,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9587151408195496
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 10,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.041284799575805664
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -70,
+              "winner": 1
+            }
+          ]
+        },
+        "hu_pass": {
+          "decisions": 56,
+          "distinct_games": 56,
+          "independent_seeds": 29,
+          "different_from_parent": 0,
+          "parent_to_chosen": {},
+          "actions": {
+            "hu": {
+              "decisions": 55,
+              "mean_terminal_cash": 52.90909090909091,
+              "win_rate": 1.0
+            },
+            "pass": {
+              "decisions": 1,
+              "mean_terminal_cash": -30.0,
+              "win_rate": 0.0
+            }
+          },
+          "passed_hu": 1,
+          "pass_hu_worse_than_immediate": 1,
+          "mean_realized_cash_minus_immediate_hu": -60.0,
+          "examples": [
+            {
+              "category": "hu_pass",
+              "seed": 6500004,
+              "dealer": 0,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 0,
+              "step": 33,
+              "phase": "respond",
+              "remaining_tiles": 12,
+              "hand": [
+                1,
+                6,
+                9,
+                14,
+                14,
+                14,
+                15,
+                15,
+                18,
+                18
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 8,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 8,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.39945441484451294
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.6005455851554871
+                }
+              ],
+              "immediate_hu_cash": 30,
+              "terminal_cash": -30,
+              "winner": 0
+            },
+            {
+              "category": "hu_pass",
+              "seed": 6500000,
+              "dealer": 2,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 30,
+              "phase": "respond",
+              "remaining_tiles": 16,
+              "hand": [
+                0,
+                0,
+                2,
+                3,
+                4,
+                5,
+                12,
+                12
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "hu",
+                "player": 2,
+                "tile": 17,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 2,
+                "tile": 17,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 2,
+                    "tile": 17,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999995231628418
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 17,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 5.180282300898398e-07
+                }
+              ],
+              "immediate_hu_cash": 20,
+              "terminal_cash": 20,
+              "winner": 2
+            },
+            {
+              "category": "hu_pass",
+              "seed": 6500000,
+              "dealer": 2,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 1,
+              "step": 41,
+              "phase": "respond",
+              "remaining_tiles": 14,
+              "hand": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                6,
+                9
+              ],
+              "exposed_huxi": 13,
+              "chosen": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 1,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 1,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 1,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9331815838813782
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 1,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.06681842356920242
+                }
+              ],
+              "immediate_hu_cash": 20,
+              "terminal_cash": 20,
+              "winner": 1
+            },
+            {
+              "category": "hu_pass",
+              "seed": 6500000,
+              "dealer": 2,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 1,
+              "step": 66,
+              "phase": "respond",
+              "remaining_tiles": 5,
+              "hand": [
+                4,
+                5,
+                6,
+                7,
+                7,
+                12,
+                12
+              ],
+              "exposed_huxi": 16,
+              "chosen": {
+                "kind": "hu",
+                "player": 2,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 2,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 2,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9998826384544373
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.00011737746535800397
+                }
+              ],
+              "immediate_hu_cash": 20,
+              "terminal_cash": 20,
+              "winner": 2
+            },
+            {
+              "category": "hu_pass",
+              "seed": 6500001,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 0,
+              "step": 18,
+              "phase": "post_meld",
+              "remaining_tiles": 18,
+              "hand": [
+                4,
+                4,
+                14,
+                15,
+                16,
+                19,
+                19,
+                19
+              ],
+              "exposed_huxi": 14,
+              "chosen": {
+                "kind": "hu",
+                "player": 2,
+                "tile": null,
+                "chi": [],
+                "bi": [],
+                "source_player": null,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 2,
+                "tile": null,
+                "chi": [],
+                "bi": [],
+                "source_player": null,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 2,
+                    "tile": null,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": null,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999995231628418
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": null,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": null,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 4.2532508359727217e-07
+                }
+              ],
+              "immediate_hu_cash": 60,
+              "terminal_cash": 60,
+              "winner": 2
+            },
+            {
+              "category": "hu_pass",
+              "seed": 6500001,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 1,
+              "step": 18,
+              "phase": "post_meld",
+              "remaining_tiles": 18,
+              "hand": [
+                4,
+                4,
+                14,
+                15,
+                16,
+                19,
+                19,
+                19
+              ],
+              "exposed_huxi": 14,
+              "chosen": {
+                "kind": "hu",
+                "player": 2,
+                "tile": null,
+                "chi": [],
+                "bi": [],
+                "source_player": null,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 2,
+                "tile": null,
+                "chi": [],
+                "bi": [],
+                "source_player": null,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 2,
+                    "tile": null,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": null,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999995231628418
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": null,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": null,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 4.2532508359727217e-07
+                }
+              ],
+              "immediate_hu_cash": 60,
+              "terminal_cash": 60,
+              "winner": 2
+            }
+          ]
+        }
+      }
+    }
+  }
+}
