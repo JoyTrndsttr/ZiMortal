@@ -15,3 +15,6 @@ data/generated/
 
 .venv-cuda/
 logs/
+
+# 逐代训练指标保留本地，重要结论写入人工总结。
+docs/training/**/generation-*.json

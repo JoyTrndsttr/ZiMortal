@@ -1,0 +1,4989 @@
+{
+  "evaluation": {
+    "valid": true,
+    "opponents": {
+      "0": {
+        "seeds": 600,
+        "games": 1800,
+        "mean_cash_delta": 1.347222222222222,
+        "paired_seed_bootstrap_95": [
+          -1.0500000000000003,
+          3.7028472222222217
+        ],
+        "paired_seed_bootstrap_interval": [
+          -1.7291840277777777,
+          4.245850694444446
+        ],
+        "alpha": 0.0125,
+        "candidate_mean_cash": 1.3472222222222223,
+        "base_mean_cash": 0.0,
+        "changed_trajectory_games": 827
+      },
+      "1": {
+        "seeds": 600,
+        "games": 1800,
+        "mean_cash_delta": 1.8166666666666667,
+        "paired_seed_bootstrap_95": [
+          -0.9695138888888891,
+          4.794513888888889
+        ],
+        "paired_seed_bootstrap_interval": [
+          -1.7668055555555555,
+          5.708333333333333
+        ],
+        "alpha": 0.0125,
+        "candidate_mean_cash": 17.183333333333334,
+        "base_mean_cash": 15.366666666666667,
+        "changed_trajectory_games": 878
+      },
+      "2": {
+        "seeds": 600,
+        "games": 1800,
+        "mean_cash_delta": 0.8361111111111109,
+        "paired_seed_bootstrap_95": [
+          -2.066666666666667,
+          3.7722222222222217
+        ],
+        "paired_seed_bootstrap_interval": [
+          -2.926475694444444,
+          4.476475694444449
+        ],
+        "alpha": 0.0125,
+        "candidate_mean_cash": 11.563888888888888,
+        "base_mean_cash": 10.727777777777778,
+        "changed_trajectory_games": 827
+      },
+      "3": {
+        "seeds": 600,
+        "games": 1800,
+        "mean_cash_delta": 3.2444444444444445,
+        "paired_seed_bootstrap_95": [
+          0.49986111111111114,
+          6.194513888888888
+        ],
+        "paired_seed_bootstrap_interval": [
+          -0.26124999999999976,
+          7.0722569444444465
+        ],
+        "alpha": 0.0125,
+        "candidate_mean_cash": 14.158333333333333,
+        "base_mean_cash": 10.91388888888889,
+        "changed_trajectory_games": 853
+      },
+      "4": {
+        "seeds": 600,
+        "games": 1800,
+        "mean_cash_delta": 1.980555555555555,
+        "paired_seed_bootstrap_95": [
+          -1.0611111111111113,
+          4.950069444444444
+        ],
+        "paired_seed_bootstrap_interval": [
+          -1.9444444444444444,
+          5.737552083333336
+        ],
+        "alpha": 0.0125,
+        "candidate_mean_cash": 18.966666666666665,
+        "base_mean_cash": 16.98611111111111,
+        "changed_trajectory_games": 864
+      },
+      "5": {
+        "seeds": 600,
+        "games": 1800,
+        "mean_cash_delta": 1.583333333333333,
+        "paired_seed_bootstrap_95": [
+          -1.369513888888889,
+          4.663888888888889
+        ],
+        "paired_seed_bootstrap_interval": [
+          -2.0917013888888887,
+          5.429218750000003
+        ],
+        "alpha": 0.0125,
+        "candidate_mean_cash": 23.066666666666666,
+        "base_mean_cash": 21.483333333333334,
+        "changed_trajectory_games": 863
+      },
+      "6": {
+        "seeds": 600,
+        "games": 1800,
+        "mean_cash_delta": 3.0250000000000004,
+        "paired_seed_bootstrap_95": [
+          0.13326388888888863,
+          5.952777777777777
+        ],
+        "paired_seed_bootstrap_interval": [
+          -0.6055902777777776,
+          6.750069444444448
+        ],
+        "alpha": 0.0125,
+        "candidate_mean_cash": 12.019444444444444,
+        "base_mean_cash": 8.994444444444444,
+        "changed_trajectory_games": 832
+      },
+      "7": {
+        "seeds": 600,
+        "games": 1800,
+        "mean_cash_delta": 1.6055555555555558,
+        "paired_seed_bootstrap_95": [
+          -1.5445833333333332,
+          4.583402777777777
+        ],
+        "paired_seed_bootstrap_interval": [
+          -2.505659722222222,
+          5.44029513888889
+        ],
+        "alpha": 0.0125,
+        "candidate_mean_cash": 6.5055555555555555,
+        "base_mean_cash": 4.9,
+        "changed_trajectory_games": 847
+      }
+    },
+    "aggregate": {
+      "independent_seeds": 600,
+      "mean_cash_delta": 1.9298611111111112,
+      "paired_seed_bootstrap_interval": [
+        0.11161241319444457,
+        3.767588975694448
+      ],
+      "alpha": 0.0125,
+      "interval_method": "approximate seed-cluster bootstrap"
+    },
+    "candidate_decisions": {
+      "sampling": "greedy evaluation",
+      "interpretation": "descriptive outcomes; action groups are not causal Q or EV labels",
+      "categories": {
+        "chi_bi_pass": {
+          "decisions": 31698,
+          "distinct_games": 12671,
+          "independent_seeds": 599,
+          "different_from_parent": 2866,
+          "review_eligible": 1847,
+          "parent_to_chosen": {
+            "pass->chi": 1092,
+            "chi->pass": 1626,
+            "chi->chi": 148
+          },
+          "actions": {
+            "chi": {
+              "decisions": 12450,
+              "mean_terminal_cash": 5.31285140562249,
+              "win_rate": 0.343855421686747
+            },
+            "pass": {
+              "decisions": 19248,
+              "mean_terminal_cash": 7.780288861180383,
+              "win_rate": 0.29961554447215294
+            }
+          },
+          "passed_hu": 0,
+          "pass_hu_worse_than_immediate": 0,
+          "mean_realized_cash_minus_immediate_hu": null,
+          "examples": [
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000542,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 2,
+              "step": 26,
+              "phase": "respond",
+              "remaining_tiles": 18,
+              "hand": [
+                0,
+                0,
+                1,
+                2,
+                3,
+                4,
+                4,
+                7,
+                10,
+                10,
+                16,
+                17,
+                18
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 2,
+                "chi": [
+                  2,
+                  3,
+                  4
+                ],
+                "bi": [
+                  [
+                    0,
+                    1,
+                    2
+                  ]
+                ],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 2,
+                "chi": [
+                  0,
+                  1,
+                  2
+                ],
+                "bi": [
+                  [
+                    2,
+                    3,
+                    4
+                  ]
+                ],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.24745851755142212,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 2,
+                    "chi": [
+                      0,
+                      1,
+                      2
+                    ],
+                    "bi": [
+                      [
+                        2,
+                        3,
+                        4
+                      ]
+                    ],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.2959885001182556,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 3,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 2,
+                    "chi": [
+                      2,
+                      3,
+                      4
+                    ],
+                    "bi": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.5434470176696777,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 3,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.16056452691555023,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -715,
+              "winner": 0
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000542,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 6,
+              "step": 26,
+              "phase": "respond",
+              "remaining_tiles": 18,
+              "hand": [
+                0,
+                0,
+                1,
+                2,
+                3,
+                4,
+                4,
+                7,
+                10,
+                10,
+                16,
+                17,
+                18
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 2,
+                "chi": [
+                  2,
+                  3,
+                  4
+                ],
+                "bi": [
+                  [
+                    0,
+                    1,
+                    2
+                  ]
+                ],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 2,
+                "chi": [
+                  0,
+                  1,
+                  2
+                ],
+                "bi": [
+                  [
+                    2,
+                    3,
+                    4
+                  ]
+                ],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.24745851755142212,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 2,
+                    "chi": [
+                      0,
+                      1,
+                      2
+                    ],
+                    "bi": [
+                      [
+                        2,
+                        3,
+                        4
+                      ]
+                    ],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.2959885001182556,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 3,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 2,
+                    "chi": [
+                      2,
+                      3,
+                      4
+                    ],
+                    "bi": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.5434470176696777,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 3,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.16056452691555023,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -715,
+              "winner": 0
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000340,
+              "dealer": 2,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 5,
+              "step": 20,
+              "phase": "respond",
+              "remaining_tiles": 18,
+              "hand": [
+                1,
+                3,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                11,
+                11,
+                13,
+                15,
+                17
+              ],
+              "exposed_huxi": 4,
+              "chosen": {
+                "kind": "chi",
+                "player": 1,
+                "tile": 16,
+                "chi": [
+                  15,
+                  16,
+                  17
+                ],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.0743710994720459,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 1,
+                    "tile": 16,
+                    "chi": [
+                      15,
+                      16,
+                      17
+                    ],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.537185549736023,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 16,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.46281445026397705,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -400,
+              "winner": 2
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000173,
+              "dealer": 0,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 0,
+              "step": 30,
+              "phase": "respond",
+              "remaining_tiles": 13,
+              "hand": [
+                1,
+                2,
+                2,
+                3,
+                7,
+                10,
+                11,
+                12,
+                17,
+                17
+              ],
+              "exposed_huxi": 33,
+              "chosen": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 0,
+                "tile": 0,
+                "chi": [
+                  0,
+                  1,
+                  2
+                ],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.12391871213912964,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 0,
+                    "chi": [
+                      0,
+                      1,
+                      2
+                    ],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.43804067373275757,
+                  "structure": {
+                    "before_pattern_huxi": 6,
+                    "after_pattern_huxi": 6,
+                    "new_meld_huxi": 3,
+                    "static_huxi_delta": 3,
+                    "before_plan": [
+                      [
+                        10,
+                        11,
+                        12
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        10,
+                        11,
+                        12
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.5619593858718872,
+                  "structure": {
+                    "before_pattern_huxi": 6,
+                    "after_pattern_huxi": 6,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        10,
+                        11,
+                        12
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        10,
+                        11,
+                        12
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -360,
+              "winner": 2
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000195,
+              "dealer": 1,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 0,
+              "step": 30,
+              "phase": "respond",
+              "remaining_tiles": 14,
+              "hand": [
+                3,
+                4,
+                6,
+                11,
+                14,
+                14,
+                15,
+                15,
+                16,
+                17,
+                17
+              ],
+              "exposed_huxi": 7,
+              "chosen": {
+                "kind": "chi",
+                "player": 1,
+                "tile": 6,
+                "chi": [
+                  6,
+                  6,
+                  16
+                ],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 6,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.6613972336053848,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 1,
+                    "tile": 6,
+                    "chi": [
+                      6,
+                      6,
+                      16
+                    ],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.8306986093521118,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": true,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 6,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.169301375746727,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -320,
+              "winner": 0
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000599,
+              "dealer": 0,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 0,
+              "step": 52,
+              "phase": "respond",
+              "remaining_tiles": 7,
+              "hand": [
+                3,
+                4,
+                6,
+                9,
+                11,
+                11,
+                12,
+                13,
+                13,
+                13,
+                14,
+                14,
+                15,
+                16,
+                19,
+                19
+              ],
+              "exposed_huxi": 6,
+              "chosen": {
+                "kind": "chi",
+                "player": 0,
+                "tile": 6,
+                "chi": [
+                  6,
+                  6,
+                  16
+                ],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 6,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.6109444499015808,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 6,
+                    "chi": [
+                      6,
+                      6,
+                      16
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.8054722547531128,
+                  "structure": {
+                    "before_pattern_huxi": 6,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": -6,
+                    "before_plan": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "after_plan": [],
+                    "broken_patterns": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "mixed_pair": true,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 6,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.19452780485153198,
+                  "structure": {
+                    "before_pattern_huxi": 6,
+                    "after_pattern_huxi": 6,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -300,
+              "winner": 1
+            }
+          ]
+        },
+        "peng_pass": {
+          "decisions": 29884,
+          "distinct_games": 12891,
+          "independent_seeds": 598,
+          "different_from_parent": 539,
+          "review_eligible": 145,
+          "parent_to_chosen": {
+            "pass->peng": 514,
+            "peng->pass": 25
+          },
+          "actions": {
+            "pass": {
+              "decisions": 369,
+              "mean_terminal_cash": -4.8102981029810294,
+              "win_rate": 0.2005420054200542
+            },
+            "peng": {
+              "decisions": 29515,
+              "mean_terminal_cash": 21.39437574114857,
+              "win_rate": 0.37502964594274096
+            }
+          },
+          "passed_hu": 0,
+          "pass_hu_worse_than_immediate": 0,
+          "mean_realized_cash_minus_immediate_hu": null,
+          "examples": [
+            {
+              "category": "peng_pass",
+              "seed": 163000056,
+              "dealer": 0,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 2,
+              "step": 7,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                0,
+                0,
+                1,
+                2,
+                3,
+                4,
+                4,
+                7,
+                7,
+                8,
+                11,
+                13,
+                13,
+                13,
+                14,
+                15,
+                17,
+                18,
+                18,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "peng",
+                "player": 2,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.9490686077624559,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 2,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9745343327522278,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 1,
+                    "static_huxi_delta": -2,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [],
+                    "broken_patterns": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.025465724989771843,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -315,
+              "winner": 0
+            },
+            {
+              "category": "peng_pass",
+              "seed": 163000537,
+              "dealer": 1,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 2,
+              "step": 5,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                0,
+                0,
+                1,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                5,
+                8,
+                8,
+                9,
+                9,
+                10,
+                11,
+                13,
+                16,
+                18,
+                18
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "peng",
+                "player": 2,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 2,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.005386769771575928,
+              "review_eligible": true,
+              "public_players": [
+                {
+                  "hand_count": 17,
+                  "melds": [
+                    {
+                      "kind": "peng",
+                      "tiles": [
+                        2,
+                        2,
+                        2
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "hand_count": 20,
+                  "melds": []
+                },
+                {
+                  "hand_count": 20,
+                  "melds": []
+                }
+              ],
+              "passed_chi": [],
+              "passed_peng": [],
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 2,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.5026933550834656,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 1,
+                    "static_huxi_delta": -2,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [],
+                    "broken_patterns": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.49730658531188965,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "history_prefix": [
+                {
+                  "kind": "pass",
+                  "player": 1,
+                  "tile": null,
+                  "chi": [],
+                  "bi": [],
+                  "source_player": null,
+                  "source_type": "initial",
+                  "forced": true
+                },
+                {
+                  "kind": "discard",
+                  "player": 1,
+                  "tile": 2,
+                  "chi": [],
+                  "bi": [],
+                  "source_player": null,
+                  "source_type": null,
+                  "forced": false
+                },
+                {
+                  "kind": "peng",
+                  "player": 0,
+                  "tile": 2,
+                  "chi": [],
+                  "bi": [],
+                  "source_player": 1,
+                  "source_type": "discard",
+                  "forced": false
+                },
+                {
+                  "kind": "discard",
+                  "player": 0,
+                  "tile": 0,
+                  "chi": [],
+                  "bi": [],
+                  "source_player": null,
+                  "source_type": null,
+                  "forced": false
+                }
+              ],
+              "terminal_cash": -315,
+              "winner": 1
+            },
+            {
+              "category": "peng_pass",
+              "seed": 163000173,
+              "dealer": 0,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 0,
+              "step": 29,
+              "phase": "respond",
+              "remaining_tiles": 13,
+              "hand": [
+                0,
+                0,
+                1,
+                2,
+                3,
+                7,
+                7,
+                9,
+                9,
+                17,
+                19
+              ],
+              "exposed_huxi": 7,
+              "chosen": {
+                "kind": "peng",
+                "player": 1,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.8567755147814751,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 1,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9283877611160278,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 1,
+                    "static_huxi_delta": -2,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [],
+                    "broken_patterns": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.07161224633455276,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -300,
+              "winner": 0
+            },
+            {
+              "category": "peng_pass",
+              "seed": 163000173,
+              "dealer": 0,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 6,
+              "step": 29,
+              "phase": "respond",
+              "remaining_tiles": 13,
+              "hand": [
+                0,
+                0,
+                1,
+                2,
+                3,
+                7,
+                7,
+                9,
+                9,
+                17,
+                19
+              ],
+              "exposed_huxi": 7,
+              "chosen": {
+                "kind": "peng",
+                "player": 1,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.8567755147814751,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 1,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9283877611160278,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 1,
+                    "static_huxi_delta": -2,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [],
+                    "broken_patterns": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.07161224633455276,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -300,
+              "winner": 0
+            },
+            {
+              "category": "peng_pass",
+              "seed": 163000173,
+              "dealer": 0,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 7,
+              "step": 29,
+              "phase": "respond",
+              "remaining_tiles": 13,
+              "hand": [
+                0,
+                0,
+                1,
+                2,
+                3,
+                7,
+                7,
+                9,
+                9,
+                17,
+                19
+              ],
+              "exposed_huxi": 7,
+              "chosen": {
+                "kind": "peng",
+                "player": 1,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.8567755147814751,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 1,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9283877611160278,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 1,
+                    "static_huxi_delta": -2,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [],
+                    "broken_patterns": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.07161224633455276,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -300,
+              "winner": 0
+            },
+            {
+              "category": "peng_pass",
+              "seed": 163000173,
+              "dealer": 0,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 2,
+              "step": 29,
+              "phase": "respond",
+              "remaining_tiles": 13,
+              "hand": [
+                0,
+                0,
+                1,
+                2,
+                3,
+                7,
+                7,
+                9,
+                9,
+                17,
+                19
+              ],
+              "exposed_huxi": 7,
+              "chosen": {
+                "kind": "peng",
+                "player": 1,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 1,
+                "tile": 0,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.8567755147814751,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 1,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9283877611160278,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 1,
+                    "static_huxi_delta": -2,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [],
+                    "broken_patterns": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 0,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.07161224633455276,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -275,
+              "winner": 0
+            }
+          ]
+        },
+        "hu_pass": {
+          "decisions": 5134,
+          "distinct_games": 5134,
+          "independent_seeds": 595,
+          "different_from_parent": 1,
+          "review_eligible": 0,
+          "parent_to_chosen": {
+            "pass->hu": 1
+          },
+          "actions": {
+            "hu": {
+              "decisions": 5134,
+              "mean_terminal_cash": 78.61901051811454,
+              "win_rate": 1.0
+            }
+          },
+          "passed_hu": 0,
+          "pass_hu_worse_than_immediate": 0,
+          "mean_realized_cash_minus_immediate_hu": null,
+          "examples": [
+            {
+              "category": "hu_pass",
+              "seed": 163000411,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 5,
+              "step": 37,
+              "phase": "respond",
+              "remaining_tiles": 13,
+              "hand": [
+                1,
+                6,
+                7,
+                7,
+                9,
+                13,
+                13,
+                14,
+                14,
+                15,
+                16,
+                17,
+                17
+              ],
+              "exposed_huxi": 12,
+              "chosen": {
+                "kind": "hu",
+                "player": 0,
+                "tile": 3,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 3,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": true,
+              "policy_margin": 0.964766239747405,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 0,
+                    "tile": 3,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.982383131980896,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 3,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.017616892233490944,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 20,
+              "terminal_cash": 20,
+              "winner": 0
+            },
+            {
+              "category": "hu_pass",
+              "seed": 163000000,
+              "dealer": 1,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 3,
+              "step": 27,
+              "phase": "respond",
+              "remaining_tiles": 16,
+              "hand": [
+                10,
+                10,
+                12,
+                12,
+                16,
+                16,
+                16,
+                17,
+                17,
+                17
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9999993021879732,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999996423721313,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 3.40184158176271e-07,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 120,
+              "terminal_cash": 120,
+              "winner": 1
+            },
+            {
+              "category": "hu_pass",
+              "seed": 163000000,
+              "dealer": 1,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 7,
+              "step": 27,
+              "phase": "respond",
+              "remaining_tiles": 16,
+              "hand": [
+                10,
+                10,
+                12,
+                12,
+                16,
+                16,
+                16,
+                17,
+                17,
+                17
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.999999780034436,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999998807907104,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 1.0075627443484336e-07,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 120,
+              "terminal_cash": 120,
+              "winner": 1
+            },
+            {
+              "category": "hu_pass",
+              "seed": 163000000,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 3,
+              "step": 46,
+              "phase": "respond",
+              "remaining_tiles": 10,
+              "hand": [
+                11,
+                12,
+                13,
+                14,
+                16,
+                19,
+                19
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "hu",
+                "player": 0,
+                "tile": 19,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 0,
+                "tile": 19,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9999980696863986,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 0,
+                    "tile": 19,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999990463256836,
+                  "structure": {
+                    "before_pattern_huxi": 6,
+                    "after_pattern_huxi": 6,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 19,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 9.766392849996919e-07,
+                  "structure": {
+                    "before_pattern_huxi": 6,
+                    "after_pattern_huxi": 6,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 20,
+              "terminal_cash": 20,
+              "winner": 0
+            },
+            {
+              "category": "hu_pass",
+              "seed": 163000000,
+              "dealer": 1,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 0,
+              "step": 68,
+              "phase": "respond",
+              "remaining_tiles": 1,
+              "hand": [
+                10,
+                10,
+                12,
+                12,
+                16,
+                16,
+                16
+              ],
+              "exposed_huxi": 18,
+              "chosen": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 12,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 12,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.999999807039984,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 12,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999998807907104,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 12,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 7.375072641480074e-08,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 180,
+              "terminal_cash": 180,
+              "winner": 1
+            },
+            {
+              "category": "hu_pass",
+              "seed": 163000000,
+              "dealer": 1,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 2,
+              "step": 69,
+              "phase": "post_meld",
+              "remaining_tiles": 1,
+              "hand": [
+                8,
+                8,
+                8,
+                10,
+                10
+              ],
+              "exposed_huxi": 30,
+              "chosen": {
+                "kind": "hu",
+                "player": 1,
+                "tile": null,
+                "chi": [],
+                "bi": [],
+                "source_player": null,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": null,
+                "chi": [],
+                "bi": [],
+                "source_player": null,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.999999997484899,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": null,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": null,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 1.0,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": null,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": null,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 2.515101016342669e-09,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 320,
+              "terminal_cash": 320,
+              "winner": 1
+            }
+          ]
+        }
+      }
+    },
+    "parent_decisions": {
+      "sampling": "greedy evaluation",
+      "interpretation": "descriptive outcomes; action groups are not causal Q or EV labels",
+      "categories": {
+        "chi_bi_pass": {
+          "decisions": 32409,
+          "distinct_games": 12716,
+          "independent_seeds": 599,
+          "different_from_parent": 0,
+          "review_eligible": 2257,
+          "parent_to_chosen": {},
+          "actions": {
+            "chi": {
+              "decisions": 13290,
+              "mean_terminal_cash": 4.9303987960872835,
+              "win_rate": 0.3378480060195636
+            },
+            "pass": {
+              "decisions": 19119,
+              "mean_terminal_cash": 5.892044563000157,
+              "win_rate": 0.2850044458392175
+            }
+          },
+          "passed_hu": 0,
+          "pass_hu_worse_than_immediate": 0,
+          "mean_realized_cash_minus_immediate_hu": null,
+          "examples": [
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000525,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 5,
+              "step": 26,
+              "phase": "respond",
+              "remaining_tiles": 16,
+              "hand": [
+                1,
+                1,
+                2,
+                3,
+                5,
+                5,
+                6,
+                7,
+                14,
+                14,
+                15,
+                17,
+                17
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "chi",
+                "player": 0,
+                "tile": 8,
+                "chi": [
+                  6,
+                  7,
+                  8
+                ],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 0,
+                "tile": 8,
+                "chi": [
+                  6,
+                  7,
+                  8
+                ],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.42177727818489075,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 8,
+                    "chi": [
+                      6,
+                      7,
+                      8
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.7108886241912842,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.28911134600639343,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -880,
+              "winner": 1
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000203,
+              "dealer": 0,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 2,
+              "step": 7,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                1,
+                2,
+                4,
+                5,
+                6,
+                7,
+                9,
+                12,
+                13,
+                15,
+                15,
+                15,
+                16,
+                17,
+                18,
+                18,
+                18
+              ],
+              "exposed_huxi": 1,
+              "chosen": {
+                "kind": "chi",
+                "player": 1,
+                "tile": 14,
+                "chi": [
+                  12,
+                  13,
+                  14
+                ],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 1,
+                "tile": 14,
+                "chi": [
+                  12,
+                  13,
+                  14
+                ],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9268589429557323,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 1,
+                    "tile": 14,
+                    "chi": [
+                      12,
+                      13,
+                      14
+                    ],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9634295105934143,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 14,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.03657056763768196,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -750,
+              "winner": 0
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000195,
+              "dealer": 1,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 3,
+              "step": 41,
+              "phase": "respond",
+              "remaining_tiles": 13,
+              "hand": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                5,
+                5,
+                6,
+                9,
+                9,
+                9,
+                12,
+                14
+              ],
+              "exposed_huxi": 10,
+              "chosen": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 14,
+                "chi": [
+                  4,
+                  14,
+                  14
+                ],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 2,
+                "tile": 14,
+                "chi": [
+                  4,
+                  14,
+                  14
+                ],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9260942041873932,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 2,
+                    "tile": 14,
+                    "chi": [
+                      4,
+                      14,
+                      14
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9630471467971802,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": true,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 14,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.03695294260978699,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -630,
+              "winner": 0
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000525,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 2,
+              "step": 29,
+              "phase": "respond",
+              "remaining_tiles": 16,
+              "hand": [
+                1,
+                1,
+                2,
+                3,
+                5,
+                5,
+                6,
+                7,
+                14,
+                14,
+                15,
+                17,
+                17
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.8576625622808933,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [
+                      14,
+                      15,
+                      16
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.06145262345671654,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [
+                      15,
+                      16,
+                      17
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.01943216659128666,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9191151857376099,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -585,
+              "winner": 1
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000525,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 7,
+              "step": 29,
+              "phase": "respond",
+              "remaining_tiles": 16,
+              "hand": [
+                1,
+                1,
+                2,
+                3,
+                5,
+                5,
+                6,
+                7,
+                14,
+                14,
+                15,
+                17,
+                17
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "pass",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.8576625622808933,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [
+                      14,
+                      15,
+                      16
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.06145262345671654,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [
+                      15,
+                      16,
+                      17
+                    ],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.01943216659128666,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9191151857376099,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -585,
+              "winner": 1
+            },
+            {
+              "category": "chi_bi_pass",
+              "seed": 163000268,
+              "dealer": 2,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 4,
+              "step": 34,
+              "phase": "respond",
+              "remaining_tiles": 13,
+              "hand": [
+                2,
+                3,
+                5,
+                5,
+                12,
+                13,
+                13,
+                15,
+                16,
+                17
+              ],
+              "exposed_huxi": 12,
+              "chosen": {
+                "kind": "chi",
+                "player": 0,
+                "tile": 12,
+                "chi": [
+                  2,
+                  12,
+                  12
+                ],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "chi",
+                "player": 0,
+                "tile": 12,
+                "chi": [
+                  2,
+                  12,
+                  12
+                ],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9977237813873217,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "chi",
+                    "player": 0,
+                    "tile": 12,
+                    "chi": [
+                      2,
+                      12,
+                      12
+                    ],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9988619089126587,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": true,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 12,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.0011381275253370404,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -560,
+              "winner": 1
+            }
+          ]
+        },
+        "peng_pass": {
+          "decisions": 29662,
+          "distinct_games": 12874,
+          "independent_seeds": 598,
+          "different_from_parent": 0,
+          "review_eligible": 187,
+          "parent_to_chosen": {},
+          "actions": {
+            "pass": {
+              "decisions": 888,
+              "mean_terminal_cash": -0.9459459459459459,
+              "win_rate": 0.24436936936936937
+            },
+            "peng": {
+              "decisions": 28774,
+              "mean_terminal_cash": 18.69256968096198,
+              "win_rate": 0.3656078404114826
+            }
+          },
+          "passed_hu": 0,
+          "pass_hu_worse_than_immediate": 0,
+          "mean_realized_cash_minus_immediate_hu": null,
+          "examples": [
+            {
+              "category": "peng_pass",
+              "seed": 163000525,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 5,
+              "step": 16,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                1,
+                1,
+                2,
+                3,
+                5,
+                5,
+                6,
+                7,
+                14,
+                14,
+                15,
+                16,
+                16,
+                17,
+                17,
+                19
+              ],
+              "exposed_huxi": 6,
+              "chosen": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9994501819310244,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9997251033782959,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 3,
+                    "static_huxi_delta": 3,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.00027492144727148116,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -880,
+              "winner": 1
+            },
+            {
+              "category": "peng_pass",
+              "seed": 163000203,
+              "dealer": 0,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 2,
+              "step": 3,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                1,
+                2,
+                4,
+                5,
+                6,
+                7,
+                8,
+                8,
+                9,
+                10,
+                12,
+                13,
+                15,
+                15,
+                15,
+                16,
+                17,
+                18,
+                18,
+                18
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "peng",
+                "player": 1,
+                "tile": 8,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "peng",
+                "player": 1,
+                "tile": 8,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9962732656858861,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 1,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9981366395950317,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 1,
+                    "static_huxi_delta": 1,
+                    "before_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.0018633739091455936,
+                  "structure": {
+                    "before_pattern_huxi": 3,
+                    "after_pattern_huxi": 3,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        1,
+                        6,
+                        9
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -750,
+              "winner": 0
+            },
+            {
+              "category": "peng_pass",
+              "seed": 163000195,
+              "dealer": 1,
+              "learner_seat": 2,
+              "player": 2,
+              "opponent": 3,
+              "step": 3,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                5,
+                5,
+                6,
+                8,
+                8,
+                9,
+                9,
+                9,
+                11,
+                11,
+                11,
+                12,
+                14,
+                18,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "peng",
+                "player": 2,
+                "tile": 8,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "peng",
+                "player": 2,
+                "tile": 8,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9981485080206767,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 2,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9990742802619934,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 1,
+                    "static_huxi_delta": 1,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 2,
+                    "tile": 8,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.0009257722413167357,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -630,
+              "winner": 0
+            },
+            {
+              "category": "peng_pass",
+              "seed": 163000525,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 2,
+              "step": 8,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                1,
+                1,
+                2,
+                3,
+                5,
+                5,
+                6,
+                7,
+                14,
+                14,
+                15,
+                16,
+                16,
+                17,
+                17,
+                19
+              ],
+              "exposed_huxi": 6,
+              "chosen": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9994917958974838,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9997459053993225,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 3,
+                    "static_huxi_delta": 3,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.0002541095018386841,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -585,
+              "winner": 1
+            },
+            {
+              "category": "peng_pass",
+              "seed": 163000525,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 7,
+              "step": 8,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                1,
+                1,
+                2,
+                3,
+                5,
+                5,
+                6,
+                7,
+                14,
+                14,
+                15,
+                16,
+                16,
+                17,
+                17,
+                19
+              ],
+              "exposed_huxi": 6,
+              "chosen": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 16,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9994917958974838,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.9997459053993225,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 3,
+                    "static_huxi_delta": 3,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 16,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.0002541095018386841,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -585,
+              "winner": 1
+            },
+            {
+              "category": "peng_pass",
+              "seed": 163000268,
+              "dealer": 2,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 4,
+              "step": 3,
+              "phase": "respond",
+              "remaining_tiles": 19,
+              "hand": [
+                0,
+                1,
+                2,
+                3,
+                5,
+                5,
+                7,
+                7,
+                10,
+                11,
+                11,
+                12,
+                13,
+                13,
+                15,
+                16,
+                17,
+                18,
+                19,
+                19
+              ],
+              "exposed_huxi": 0,
+              "chosen": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 19,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "parent": {
+                "kind": "peng",
+                "player": 0,
+                "tile": 19,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "discard",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9928355594165623,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "peng",
+                    "player": 0,
+                    "tile": 19,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.996417760848999,
+                  "structure": {
+                    "before_pattern_huxi": 15,
+                    "after_pattern_huxi": 9,
+                    "new_meld_huxi": 3,
+                    "static_huxi_delta": -3,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ],
+                      [
+                        10,
+                        11,
+                        12
+                      ],
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ],
+                      [
+                        10,
+                        11,
+                        12
+                      ]
+                    ],
+                    "broken_patterns": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 19,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "discard",
+                    "forced": false
+                  },
+                  "probability": 0.0035822014324367046,
+                  "structure": {
+                    "before_pattern_huxi": 15,
+                    "after_pattern_huxi": 15,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ],
+                      [
+                        10,
+                        11,
+                        12
+                      ],
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        0,
+                        1,
+                        2
+                      ],
+                      [
+                        10,
+                        11,
+                        12
+                      ],
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": null,
+              "terminal_cash": -560,
+              "winner": 1
+            }
+          ]
+        },
+        "hu_pass": {
+          "decisions": 4981,
+          "distinct_games": 4980,
+          "independent_seeds": 595,
+          "different_from_parent": 0,
+          "review_eligible": 0,
+          "parent_to_chosen": {},
+          "actions": {
+            "hu": {
+              "decisions": 4980,
+              "mean_terminal_cash": 75.26907630522088,
+              "win_rate": 1.0
+            },
+            "pass": {
+              "decisions": 1,
+              "mean_terminal_cash": 50.0,
+              "win_rate": 1.0
+            }
+          },
+          "passed_hu": 1,
+          "pass_hu_worse_than_immediate": 0,
+          "mean_realized_cash_minus_immediate_hu": 30.0,
+          "examples": [
+            {
+              "category": "hu_pass",
+              "seed": 163000000,
+              "dealer": 1,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 3,
+              "step": 27,
+              "phase": "respond",
+              "remaining_tiles": 16,
+              "hand": [
+                10,
+                10,
+                12,
+                12,
+                16,
+                16,
+                16,
+                17,
+                17,
+                17
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 2,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9999974340724975,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999986886978149,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 2,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 1.254625317415048e-06,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 120,
+              "terminal_cash": 120,
+              "winner": 1
+            },
+            {
+              "category": "hu_pass",
+              "seed": 163000000,
+              "dealer": 1,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 7,
+              "step": 27,
+              "phase": "respond",
+              "remaining_tiles": 16,
+              "hand": [
+                10,
+                10,
+                12,
+                12,
+                16,
+                16,
+                16,
+                17,
+                17,
+                17
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 2,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9999987655619407,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999993443489075,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 2,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 5.787869667983614e-07,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 120,
+              "terminal_cash": 120,
+              "winner": 1
+            },
+            {
+              "category": "hu_pass",
+              "seed": 163000000,
+              "dealer": 1,
+              "learner_seat": 0,
+              "player": 0,
+              "opponent": 3,
+              "step": 46,
+              "phase": "respond",
+              "remaining_tiles": 10,
+              "hand": [
+                11,
+                12,
+                13,
+                14,
+                16,
+                19,
+                19
+              ],
+              "exposed_huxi": 9,
+              "chosen": {
+                "kind": "hu",
+                "player": 0,
+                "tile": 19,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 0,
+                "tile": 19,
+                "chi": [],
+                "bi": [],
+                "source_player": 1,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9999997734338848,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 0,
+                    "tile": 19,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 0.9999998807907104,
+                  "structure": {
+                    "before_pattern_huxi": 6,
+                    "after_pattern_huxi": 6,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 0,
+                    "tile": 19,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 1,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 1.0735682565155003e-07,
+                  "structure": {
+                    "before_pattern_huxi": 6,
+                    "after_pattern_huxi": 6,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "after_plan": [
+                      [
+                        11,
+                        16,
+                        19
+                      ]
+                    ],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 20,
+              "terminal_cash": 20,
+              "winner": 0
+            },
+            {
+              "category": "hu_pass",
+              "seed": 163000000,
+              "dealer": 1,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 6,
+              "step": 65,
+              "phase": "respond",
+              "remaining_tiles": 1,
+              "hand": [
+                10,
+                10,
+                12,
+                12,
+                16,
+                16,
+                16
+              ],
+              "exposed_huxi": 18,
+              "chosen": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 12,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 12,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9999999830420094,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 12,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 1.0,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 12,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 1.695799056733449e-08,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 180,
+              "terminal_cash": 180,
+              "winner": 1
+            },
+            {
+              "category": "hu_pass",
+              "seed": 163000000,
+              "dealer": 1,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 0,
+              "step": 68,
+              "phase": "respond",
+              "remaining_tiles": 1,
+              "hand": [
+                10,
+                10,
+                12,
+                12,
+                16,
+                16,
+                16
+              ],
+              "exposed_huxi": 18,
+              "chosen": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 12,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 12,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9999999483471704,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 12,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 1.0,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 12,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 5.165282956909323e-08,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 180,
+              "terminal_cash": 180,
+              "winner": 1
+            },
+            {
+              "category": "hu_pass",
+              "seed": 163000000,
+              "dealer": 1,
+              "learner_seat": 1,
+              "player": 1,
+              "opponent": 4,
+              "step": 68,
+              "phase": "respond",
+              "remaining_tiles": 1,
+              "hand": [
+                10,
+                10,
+                12,
+                12,
+                16,
+                16,
+                16
+              ],
+              "exposed_huxi": 18,
+              "chosen": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 12,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "parent": {
+                "kind": "hu",
+                "player": 1,
+                "tile": 12,
+                "chi": [],
+                "bi": [],
+                "source_player": 0,
+                "source_type": "draw",
+                "forced": false
+              },
+              "different_from_parent": false,
+              "policy_margin": 0.9999999818868517,
+              "review_eligible": false,
+              "public_players": null,
+              "passed_chi": null,
+              "passed_peng": null,
+              "options": [
+                {
+                  "action": {
+                    "kind": "hu",
+                    "player": 1,
+                    "tile": 12,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 1.0,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                },
+                {
+                  "action": {
+                    "kind": "pass",
+                    "player": 1,
+                    "tile": 12,
+                    "chi": [],
+                    "bi": [],
+                    "source_player": 0,
+                    "source_type": "draw",
+                    "forced": false
+                  },
+                  "probability": 1.8113148314569116e-08,
+                  "structure": {
+                    "before_pattern_huxi": 0,
+                    "after_pattern_huxi": 0,
+                    "new_meld_huxi": 0,
+                    "static_huxi_delta": 0,
+                    "before_plan": [],
+                    "after_plan": [],
+                    "broken_patterns": [],
+                    "mixed_pair": false,
+                    "board": false,
+                    "interpretation": "static non-overlapping 123/2710 potential; excludes locked kans; not EV"
+                  }
+                }
+              ],
+              "immediate_hu_cash": 180,
+              "terminal_cash": 180,
+              "winner": 1
+            }
+          ]
+        }
+      }
+    }
+  },
+  "checkpoint": "data/generated/league-v3/stage-04/best-dev.pt",
+  "formal_champion_changed": false,
+  "selected_by_development_only": true,
+  "opponent_pool": [
+    "data/generated/league-v2/stage-02/best-dev.pt",
+    "checkpoints/scale100k-resnet.pt",
+    "checkpoints/huxi-resnet.pt",
+    "checkpoints/boundary-calibrated.pt",
+    "checkpoints/planning-cuda-resnet.pt",
+    "checkpoints/round3-resnet.pt",
+    "data/generated/online-rl-v1/generation-002.pt",
+    "data/generated/online-rl-v1/generation-012.pt"
+  ]
+}
