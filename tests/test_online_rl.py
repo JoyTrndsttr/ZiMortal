@@ -11,15 +11,30 @@ from zimortal.training import decision_audit
 from zimortal.training.online_rl import infer, paired_summary, play, ppo_update, training_specs
 
 
-def test_cash_selfplay_batched_collection_is_reproducible_and_updates_policy():
+@pytest.mark.parametrize("temperature", [1.0, 2.0])
+def test_cash_selfplay_batched_collection_is_reproducible_and_updates_policy(temperature):
     torch.set_num_threads(1)
     torch.manual_seed(27)
     model = PolicyValueNet("mlp", width=8, feature_version="huxi")
     opponent = copy.deepcopy(model).eval()
     specs = [(118, 1, 0, -1), (46, 2, 1, 0)]
-    rows, results, questions = play(model, [opponent], specs, slots=2, seed=7, training=True)
+    rows, results, questions = play(
+        model,
+        [opponent],
+        specs,
+        slots=2,
+        seed=7,
+        training=True,
+        sampling_temperature=temperature,
+    )
     again, same_results, same_questions = play(
-        model, [opponent], specs, slots=2, seed=7, training=True
+        model,
+        [opponent],
+        specs,
+        slots=2,
+        seed=7,
+        training=True,
+        sampling_temperature=temperature,
     )
     assert not questions and not same_questions
     assert results == same_results and len(results) == 2
@@ -31,6 +46,19 @@ def test_cash_selfplay_batched_collection_is_reproducible_and_updates_policy():
         assert 0 <= left[2] < len(left[1])
         assert np.isfinite(left[3:]).all()
     before = copy.deepcopy(model.state_dict())
+    unchanged = ppo_update(
+        model,
+        opponent,
+        torch.optim.AdamW(model.parameters(), lr=0),
+        rows,
+        random.Random(1),
+        device="cpu",
+        epochs=1,
+        batch_size=32,
+        sampling_temperature=temperature,
+    )
+    assert abs(unchanged["kl"]) < 1e-6
+    assert not unchanged["kl_stopped"]
     metrics = ppo_update(
         model,
         opponent,
@@ -40,8 +68,19 @@ def test_cash_selfplay_batched_collection_is_reproducible_and_updates_policy():
         device="cpu",
         epochs=1,
         batch_size=32,
+        value_coef=0.1,
+        entropy_coef=0.02,
+        anchor_coef=0.005,
+        sampling_temperature=temperature,
     )
     assert metrics["updates"] > 0 and np.isfinite(metrics["loss"])
+    expected = (
+        metrics["actor"]
+        + 0.1 * metrics["critic"]
+        - 0.02 * metrics["entropy"]
+        + 0.005 * metrics["anchor_kl"]
+    )
+    assert np.isclose(metrics["loss"], expected, atol=1e-6)
     assert not torch.equal(
         before["policy_context.weight"], model.state_dict()["policy_context.weight"]
     )

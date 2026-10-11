@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import math
 from itertools import pairwise
 from pathlib import Path
 
@@ -49,7 +50,11 @@ def stage_args(args, stage, parent, initialize, previous_optimizer, best_optimiz
         historical=historical,
         opponents=fixed,
         snapshot_pool=args.snapshot_pool,
-        selfplay_fraction=0.5,
+        selfplay_fraction=getattr(args, "selfplay_fraction", 0.5),
+        value_coef=getattr(args, "value_coef", 0.5),
+        entropy_coef=getattr(args, "entropy_coef", 0.01),
+        anchor_coef=getattr(args, "anchor_coef", 0.02),
+        sampling_temperature=getattr(args, "sampling_temperature", 1.0),
         audit_decisions=True,
         directory=str(Path(args.directory) / f"stage-{stage + 1:02d}"),
         reports=str(Path(args.reports) / f"stage-{stage + 1:02d}"),
@@ -242,6 +247,11 @@ def main():
     parser.add_argument("--snapshot-pool", type=int, default=4)
     parser.add_argument("--slots", type=int, default=64)
     parser.add_argument("--lr", type=float, default=0.00003)
+    parser.add_argument("--selfplay-fraction", type=float, default=0.5)
+    parser.add_argument("--value-coef", type=float, default=0.5)
+    parser.add_argument("--entropy-coef", type=float, default=0.01)
+    parser.add_argument("--anchor-coef", type=float, default=0.02)
+    parser.add_argument("--sampling-temperature", type=float, default=1.0)
     parser.add_argument("--seed", type=int, default=310)
     parser.add_argument("--train-start", type=int, default=10000000)
     parser.add_argument("--dev-start", type=int, default=20000000)
@@ -254,6 +264,15 @@ def main():
     parser.add_argument("--regression-tolerance", type=float, default=3.0)
     parser.add_argument("--commit-reports", action="store_true")
     args = parser.parse_args()
+    if not math.isfinite(args.sampling_temperature) or args.sampling_temperature <= 0:
+        parser.error("sampling temperature must be finite and positive")
+    if not 0 <= args.selfplay_fraction <= 1:
+        parser.error("selfplay fraction must be in [0,1]")
+    if any(
+        not math.isfinite(c) or c < 0
+        for c in (args.value_coef, args.entropy_coef, args.anchor_coef)
+    ):
+        parser.error("PPO loss coefficients must be finite and nonnegative")
     if (
         min(
             args.stages,

@@ -38,14 +38,16 @@ def pack(features, actions, device):
     )
 
 
-def infer(model, observations, device, generator=None, details=None):
+def infer(model, observations, device, generator=None, details=None, temperature=1.0):
+    if not np.isfinite(temperature) or temperature <= 0:
+        raise ValueError("sampling temperature must be finite and positive")
     features = [encode_observation(obs, model.feature_version) for obs in observations]
     actions = [
         np.stack([encode_action(a, obs.player) for a in obs.legal_actions]) for obs in observations
     ]
     with torch.inference_mode():
         logits, values, _ = model(*pack(features, actions, device))
-        logp = logits.log_softmax(-1)
+        logp = (logits / temperature).log_softmax(-1)
         indices = (
             torch.multinomial(logp.exp(), 1, generator=generator).squeeze(-1)
             if generator is not None
@@ -74,6 +76,7 @@ def play(
     training=False,
     audit=None,
     audit_parent=None,
+    sampling_temperature=1.0,
 ):
     """Each spec is seed, dealer, learner seat, opponent index (-1=self-play).
 
@@ -163,6 +166,7 @@ def play(
                 device,
                 generator if training and owner == -1 else None,
                 details,
+                temperature=sampling_temperature if training and owner == -1 else 1.0,
             )
             relevant = [
                 j
@@ -212,7 +216,25 @@ def play(
     return rows, results, questions
 
 
-def ppo_update(model, anchor, optimizer, rows, rng, *, device, epochs=3, batch_size=256):
+def ppo_update(
+    model,
+    anchor,
+    optimizer,
+    rows,
+    rng,
+    *,
+    device,
+    epochs=3,
+    batch_size=256,
+    value_coef=0.5,
+    entropy_coef=0.01,
+    anchor_coef=0.02,
+    sampling_temperature=1.0,
+):
+    if not np.isfinite(sampling_temperature) or sampling_temperature <= 0:
+        raise ValueError("sampling temperature must be finite and positive")
+    if any(not np.isfinite(c) or c < 0 for c in (value_coef, entropy_coef, anchor_coef)):
+        raise ValueError("PPO loss coefficients must be finite and nonnegative")
     if not rows:
         raise RuntimeError("no valid on-policy decisions")
     advantages = np.array([r[5] - r[4] for r in rows], np.float32)
@@ -228,8 +250,9 @@ def ppo_update(model, anchor, optimizer, rows, rng, *, device, epochs=3, batch_s
             selected = [rows[i] for i in idx]
             x, a, mask = pack([r[0] for r in selected], [r[1] for r in selected], device)
             logits, value, _ = model(x, a, mask)
+            logits = logits / sampling_temperature
             with torch.no_grad():
-                reference = anchor(x, a, mask)[0].log_softmax(-1)
+                reference = (anchor(x, a, mask)[0] / sampling_temperature).log_softmax(-1)
             distribution = torch.distributions.Categorical(logits=logits)
             chosen = torch.tensor([r[2] for r in selected], device=device)
             logprob = distribution.log_prob(chosen)
@@ -245,7 +268,8 @@ def ppo_update(model, anchor, optimizer, rows, rng, *, device, epochs=3, batch_s
             target = torch.tensor([r[5] for r in selected], device=device)
             critic = nn.functional.mse_loss(value, target)
             anchor_kl = (reference.exp() * (reference - logits.log_softmax(-1))).sum(-1).mean()
-            loss = actor + 0.5 * critic - 0.01 * distribution.entropy().mean() + 0.02 * anchor_kl
+            entropy = distribution.entropy().mean()
+            loss = actor + value_coef * critic - entropy_coef * entropy + anchor_coef * anchor_kl
             if not torch.isfinite(loss):
                 raise RuntimeError("nonfinite cash PPO loss")
             optimizer.zero_grad(set_to_none=True)
@@ -257,6 +281,9 @@ def ppo_update(model, anchor, optimizer, rows, rng, *, device, epochs=3, batch_s
                     "loss": float(loss.detach()),
                     "critic": float(critic.detach()),
                     "kl": float(approximate_kl.detach()),
+                    "actor": float(actor.detach()),
+                    "entropy": float(entropy.detach()),
+                    "anchor_kl": float(anchor_kl.detach()),
                 }
             )
         if stopped:
@@ -265,7 +292,10 @@ def ppo_update(model, anchor, optimizer, rows, rng, *, device, epochs=3, batch_s
     return {
         "updates": len(metrics),
         "kl_stopped": stopped,
-        **{k: sum(m[k] for m in metrics) / max(1, len(metrics)) for k in ("loss", "critic", "kl")},
+        **{
+            k: sum(m[k] for m in metrics) / max(1, len(metrics))
+            for k in ("loss", "critic", "kl", "actor", "entropy", "anchor_kl")
+        },
     }
 
 
@@ -539,6 +569,7 @@ def run(args):
             training=True,
             audit=training_audit,
             audit_parent=base,
+            sampling_temperature=getattr(args, "sampling_temperature", 1.0),
         )
         if questions:
             atomic_json(root / f"questions-{iteration + 1:03d}.json", questions)
@@ -553,6 +584,10 @@ def run(args):
             device=args.device,
             epochs=args.epochs,
             batch_size=args.batch_size,
+            value_coef=getattr(args, "value_coef", 0.5),
+            entropy_coef=getattr(args, "entropy_coef", 0.01),
+            anchor_coef=getattr(args, "anchor_coef", 0.02),
+            sampling_temperature=getattr(args, "sampling_temperature", 1.0),
         )
         path = root / f"generation-{iteration + 1:03d}.pt"
         save_model(
@@ -721,6 +756,10 @@ def main():
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--lr", type=float, default=0.0001)
+    parser.add_argument("--value-coef", type=float, default=0.5)
+    parser.add_argument("--entropy-coef", type=float, default=0.01)
+    parser.add_argument("--anchor-coef", type=float, default=0.02)
+    parser.add_argument("--sampling-temperature", type=float, default=1.0)
     parser.add_argument("--seed", type=int, default=108)
     parser.add_argument("--train-start", type=int, default=4000000)
     parser.add_argument("--dev-start", type=int, default=5000000)
@@ -729,6 +768,12 @@ def main():
     parser.add_argument("--holdout-seeds", type=int, default=100)
     parser.add_argument("--commit-reports", action="store_true")
     args = parser.parse_args()
+    if not np.isfinite(args.sampling_temperature) or args.sampling_temperature <= 0:
+        parser.error("sampling temperature must be finite and positive")
+    if any(
+        not np.isfinite(c) or c < 0 for c in (args.value_coef, args.entropy_coef, args.anchor_coef)
+    ):
+        parser.error("PPO loss coefficients must be finite and nonnegative")
     if not 0 < args.holdout_alpha < 1:
         parser.error("holdout alpha must be in (0,1)")
     if not 0 <= args.selfplay_fraction <= 1 or args.snapshot_pool < 0:
