@@ -1,0 +1,23 @@
+{
+  "stage": 2,
+  "parent": "data/generated/online-rl-v2/best-dev.pt",
+  "parent_sha256": "8061fa09178328914e219ad3e3b218f32e9ba84d001e2c9e06ebbd6f7fc203f1",
+  "candidate": "data/generated/league-v1/stage-02/best-dev.pt",
+  "candidate_sha256": "0d4f62810035d41920cc6cf7d3e34f921c30adbbfaf608a0590433c49390ed30",
+  "promotion": {
+    "accepted": false,
+    "aggregate_lower": -0.7354361979166667,
+    "parent_lower": -1.8417708333333336,
+    "worst_opponent_mean": -0.7791666666666667,
+    "tolerance": 3.0,
+    "reason": "insufficient improvement evidence",
+    "limitation": "bootstrap is approximate; per-opponent regression guard uses means"
+  },
+  "screen_report": "docs/training/league-v1/stage-02/holdout.json",
+  "training_games": 98304,
+  "training_decisions": 1688724,
+  "excluded_rule_games": 0,
+  "next_initialize": "data/generated/league-v1/stage-02/generation-012.pt",
+  "optimizer_checkpoint": "data/generated/league-v1/stage-02/last.pt",
+  "formal_champion_changed": false
+}

@@ -1,0 +1,66 @@
+[
+  {
+    "id": "split-001",
+    "seed": 90000052,
+    "step": 21,
+    "player": 2,
+    "url": "http://127.0.0.1:8765/?review=split-001",
+    "category": "peng_pass"
+  },
+  {
+    "id": "split-002",
+    "seed": 90000000,
+    "step": 32,
+    "player": 0,
+    "url": "http://127.0.0.1:8765/?review=split-002",
+    "category": "peng_pass"
+  },
+  {
+    "id": "split-003",
+    "seed": 90000028,
+    "step": 36,
+    "player": 2,
+    "url": "http://127.0.0.1:8765/?review=split-003",
+    "category": "peng_pass"
+  },
+  {
+    "id": "split-004",
+    "seed": 90000008,
+    "step": 46,
+    "player": 2,
+    "url": "http://127.0.0.1:8765/?review=split-004",
+    "category": "peng_pass"
+  },
+  {
+    "id": "split-005",
+    "seed": 90000005,
+    "step": 22,
+    "player": 0,
+    "url": "http://127.0.0.1:8765/?review=split-005",
+    "category": "chi_bi_pass"
+  },
+  {
+    "id": "split-006",
+    "seed": 90000002,
+    "step": 3,
+    "player": 0,
+    "url": "http://127.0.0.1:8765/?review=split-006",
+    "category": "chi_bi_pass"
+  },
+  {
+    "id": "split-007",
+    "seed": 90000037,
+    "step": 7,
+    "player": 1,
+    "url": "http://127.0.0.1:8765/?review=split-007",
+    "category": "chi_bi_pass"
+  },
+  {
+    "id": "split-008",
+    "seed": 90000005,
+    "step": 20,
+    "player": 2,
+    "url": "http://127.0.0.1:8765/?review=split-008",
+    "category": "chi_bi_pass"
+  }
+]

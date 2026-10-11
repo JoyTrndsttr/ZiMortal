@@ -21,6 +21,47 @@ def test_review_draw_records_revealed_tile():
             assert frame["action"]["tile"] == frame["pending"]["tile"]
 
 
+def test_saved_mixed_policy_review_replays_json_history_and_rejects_corruption():
+    from dataclasses import asdict
+
+    import pytest
+
+    from zimortal.engine import ActionType, RuleEngine
+    from zimortal.training.decision_audit import record
+    from zimortal.web.server import build_review
+
+    engine = RuleEngine()
+    state = engine.new_game(118)
+    for _ in range(200):
+        actions = engine.legal_actions(state)
+        if len(actions) > 1 and any(a.kind in (ActionType.CHI, ActionType.PENG) for a in actions):
+            break
+        state = engine.step(state, actions[0])
+    obs = engine.observation(state, actions[0].player)
+    case = record(
+        obs,
+        0,
+        0,
+        [1 / len(actions)] * len(actions),
+        spec=(118, 0, obs.player, 0),
+        step=len(state.history) + 1,
+    )
+    case.update(
+        id="split-001",
+        model="learner",
+        opponent_pool=["frozen"],
+        history_prefix=[asdict(a) for a in state.history],
+    )
+    case = json.loads(json.dumps(case))
+    payload = build_review(case)
+    assert payload["replay_verified"]
+    assert len(payload["frames"]) == case["step"]
+    assert payload["frames"][-1]["players"][obs.player]["hand"] == list(obs.hand)
+    assert payload["player_policies"][obs.player] == "learner"
+    with pytest.raises(ValueError, match="reproduce"):
+        build_review({**case, "hand": case["hand"] + [0]})
+
+
 def test_seed118_drawer_chi_window_after_peng_pass():
     trace = build_game(118)
     draw = trace["frames"][6]

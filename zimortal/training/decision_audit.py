@@ -8,6 +8,8 @@ import numpy as np
 from zimortal.engine import ActionType as A
 from zimortal.engine.scoring import meld_huxi
 
+from .split_audit import diagnostics
+
 
 def category(observation):
     kinds = {a.kind for a in observation.legal_actions}
@@ -23,7 +25,15 @@ def category(observation):
 def record(observation, chosen, parent, probabilities, *, spec, step, immediate_hu_cash=None):
     """All policy diagnostics are computed from this player's Observation."""
     actions = observation.legal_actions
-    return {
+    structure = [diagnostics(observation.hand, a) for a in actions]
+    ordered = sorted(probabilities, reverse=True)
+    margin = float(ordered[0] - ordered[1]) if len(ordered) > 1 else 1.0
+    eligible = (
+        category(observation) in ("chi_bi_pass", "peng_pass")
+        and margin <= 0.2
+        and any(s["broken_patterns"] or s["mixed_pair"] for s in structure)
+    )
+    result = {
         "category": category(observation),
         "seed": spec[0],
         "dealer": spec[1],
@@ -38,12 +48,20 @@ def record(observation, chosen, parent, probabilities, *, spec, step, immediate_
         "chosen": asdict(actions[chosen]),
         "parent": asdict(actions[parent]),
         "different_from_parent": chosen != parent,
+        "policy_margin": margin,
+        "review_eligible": eligible,
+        "public_players": [asdict(p) for p in observation.players] if eligible else None,
+        "passed_chi": sorted(observation.passed_chi) if eligible else None,
+        "passed_peng": sorted(observation.passed_peng) if eligible else None,
         "options": [
-            {"action": asdict(a), "probability": float(p)}
-            for a, p in zip(actions, probabilities, strict=True)
+            {"action": asdict(a), "probability": float(p), "structure": s}
+            for a, p, s in zip(actions, probabilities, structure, strict=True)
         ],
         "immediate_hu_cash": immediate_hu_cash,
     }
+    if eligible:
+        result["history_prefix"] = [asdict(a) for a in observation.history]
+    return result
 
 
 def summarize(records, *, stochastic, examples=6):
@@ -91,6 +109,7 @@ def summarize(records, *, stochastic, examples=6):
             ),
             "independent_seeds": len({r["seed"] for r in rows}),
             "different_from_parent": len(differences),
+            "review_eligible": sum(r.get("review_eligible", False) for r in rows),
             "parent_to_chosen": dict(
                 Counter(
                     f"{getattr(r['parent']['kind'], 'value', r['parent']['kind'])}"

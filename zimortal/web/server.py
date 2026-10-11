@@ -338,10 +338,74 @@ def replay_frame(engine, state, frame):
     return engine.step(state, action)
 
 
+def build_review(case):
+    """Replay the saved mixed-policy prefix, never regenerate a new policy game."""
+    engine = RuleEngine()
+    initial = engine.new_game(case["seed"], case["dealer"])
+    state = initial
+    frames = [
+        snapshot(engine, initial, include_huxi=False)
+        | {"index": 0, "action": None, "note": "保存的人工审核轨迹", "verified": True}
+    ]
+    for index, action in enumerate(case["history_prefix"], 1):
+        state = replay_frame(engine, state, {"action": action})
+        state.validate()
+        shown = dict(action)
+        if shown["kind"] == "draw" and state.pending:
+            shown["tile"] = state.pending.tile
+        frames.append(
+            snapshot(engine, state, include_huxi=False)
+            | {"index": index, "action": shown, "note": "原对局动作", "verified": True}
+        )
+    obs = engine.observation(state, case["player"])
+    if list(obs.hand) != case["hand"] or json.dumps(
+        [asdict(a) for a in obs.legal_actions], sort_keys=True
+    ) != json.dumps([o["action"] for o in case["options"]], sort_keys=True):
+        raise ValueError("review prefix does not reproduce saved decision")
+    if len(frames) != case["step"]:
+        raise ValueError("review step disagrees with saved history")
+    frames[-1]["note"] = (
+        f"待审核第{case['step']}步：模型选择{LABELS[case['chosen']['kind']]}。概率和拆组分析见审核报告。"
+    )
+    if engine.replay(initial, state.history).serialize() != state.serialize():
+        raise ValueError("review replay mismatch")
+    policies = [case["opponent_pool"][case["opponent"]]] * 3
+    policies[case["learner_seat"]] = case["model"]
+    return {
+        "seed": case["seed"],
+        "dealer": case["dealer"],
+        "policy": "saved_review",
+        "player_policies": policies,
+        "frames": frames,
+        "replay_verified": True,
+        "actions": len(state.history),
+        "review": case["id"],
+        "decision": case,
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         url = urlparse(self.path)
-        if url.path == "/api/completion":
+        if url.path == "/api/review":
+            identifier = parse_qs(url.query).get("id", [""])[0]
+            if not (
+                len(identifier) == 9
+                and identifier.startswith("split-")
+                and identifier[6:].isdigit()
+            ):
+                self.respond(400, b'{"error":"invalid review id"}', "application/json")
+                return
+            path = (
+                Path(__file__).resolve().parents[2]
+                / "data/generated/human-review-v1"
+                / f"{identifier}-trace.json"
+            )
+            if not path.is_file():
+                self.respond(404, b'{"error":"review missing"}', "application/json")
+                return
+            self.respond(200, path.read_bytes(), "application/json; charset=utf-8")
+        elif url.path == "/api/completion":
             from zimortal.analysis.completion import SearchLimit, analyze_decision
 
             try:
