@@ -45,6 +45,8 @@ def detect_fan(groups, *, heavenly=False, earthly=False):
         result["黑胡"] = 5
     if red_count == 1:
         result["点胡"] = 4
+    if red_count == 2 and len(reds) == 1:
+        result["红胡"] = 2
     if red_count == 3 and len(reds) == 1:
         result["三扁"] = 3
     if red_count == 4 and len(reds) == 1:
@@ -58,7 +60,10 @@ def detect_fan(groups, *, heavenly=False, earthly=False):
     if len(red_groups) == 2 and sum(len(g.tiles) for g in red_groups) == red_count:
         result["双漂"] = 2
     if red_count >= 10:
-        result["十红"] = red_count - 8
+        digits = "零一二三四五六七八九"
+        tens, units = divmod(red_count, 10)
+        name = (digits[tens] if tens > 1 else "") + "十"
+        result[name + (digits[units] if units else "") + "红"] = red_count - 8
     if big >= 18:
         result["十八大"] = big - 13
     if len(tiles) - big >= 18:

@@ -290,6 +290,7 @@ def test_full_game_conservation_replay_observation(seed):
     [
         ("黑胡", [Meld(M.KAN, (0,) * 3)], 5),
         ("点胡", [Meld(M.CHI, (0, 1, 2))], 4),
+        ("红胡", [Meld(M.PAIR, (1, 1)), Meld(M.KAN, (0,) * 3)], 2),
         ("三扁", [Meld(M.KAN, (1,) * 3)], 3),
         ("四扁", [Meld(M.TI, (1,) * 4)], 4),
         ("双漂", [Meld(M.WEI, (1,) * 3), Meld(M.PENG, (6,) * 3)], 2),
@@ -310,6 +311,45 @@ def test_fan_additive_and_ordinary():
     assert result.amount_each == base_amount(36) * 15
     assert result.payments == (-result.amount_each, result.amount_each * 2, -result.amount_each)
     assert detect_fan([Meld(M.CHI, (0, 1, 2))], earthly=True)["地胡"] == 5
+
+
+@pytest.mark.parametrize("tile", [1, 6, 9, 11, 16, 19])
+def test_two_identical_red_fan_and_cash(tile):
+    groups = [Meld(M.PAIR, (tile,) * 2), Meld(M.PAO, (0,) * 4)]
+    groups += [Meld(M.KAN, (t,) * 3) for t in (2, 10, 12, 13)]
+    groups += [Meld(M.CHI, (3, 4, 5))]
+    assert detect_fan(groups) == {"红胡": 2}
+    result = settle(0, groups, ordinary_fan=1)
+    assert result.amount_each == base_amount(result.huxi) * 2
+    assert result.payments == (120, -60, -60)
+
+
+@pytest.mark.parametrize("second", [(5, 6, 7), (10, 11, 12)])
+def test_two_red_requires_identical_tile(second):
+    groups = [Meld(M.CHI, (0, 1, 2)), Meld(M.CHI, second)]
+    assert "红胡" not in detect_fan(groups)
+
+
+@pytest.mark.parametrize(
+    "sizes,name",
+    [
+        ((4, 3, 3), "十红"),
+        ((4, 4, 3), "十一红"),
+        ((4, 4, 4), "十二红"),
+        ((4, 3, 3, 3), "十三红"),
+        ((4, 4, 4, 4, 4), "二十红"),
+        ((4,) * 6, "二十四红"),
+    ],
+)
+def test_red_count_names_do_not_duplicate_fan(sizes, name):
+    groups = [
+        Meld(M.PAO if n == 4 else M.PENG, (t,) * n) for t, n in zip((1, 6, 9, 11, 16, 19), sizes)
+    ]
+    fan = detect_fan(groups)
+    assert fan[name] == sum(sizes) - 8
+    assert "红胡" not in fan
+    if name != "十红":
+        assert "十红" not in fan
 
 
 def test_multi_hu_order(monkeypatch):
@@ -442,7 +482,7 @@ def test_no_red_threshold_false_positives():
 @pytest.mark.parametrize("kind", [M.PAO, M.TI])
 def test_fan_threshold_increments(kind):
     groups = [Meld(kind, (1,) * 4), Meld(M.WEI, (6,) * 3), Meld(kind, (9,) * 4)]
-    assert detect_fan(groups)["十红"] == 3
+    assert detect_fan(groups)["十一红"] == 3
     groups = [Meld(M.KAN, (t,) * 3) for t in (10, 12, 13, 14, 15)] + [Meld(kind, (17,) * 4)]
     assert detect_fan(groups)["十八大"] == 6
 
