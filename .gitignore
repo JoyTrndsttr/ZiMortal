@@ -12,6 +12,8 @@ checkpoints/
 runs/
 wandb/
 data/generated/
+# 两步分支教师逐粒子证据仅保留本地。
+data/generated/branch-teacher-v1/
 
 .venv-cuda/
 logs/

@@ -37,7 +37,213 @@
       ],
       "exposed_huxi": 9,
       "followup_discard_tile": 6,
-      "interpretation": "保留二七十与已有普通顺子，追求尽快达到合法听牌；公开胡息是9，12包含手中潜力，不能当公开胡息标签。"
+      "interpretation": "保留二七十与已有普通顺子，追求尽快达到合法听牌；公开胡息是9，12包含手中潜力，不能当公开胡息标签。",
+      "history_prefix": [
+        {
+          "kind": "pass",
+          "player": 1,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": "initial",
+          "forced": true
+        },
+        {
+          "kind": "discard",
+          "player": 1,
+          "tile": 2,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 2,
+          "tile": 2,
+          "chi": [],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "discard",
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 1,
+          "tile": 2,
+          "chi": [],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 2,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "wei",
+          "player": 2,
+          "tile": 17,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "draw",
+          "forced": true
+        },
+        {
+          "kind": "pass",
+          "player": 2,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": "draw",
+          "forced": true
+        },
+        {
+          "kind": "discard",
+          "player": 2,
+          "tile": 18,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "peng",
+          "player": 0,
+          "tile": 18,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "discard",
+          "forced": false
+        },
+        {
+          "kind": "discard",
+          "player": 0,
+          "tile": 19,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "peng",
+          "player": 2,
+          "tile": 19,
+          "chi": [],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "discard",
+          "forced": false
+        },
+        {
+          "kind": "discard",
+          "player": 2,
+          "tile": 8,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "peng",
+          "player": 1,
+          "tile": 8,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "discard",
+          "forced": false
+        },
+        {
+          "kind": "discard",
+          "player": 1,
+          "tile": 18,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 1,
+          "tile": 18,
+          "chi": [],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 2,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "pass",
+          "player": 2,
+          "tile": 9,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "draw",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 0,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "chi",
+          "player": 0,
+          "tile": 4,
+          "chi": [
+            3,
+            4,
+            5
+          ],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "draw",
+          "forced": false
+        },
+        {
+          "kind": "discard",
+          "player": 0,
+          "tile": 0,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        }
+      ]
     },
     {
       "case_id": "split-002",
@@ -429,7 +635,331 @@
           ]
         }
       ],
-      "interpretation": "较弱倾向过碰；优先审查第2步打一、第13步打拾与门子、红胡计划的冲突。第2步打六合法；第13步未给出唯一替代弃牌。"
+      "interpretation": "较弱倾向过碰；优先审查第2步打一、第13步打拾与门子、红胡计划的冲突。第2步打六合法；第13步未给出唯一替代弃牌。",
+      "history_prefix": [
+        {
+          "kind": "pass",
+          "player": 0,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": "initial",
+          "forced": true
+        },
+        {
+          "kind": "discard",
+          "player": 0,
+          "tile": 0,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 1,
+          "tile": 0,
+          "chi": [],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "discard",
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 1,
+          "tile": 0,
+          "chi": [],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "discard",
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 0,
+          "tile": 0,
+          "chi": [],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 1,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "chi",
+          "player": 1,
+          "tile": 9,
+          "chi": [
+            7,
+            8,
+            9
+          ],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "draw",
+          "forced": false
+        },
+        {
+          "kind": "discard",
+          "player": 1,
+          "tile": 10,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 2,
+          "tile": 10,
+          "chi": [],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "discard",
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 1,
+          "tile": 10,
+          "chi": [],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 2,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "pao",
+          "player": 0,
+          "tile": 11,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "draw",
+          "forced": true
+        },
+        {
+          "kind": "discard",
+          "player": 0,
+          "tile": 19,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pao",
+          "player": 1,
+          "tile": 19,
+          "chi": [],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "discard",
+          "player": 1,
+          "tile": 7,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 1,
+          "tile": 7,
+          "chi": [],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 2,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "chi",
+          "player": 2,
+          "tile": 3,
+          "chi": [
+            3,
+            4,
+            5
+          ],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "draw",
+          "forced": false
+        },
+        {
+          "kind": "discard",
+          "player": 2,
+          "tile": 9,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 0,
+          "tile": 9,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "discard",
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 2,
+          "tile": 9,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 0,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "peng",
+          "player": 2,
+          "tile": 12,
+          "chi": [],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "draw",
+          "forced": false
+        },
+        {
+          "kind": "discard",
+          "player": 2,
+          "tile": 10,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 2,
+          "tile": 10,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 0,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "chi",
+          "player": 0,
+          "tile": 16,
+          "chi": [
+            14,
+            15,
+            16
+          ],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "draw",
+          "forced": false
+        },
+        {
+          "kind": "discard",
+          "player": 0,
+          "tile": 12,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 1,
+          "tile": 12,
+          "chi": [],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "discard",
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 0,
+          "tile": 12,
+          "chi": [],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 1,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        }
+      ]
     },
     {
       "case_id": "split-005",
@@ -460,7 +990,229 @@
         18
       ],
       "exposed_huxi": 9,
-      "interpretation": "条件性近似平手：追十八大时可考虑吃九玖玖，否则吃的收益有限；不生成硬性过牌标签。"
+      "interpretation": "条件性近似平手：追十八大时可考虑吃九玖玖，否则吃的收益有限；不生成硬性过牌标签。",
+      "history_prefix": [
+        {
+          "kind": "pass",
+          "player": 2,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": "initial",
+          "forced": true
+        },
+        {
+          "kind": "discard",
+          "player": 2,
+          "tile": 10,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pao",
+          "player": 0,
+          "tile": 10,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "discard",
+          "player": 0,
+          "tile": 9,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 1,
+          "tile": 9,
+          "chi": [],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "discard",
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 0,
+          "tile": 9,
+          "chi": [],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 1,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "chi",
+          "player": 2,
+          "tile": 2,
+          "chi": [
+            0,
+            1,
+            2
+          ],
+          "bi": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "source_player": 1,
+          "source_type": "draw",
+          "forced": false
+        },
+        {
+          "kind": "discard",
+          "player": 2,
+          "tile": 3,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 0,
+          "tile": 3,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "discard",
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 2,
+          "tile": 3,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 0,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "pass",
+          "player": 0,
+          "tile": 12,
+          "chi": [],
+          "bi": [],
+          "source_player": 0,
+          "source_type": "draw",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 1,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "pass",
+          "player": 1,
+          "tile": 0,
+          "chi": [],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "draw",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 2,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "peng",
+          "player": 1,
+          "tile": 14,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "draw",
+          "forced": false
+        },
+        {
+          "kind": "discard",
+          "player": 1,
+          "tile": 0,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": false
+        },
+        {
+          "kind": "pass",
+          "player": 1,
+          "tile": 0,
+          "chi": [],
+          "bi": [],
+          "source_player": 1,
+          "source_type": "discard",
+          "forced": true
+        },
+        {
+          "kind": "draw",
+          "player": 2,
+          "tile": null,
+          "chi": [],
+          "bi": [],
+          "source_player": null,
+          "source_type": null,
+          "forced": true
+        },
+        {
+          "kind": "pass",
+          "player": 2,
+          "tile": 18,
+          "chi": [],
+          "bi": [],
+          "source_player": 2,
+          "source_type": "draw",
+          "forced": false
+        }
+      ]
     }
   ]
 }
