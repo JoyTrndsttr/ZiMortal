@@ -6,6 +6,7 @@ reward-conditioned rejection, or correlated particle reuse.
 """
 
 import random
+from bisect import bisect_right
 from collections import Counter
 from functools import lru_cache
 from math import factorial
@@ -101,10 +102,102 @@ def count_constraints(obs):
     return permitted_counts
 
 
+def discard_pass_checks(obs):
+    """Necessary claim availability at historical discard-PASS decisions.
+
+    Reverse offsets use only public consumption. Ignoring protected kans,
+    mandatory bi and priority deliberately makes this a permissive prefilter;
+    full authoritative replay still decides acceptance. No RNG is consumed.
+    """
+    from zimortal.engine.chi import CHI_PATTERNS
+
+    offsets = [[0] * 20 for _ in range(3)]
+    previous, seen = {}, [{} for _ in range(3)]
+    for i, action in enumerate(obs.history):
+        if action.kind in (A.PENG, A.WEI, A.STINKY_WEI, A.PAO, A.TI):
+            old = seen[action.player].get(action.tile)
+            previous[i] = (
+                old if action.kind in (A.PAO, A.TI) and action.source_type != S.INITIAL else None
+            )
+            seen[action.player][action.tile] = M(action.kind.value)
+    checks = []
+    for i in range(len(obs.history) - 1, -1, -1):
+        action = obs.history[i]
+        offset = offsets[action.player]
+        if action.kind == A.PASS and not action.forced and action.source_type == S.DISCARD:
+            before = obs.history[i - 1] if i else None
+            after = obs.history[i + 1] if i + 1 < len(obs.history) else obs.legal_actions[0]
+
+            def same_pass(other, action=action):
+                return (
+                    other is not None
+                    and other.kind == A.PASS
+                    and not other.forced
+                    and other.player == action.player
+                    and other.tile == action.tile
+                    and other.source_type == action.source_type
+                    and other.source_player == action.source_player
+                )
+
+            kind = (
+                "chi"
+                if same_pass(before)
+                else "peng"
+                if same_pass(after) or action.player != (action.source_player + 1) % 3
+                else "either"
+            )
+            patterns = []
+            for pattern in CHI_PATTERNS:
+                if action.tile in pattern:
+                    needed = Counter(pattern)
+                    needed[action.tile] -= 1
+                    patterns.append(tuple((t, n - offset[t]) for t, n in needed.items() if n))
+            checks.append(
+                (action.player, kind, action.tile, 2 - offset[action.tile], tuple(patterns))
+            )
+        elif action.kind == A.DISCARD:
+            offset[action.tile] += 1
+        elif action.kind == A.CHI:
+            used = Counter(action.chi)
+            used[action.tile] -= 1
+            used.update(t for group in action.bi for t in group)
+            for tile, n in used.items():
+                offset[tile] += n
+        elif action.kind in (A.PENG, A.WEI, A.STINKY_WEI, A.PAO, A.TI) and previous[i] is None:
+            offset[action.tile] += (
+                4 if action.source_type == S.INITIAL else 3 if action.kind in (A.PAO, A.TI) else 2
+            )
+    return tuple(checks)
+
+
+def satisfies_discard_passes(hands, checks):
+    if not checks:
+        return True
+    counts = {}
+    for player, kind, tile, required_pair, patterns in checks:
+        own = counts.setdefault(player, {})
+
+        def count(t, own=own, player=player):
+            if t not in own:
+                own[t] = hands[player].count(t)
+            return own[t]
+
+        peng = count(tile) == required_pair
+        if kind == "peng":
+            if not peng:
+                return False
+        elif not (kind == "either" and peng) and not any(
+            all(count(t) >= n for t, n in pattern) for pattern in patterns
+        ):
+            return False
+    return True
+
+
 class HistorySampler:
-    def __init__(self, obs):
+    def __init__(self, obs, *, engine=None):
         self.obs = obs
-        self.engine = RuleEngine()
+        self.pass_checks = discard_pass_checks(obs)
+        self.engine = engine or RuleEngine()
         self.draws = observed_draws(obs)
         first = next((a for a in obs.history if a.kind == A.DISCARD), None)
         self.dealer = first.player if first else obs.turn
@@ -146,6 +239,18 @@ class HistorySampler:
                 if a <= first_left and b <= second_left
             )
 
+        @lru_cache(maxsize=8192)
+        def transitions(tile, first_left, second_left):
+            cumulative, choices, total = [], [], 0
+            for a, b, d, weight in self.options[tile]:
+                mass = weight * ways(tile + 1, first_left - a, second_left - b)
+                if mass:
+                    total += mass
+                    cumulative.append(total)
+                    choices.append((a, b, d))
+            return tuple(cumulative), tuple(choices)
+
+        self.transitions = transitions
         self.ways = ways
         if not ways(0, *self.sizes):
             raise SamplingFailure("forced-history constraints have no feasible allocation")
@@ -155,18 +260,13 @@ class HistorySampler:
         deck = []
         left = self.sizes
         for tile in range(20):
-            ticket = rng.randrange(self.ways(tile, *left))
-            for a, b, d, weight in self.options[tile]:
-                mass = weight * self.ways(tile + 1, left[0] - a, left[1] - b)
-                if ticket < mass:
-                    hands[self.opponents[0]].extend([tile] * a)
-                    hands[self.opponents[1]].extend([tile] * b)
-                    deck.extend([tile] * d)
-                    left = (left[0] - a, left[1] - b)
-                    break
-                ticket -= mass
-            else:
-                raise RuntimeError("conditional allocation draw failed")
+            cumulative, choices = self.transitions(tile, *left)
+            ticket = rng.randrange(cumulative[-1])
+            a, b, d = choices[bisect_right(cumulative, ticket)]
+            hands[self.opponents[0]].extend([tile] * a)
+            hands[self.opponents[1]].extend([tile] * b)
+            deck.extend([tile] * d)
+            left = (left[0] - a, left[1] - b)
         rng.shuffle(deck)
         return hands, deck
 
@@ -174,6 +274,8 @@ class HistorySampler:
         rng = random.Random(seed)
         for attempt in range(1, max_attempts + 1):
             hands, deck = self.allocation(rng)
+            if not satisfies_discard_passes(hands, self.pass_checks):
+                continue
             try:
                 original = reverse_hands(self.obs, [h.copy() for h in hands], self.draws)
                 if any(len(h) != (21 if p == self.dealer else 20) for p, h in enumerate(original)):

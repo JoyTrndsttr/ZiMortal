@@ -2,6 +2,7 @@
 
 import os
 import random
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -67,21 +68,33 @@ def predict(model, obs, device="cpu"):
     return logits[0], value[0]
 
 
+@lru_cache(maxsize=2048)
+def _visible_features(obs, version):
+    features = encode_observation(obs, version)
+    features.flags.writeable = False
+    return features
+
+
+@lru_cache(maxsize=4096)
+def _action_features(actions, player):
+    features = np.stack([encode_action(a, player) for a in actions])
+    features.flags.writeable = False
+    return features
+
+
 def choose_batch(model, observations, device="cpu"):
     """Batch independent visible decisions without exposing hidden worlds."""
     if not observations:
         return []
     x = torch.from_numpy(
-        np.stack([encode_observation(obs, model.feature_version) for obs in observations])
+        np.stack([_visible_features(obs, model.feature_version) for obs in observations])
     ).to(device)
     size = max(len(obs.legal_actions) for obs in observations)
-    encoded = [
-        np.stack([encode_action(a, obs.player) for a in obs.legal_actions]) for obs in observations
-    ]
+    encoded = [_action_features(obs.legal_actions, obs.player) for obs in observations]
     a = torch.zeros(len(observations), size, encoded[0].shape[-1], device=device)
     mask = torch.zeros(len(observations), size, dtype=torch.bool, device=device)
     for i, row in enumerate(encoded):
-        a[i, : len(row)] = torch.from_numpy(row).to(device)
+        a[i, : len(row)] = torch.from_numpy(row.copy()).to(device)
         mask[i, : len(row)] = True
     with torch.inference_mode():
         scores, *_ = model(x, a, mask)

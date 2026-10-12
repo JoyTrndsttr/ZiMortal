@@ -26,14 +26,16 @@ def _potential(counts):
     rest = list(counts)
     rest[tile] -= 1
     best = _potential(tuple(rest))
-    patterns = list(SCORING_PATTERNS) + [((tile,) * 3, 6 if tile >= 10 else 3)]
+    patterns = [(pattern, hu) for pattern, hu in SCORING_PATTERNS if tile in pattern]
+    patterns.append(((tile,) * 3, 6 if tile >= 10 else 3))
     for pattern, hu in patterns:
-        if tile not in pattern:
-            continue
-        needed = Counter(pattern)
-        if all(counts[t] >= n for t, n in needed.items()):
-            remaining = tuple(n - needed[t] for t, n in enumerate(counts))
-            best = max(best, hu + _potential(remaining))
+        # Scoring sequences have distinct tiles; a triplet only touches one.
+        needed = ((tile, 3),) if pattern[0] == pattern[-1] else tuple((t, 1) for t in pattern)
+        if all(counts[t] >= n for t, n in needed):
+            remaining = list(counts)
+            for t, n in needed:
+                remaining[t] -= n
+            best = max(best, hu + _potential(tuple(remaining)))
     return best
 
 

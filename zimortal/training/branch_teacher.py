@@ -229,6 +229,70 @@ def _summary(raw, *, alpha, looks):
     }
 
 
+def reference_summary(raw, *, alpha, looks):
+    """Q(a1, frozen visible a2 policy), never max over a particle's hidden world.
+
+    The same information-set key must always select the same action. Neither
+    sample cash nor search's observed best action is an input to this policy.
+    This is a diagnostic fixed-policy estimate, not an optimized teacher label.
+    """
+    matrix, selected_by_info, counts = [], {}, {}
+    for particle in raw:
+        firsts = sorted({b["first_index"] for b in particle["branches"]})
+        row = []
+        for first in firsts:
+            branches = [b for b in particle["branches"] if b["first_index"] == first]
+            selected = [b for b in branches if b.get("reference_selected")]
+            if len(selected) != 1:
+                raise ValueError("each first action needs exactly one fixed-policy continuation")
+            branch = selected[0]
+            key = (first, branch["information_set"])
+            action = branch["second_action"]
+            if key in selected_by_info and selected_by_info[key] != action:
+                raise ValueError("fixed policy changed action within one visible information set")
+            selected_by_info[key] = action
+            counts[key] = counts.get(key, 0) + 1
+            row.append(branch["cash"])
+        matrix.append(row)
+    stats = paired_statistics(matrix, alpha=alpha, looks=looks)
+    coverage = []
+    for first in firsts:
+        support = [n for (i, _), n in counts.items() if i == first]
+        coverage.append(
+            {
+                "first_index": first,
+                "information_sets": len(support),
+                "singleton_information_sets": sum(n == 1 for n in support),
+                "particles_in_repeated_sets": sum(n for n in support if n > 1),
+                "minimum_support": min(support),
+                "maximum_support": max(support),
+            }
+        )
+    return {
+        "reference_statistics": stats,
+        "reference_outcomes": matrix,
+        "information_set_coverage": coverage,
+        "reference_semantics": "a1 then frozen visible policy at a2; diagnostic, not max-a2 or training labels",
+    }
+
+
+def compact_evidence(raw):
+    """Store visible observations once, keeping every terminal branch auditable."""
+    observations, particles = {}, []
+    for particle in raw:
+        branches = []
+        for entry in particle["branches"]:
+            copied = dict(entry)
+            observation = copied.pop("observation")
+            key = copied["information_set"]
+            if key in observations and observations[key] != observation:
+                raise ValueError("information-set digest collision")
+            observations[key] = observation
+            branches.append(copied)
+        particles.append(dict(particle, branches=branches))
+    return {"schema_version": 2, "information_sets": observations, "particles": particles}
+
+
 def evaluate_two_step_branches(
     obs,
     *,
@@ -251,7 +315,7 @@ def evaluate_two_step_branches(
     if not 0 < alpha < 1 or chunk_size < 1:
         raise ValueError("invalid alpha/chunk size")
     engine = engine or RolloutEngine()
-    sampler = sampler or HistorySampler(obs)
+    sampler = sampler or HistorySampler(obs, engine=RolloutEngine())
     schedule = []
     n = min(minimum, rollouts)
     while n < rollouts:
@@ -261,6 +325,7 @@ def evaluate_two_step_branches(
     began = time.perf_counter()
     timing = {"sampling_seconds": 0.0, "neural_inference_seconds": 0.0}
     raw, terminal_count, attempts = [], 0, 0
+    references, visible_observations = {}, {}
     result = None
     current_particle = 0
     try:
@@ -288,6 +353,24 @@ def evaluate_two_step_branches(
                 first_states = advance_to_decision(
                     engine, first_states, obs.player, model, device=device, timings=timing
                 )
+                # A fixed visible policy selects a2 before seeing terminal cash.
+                unseen = {}
+                for state in first_states:
+                    if not state.terminal:
+                        next_obs = engine.observation(state, obs.player)
+                        key = visible_key(next_obs)
+                        visible_observations.setdefault(key, serialize_observation(next_obs))
+                        if key not in references:
+                            unseen.setdefault(key, next_obs)
+                keys = list(unseen)
+                for start in range(0, len(keys), 128):
+                    batch = keys[start : start + 128]
+                    t = time.perf_counter()
+                    selected = choose_batch(model, [unseen[k] for k in batch], device=device)
+                    timing["neural_inference_seconds"] += time.perf_counter() - t
+                    references.update(
+                        (k, action_data(a)) for k, a in zip(batch, selected, strict=True)
+                    )
                 terminals, tags = [], []
                 partial = [
                     {
@@ -318,10 +401,10 @@ def evaluate_two_step_branches(
                                     "first_index": first_index,
                                     "first_action": first_action,
                                     "information_set": key,
-                                    "observation": serialize_observation(next_obs)
-                                    if next_obs
-                                    else None,
+                                    "observation": visible_observations.get(key),
                                     "second_action": action_data(second),
+                                    "reference_selected": action_data(second)
+                                    == references.get(key),
                                 },
                             )
                         )
@@ -344,7 +427,8 @@ def evaluate_two_step_branches(
                     partial[p]["branches"].append(entry)
                 terminal_count += len(terminals)
                 raw.extend(partial)
-            result = _summary(raw, alpha=alpha, looks=len(schedule))
+            result = _summary(raw, alpha=alpha / 2, looks=len(schedule))
+            result.update(reference_summary(raw, alpha=alpha / 2, looks=len(schedule)))
             if adaptive and result["resolved"]:
                 break
     except (SamplingFailure, RuleClarificationRequired, ValueError, RuntimeError) as exc:
@@ -406,6 +490,14 @@ def diagnostic_observation(case_id, *, step=None):
     return obs
 
 
+def producer_hashes():
+    from .online_rl import source_hashes
+
+    sources = source_hashes()
+    sources.update({str(p): digest(p) for p in sorted(Path("zimortal/belief").glob("*.py"))})
+    return sources
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="data/generated/league-v4/stage-02/best-dev.pt")
@@ -420,7 +512,7 @@ def main():
     parser.add_argument("--max-attempts", type=int, default=2000)
     parser.add_argument("--seed", type=int, default=712)
     parser.add_argument("--device", choices=["cpu", "cuda"], default="cpu")
-    parser.add_argument("--directory", default="data/generated/branch-teacher-v1")
+    parser.add_argument("--directory", default="data/generated/branch-teacher-v2")
     parser.add_argument("--profile", action="store_true")
     args = parser.parse_args()
     torch.set_num_threads(2)
@@ -431,11 +523,9 @@ def main():
 
     game.evaluate_hand = cached_evaluate_hand
     game.enumerate_chi_with_required_bi = cached_chi
-    from .online_rl import source_hashes
-
     root = Path(args.directory)
     root.mkdir(parents=True, exist_ok=True)
-    config = dict(**vars(args), sources=source_hashes(), model_sha256=digest(args.model))
+    config = dict(**vars(args), sources=producer_hashes(), model_sha256=digest(args.model))
     config["manual_case_sha256"] = digest("docs/strategy/reviews/human-review-v1.json")
     path = root / "config.json"
     if path.exists() and json.loads(path.read_text()) != config:
@@ -444,7 +534,7 @@ def main():
     model = load_model(args.model, args.device)
     for i, name in enumerate(args.cases):
         if (
-            source_hashes() != config["sources"]
+            producer_hashes() != config["sources"]
             or digest(args.model) != config["model_sha256"]
             or digest("docs/strategy/reviews/human-review-v1.json") != config["manual_case_sha256"]
         ):
@@ -479,7 +569,11 @@ def main():
             profiler.disable()
             profiler.dump_stats(str(root / f"{name}.profile"))
         raw = result.pop("raw_particles")
-        atomic_json(root / f"{name}-particles.json", raw)
+        atomic_json(root / f"{name}-particles.json", compact_evidence(raw))
+        # Full observations are indexed in the evidence file, not duplicated
+        # in each branch and again in each summary.
+        for group in result.get("groups", []):
+            group.pop("observation", None)
         atomic_json(
             root / f"{name}.json",
             dict(
