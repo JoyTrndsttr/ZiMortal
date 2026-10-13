@@ -72,3 +72,76 @@ def terminal_route_targets(settlement):
             for name in FAN_NAMES
         ],
     )
+
+
+def complete_group_plans(scores, capacity, fixed=(), *, beam_size=64, top_k=3):
+    """Budgeted structural targets, not reachable-action or >=15-huxi proofs.
+
+    capacity is the visible optimistic total inventory bound (including fixed
+    groups). Fixed groups must be retained exactly; promotion alternatives must
+    be supplied separately. Beam pruning means an empty result is unknown.
+    No winning-route labels or hidden wall counts are accepted as input.
+    """
+    import math
+
+    if len(scores) != len(GROUP_PATTERNS) or len(capacity) != 20:
+        raise ValueError("invalid plan dimensions")
+    if beam_size < 1 or top_k < 1 or any(not math.isfinite(float(x)) for x in scores):
+        raise ValueError("invalid plan budget/scores")
+    if any(int(n) != n or n < 0 or n > 4 for n in capacity):
+        raise ValueError("capacity must be integer copy bounds")
+    indices = [GROUP_PATTERNS.index(tuple(sorted(p))) for p in fixed]
+    if len(indices) > 7:
+        raise ValueError("too many fixed groups")
+    requirements = [tuple(Counter(p)[t] for t in range(20)) for p in GROUP_PATTERNS]
+    used = tuple(sum(requirements[i][t] for i in indices) for t in range(20))
+    if any(n > capacity[t] for t, n in enumerate(used)):
+        return {"status": "unknown", "plans": [], "beam_pruned": False}
+    # score, chosen groups, inventory, last free index; sorted free additions
+    # avoid spending the budget on permutations of the same complete plan.
+    beam = [(sum(float(scores[i]) for i in indices), tuple(indices), used, 0)]
+    pruned = False
+    for _ in range(7 - len(indices)):
+        expanded = []
+        for score, chosen, inventory, first in beam:
+            for i in range(first, len(GROUP_PATTERNS)):
+                candidate = chosen + (i,)
+                pairs = sum(len(GROUP_PATTERNS[j]) == 2 for j in candidate)
+                quads = sum(len(GROUP_PATTERNS[j]) == 4 for j in candidate)
+                if pairs > 1 or (len(candidate) == 7 and pairs != int(quads > 0)):
+                    continue
+                counts = tuple(inventory[t] + requirements[i][t] for t in range(20))
+                if any(counts[t] > capacity[t] for t in range(20)):
+                    continue
+                expanded.append((score + float(scores[i]), candidate, counts, i))
+        expanded.sort(key=lambda item: item[0], reverse=True)
+        pruned |= len(expanded) > beam_size
+        beam = expanded[:beam_size]
+        if not beam:
+            break
+    plans = [
+        {"groups": [GROUP_PATTERNS[i] for i in chosen], "tiles": counts, "score": score}
+        for score, chosen, counts, _ in beam
+        if len(chosen) == 7
+        and sum(len(GROUP_PATTERNS[i]) == 2 for i in chosen)
+        == int(any(len(GROUP_PATTERNS[i]) == 4 for i in chosen))
+    ][:top_k]
+    return {
+        "status": "structural_candidates" if plans else "unknown",
+        "plans": plans,
+        "beam_pruned": pruned,
+    }
+
+
+def observation_group_plans(observation, scores, **budget):
+    """Conservative fixed-meld/kan branch using public copy upper bounds only."""
+    own = Counter(observation.hand)
+    fixed = [m.tiles for m in observation.players[observation.player].melds]
+    fixed += [(tile,) * 3 for tile, count in own.items() if count == 3]
+    external = Counter(observation.river)
+    for player, public in enumerate(observation.players):
+        if player != observation.player:
+            external.update(tile for meld in public.melds for tile in meld.tiles)
+    # Pending tile remains optimistically available, regardless of who may
+    # claim it. The decoder does not certify acquisition legality/probability.
+    return complete_group_plans(scores, [4 - external[t] for t in range(20)], fixed, **budget)

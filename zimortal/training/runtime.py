@@ -219,3 +219,20 @@ def tournament(
         result["cashq_decisions"] = cashq_decisions
         result["cashq_changes"] = cashq_changes
     return result
+
+
+def predict_group_plans(model, obs, device="cpu", **budget):
+    """Expose v4 structural forecasts without changing the frozen action policy."""
+    from zimortal.model.trajectory import observation_group_plans
+
+    if model.auxiliary_version != "trajectory_v4":
+        raise ValueError("nonempty-group forecasts require trajectory_v4")
+    features = torch.from_numpy(encode_observation(obs, model.feature_version))[None].to(device)
+    actions = torch.from_numpy(np.stack([encode_action(a, obs.player) for a in obs.legal_actions]))[
+        None
+    ].to(device)
+    mask = torch.ones(actions.shape[:2], dtype=torch.bool, device=device)
+    with torch.no_grad():
+        _, forecasts = model.forward_trajectory(features, actions, mask)
+        scores = torch.nn.functional.logsigmoid(forecasts["presence"][0])
+    return observation_group_plans(obs, scores.cpu().tolist(), **budget)

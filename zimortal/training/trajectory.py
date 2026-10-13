@@ -51,14 +51,19 @@ def route_warmup(parent, initialize=None, version="trajectory_v2"):
             parent.width,
             parent.architecture,
             parent.feature_version,
-        ) or initialize.auxiliary_version not in ("trajectory", "trajectory_v2", "trajectory_v3"):
+        ) or initialize.auxiliary_version not in (
+            "trajectory",
+            "trajectory_v2",
+            "trajectory_v3",
+            "trajectory_v4",
+        ):
             raise ValueError("incompatible route initialization")
         model.load_state_dict(
             {k: v for k, v in initialize.state_dict().items() if k.startswith(ROUTE_PREFIXES)},
             strict=False,
         )
-        if initialize.auxiliary_version == "trajectory_v3":
-            if version != "trajectory_v3":
+        if initialize.auxiliary_version in ("trajectory_v3", "trajectory_v4"):
+            if version not in ("trajectory_v3", "trajectory_v4"):
                 raise ValueError("bounded route heads cannot be downgraded to raw v2")
             model.positive_group_counts.copy_(initialize.positive_group_counts)
             model.terminal_huxi_constant.copy_(initialize.terminal_huxi_constant)
@@ -69,7 +74,7 @@ def route_warmup(parent, initialize=None, version="trajectory_v2"):
 
 def verify_parent_policy(model, parent):
     if (
-        model.auxiliary_version not in ("trajectory_v2", "trajectory_v3")
+        model.auxiliary_version not in ("trajectory_v2", "trajectory_v3", "trajectory_v4")
         or model.policy_plan_scale.item() != 0
     ):
         raise ValueError("route warmup must not change the policy gate")
@@ -200,7 +205,10 @@ def objective(model, parent, tensors):
     route = F.cross_entropy(forecast["tiles"].transpose(1, 2), tiles.long(), reduction="none").mean(
         -1
     )
-    if model.auxiliary_version == "trajectory_v3" and model.positive_group_counts.item():
+    if (
+        model.auxiliary_version in ("trajectory_v3", "trajectory_v4")
+        and model.positive_group_counts.item()
+    ):
         route += F.poisson_nll_loss(
             forecast["groups"].clamp_min(1e-8), groups.float(), log_input=False, reduction="none"
         ).mean(-1)
@@ -210,12 +218,33 @@ def objective(model, parent, tensors):
         forecast["fans"], fans.float(), reduction="none"
     ).mean(-1)
     route += F.smooth_l1_loss(forecast["huxi"], huxi.float(), reduction="none")
-    if model.auxiliary_version in ("trajectory_v2", "trajectory_v3"):
+    if model.auxiliary_version in ("trajectory_v2", "trajectory_v3", "trajectory_v4"):
         expected_tiles = (forecast["tiles"].softmax(-1) * torch.arange(5, device=x.device)).sum(-1)
         group_tiles = forecast["groups"].clamp_min(0) @ model.group_candidates.requirements
         route += 0.1 * F.smooth_l1_loss(group_tiles / 4, expected_tiles / 4, reduction="none").mean(
             -1
         )
+    if model.auxiliary_version == "trajectory_v4":
+        present = (groups > 0).float()
+        presence = F.binary_cross_entropy_with_logits(
+            forecast["presence"], present, reduction="none"
+        )
+        # Balance present/absent patterns within each winner, not 91 empty groups
+        # overwhelming the seven actual groups. Count errors focus on present groups.
+        route += (presence * present).sum(-1) / present.sum(-1).clamp_min(1)
+        route += (presence * (1 - present)).sum(-1) / (1 - present).sum(-1).clamp_min(1)
+        route += ((forecast["groups"] - groups).abs() * present).sum(-1) / present.sum(
+            -1
+        ).clamp_min(1)
+        counts = forecast["groups"]
+        inventory = counts @ model.group_candidates.requirements
+        route += (inventory - 4).clamp_min(0).square().mean(-1)
+        route += (counts.sum(-1) - 7).square() / 7
+        sizes = model.group_candidates.requirements.sum(-1)
+        pair = counts[:, sizes == 2].sum(-1)
+        quad = counts[:, sizes == 4].sum(-1)
+        has_quad = (groups[:, sizes == 4].sum(-1) > 0).float()
+        route += (pair - has_quad).square() + (quad * (1 - has_quad)).square()
     intake = F.smooth_l1_loss(forecast["intakes"], intakes.float(), reduction="none").mean(-1)
     win = F.binary_cross_entropy_with_logits(forecast["win"], winners, reduction="none")
     value = F.smooth_l1_loss(outputs[1], cash.float(), reduction="none")
@@ -261,6 +290,12 @@ def forecast_metrics(model, rows, device, batch_size):
                 "intake_mae": ((predictions["intakes"] * 4 - intakes * 4).abs().mean(-1), weights),
                 "win_brier": ((predictions["win"].sigmoid() - won.float()).square(), weights),
             }
+            if "presence" in predictions:
+                selected = predictions["presence"] >= 0
+                actual = groups > 0
+                hits = (selected & actual).sum(-1)
+                values["group_presence_precision"] = (hits / selected.sum(-1).clamp_min(1), success)
+                values["group_presence_recall"] = (hits / actual.sum(-1).clamp_min(1), success)
             for name, (value, weight) in values.items():
                 totals[name] += (value * weight).sum().item()
                 denominator[name] += weight.sum().item()
@@ -323,7 +358,7 @@ def huxi_baselines(train, dev):
 
 
 def initialize_huxi_baseline(model, extra):
-    if model.auxiliary_version != "trajectory_v3":
+    if model.auxiliary_version not in ("trajectory_v3", "trajectory_v4"):
         raise ValueError("bounded terminal huxi head required")
     with torch.no_grad():
         model.terminal_huxi_constant.zero_()
@@ -346,6 +381,53 @@ def initialize_group_prior(model, rows):
         )
 
 
+def write_chunk(prefix, rows, records):
+    """Atomic bounded-size shards; keep original replay evidence losslessly."""
+    import gzip
+    import json
+    import os
+
+    if not rows:
+        raise RuntimeError("chunk has no decisions")
+    atomic_npz(
+        prefix.with_suffix(".npz"),
+        features=np.stack([r[0] for r in rows]),
+        actions=np.concatenate([r[1] for r in rows]),
+        offsets=np.cumsum([0] + [len(r[1]) for r in rows]),
+        **{
+            name: np.array([r[i] for r in rows])
+            for i, name in enumerate(
+                (
+                    "cash",
+                    "won",
+                    "final_tiles",
+                    "final_groups",
+                    "final_fans",
+                    "intakes",
+                    "huxi",
+                    "weights",
+                    "game_seeds",
+                ),
+                2,
+            )
+        },
+    )
+    path = prefix.with_suffix(".games.json.gz")
+    temporary = path.with_suffix(".tmp")
+    with gzip.open(temporary, "wt", encoding="utf-8") as stream:
+        json.dump(records, stream, ensure_ascii=False)
+    with temporary.open("rb") as stream:
+        os.fsync(stream.fileno())
+    temporary.replace(path)
+    atomic_json(
+        prefix.with_suffix(".sha256.json"),
+        {
+            path.name: digest(path),
+            prefix.with_suffix(".npz").name: digest(prefix.with_suffix(".npz")),
+        },
+    )
+
+
 def run(args):
     torch.set_num_threads(2)
     torch.manual_seed(args.seed)
@@ -365,7 +447,7 @@ def run(args):
     atomic_json(root / "config.json", config)
     parent = load_model(args.parent, args.device)
     initialize = load_model(args.initialize, args.device) if args.initialize else None
-    model = route_warmup(parent, initialize, "trajectory_v3").to(args.device)
+    model = route_warmup(parent, initialize, args.auxiliary_version).to(args.device)
     optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr)
 
     def progress(games, rows):
@@ -374,12 +456,42 @@ def run(args):
             {"status": "collecting", "games": games, "decisions": rows, "device": args.device},
         )
 
-    train, train_games = collect(
-        parent, range(args.train_start, args.train_start + args.games), args.device, progress
-    )
-    dev, dev_games = collect(
-        parent, range(args.dev_start, args.dev_start + args.dev_games), args.device
-    )
+    def collect_chunks(name, first, count):
+        all_rows, all_records = [], []
+        for offset in range(0, count, args.chunk_games):
+            rows, records = collect(
+                parent,
+                range(first + offset, first + min(count, offset + args.chunk_games)),
+                args.device,
+                lambda games, decisions, offset=offset: atomic_json(
+                    root / "progress.json",
+                    {
+                        "status": "collecting",
+                        "split": name,
+                        "games": offset + games,
+                        "target_games": count,
+                        "decisions": len(all_rows) + decisions,
+                        "device": args.device,
+                    },
+                ),
+            )
+            write_chunk(root / f"{name}-{offset:05d}", rows, records)
+            all_rows.extend(rows)
+            all_records.extend(records)
+            atomic_json(
+                root / f"{name}-manifest.json",
+                {
+                    "games": len(all_records),
+                    "decisions": len(all_rows),
+                    "complete": offset + args.chunk_games >= count,
+                    "first_seed": first,
+                    "chunks": [f"{name}-{i:05d}" for i in range(0, offset + 1, args.chunk_games)],
+                },
+            )
+        return all_rows, all_records
+
+    train, train_games = collect_chunks("train", args.train_start, args.games)
+    dev, dev_games = collect_chunks("dev", args.dev_start, args.dev_games)
     if source_hashes() != config["source_hashes"] or digest(args.parent) != config["parent_sha256"]:
         raise ValueError("frozen trajectory producer changed during collection")
     if not train or not dev or not any(r[3] for r in train):
@@ -387,7 +499,7 @@ def run(args):
     baselines = huxi_baselines(train, dev)
     if (
         initialize is None
-        or initialize.auxiliary_version != "trajectory_v3"
+        or initialize.auxiliary_version not in ("trajectory_v3", "trajectory_v4")
         or model.terminal_huxi_constant.item() > 0
     ):
         initialize_huxi_baseline(model, baselines["training_mean_extra_huxi"])
@@ -396,23 +508,6 @@ def run(args):
     atomic_json(root / "huxi-baselines.json", baselines)
     initial_metrics = forecast_metrics(model, dev, args.device, args.batch_size)
     atomic_json(root / "initial-dev-metrics.json", initial_metrics)
-    for name, rows, records in (("train", train, train_games), ("dev", dev, dev_games)):
-        atomic_json(root / f"{name}-games.json", records)
-        atomic_npz(
-            root / f"{name}.npz",
-            features=np.stack([r[0] for r in rows]),
-            actions=np.concatenate([r[1] for r in rows]),
-            offsets=np.cumsum([0] + [len(r[1]) for r in rows]),
-            cash=np.array([r[2] for r in rows]),
-            won=np.array([r[3] for r in rows]),
-            final_tiles=np.array([r[4] for r in rows]),
-            final_groups=np.array([r[5] for r in rows]),
-            final_fans=np.array([r[6] for r in rows]),
-            intakes=np.array([r[7] for r in rows]),
-            huxi=np.array([r[8] for r in rows]),
-            weights=np.array([r[9] for r in rows]),
-            game_seeds=np.array([r[10] for r in rows]),
-        )
     rng, best = random.Random(args.seed), float("inf")
     for epoch in range(args.epochs):
         if (
@@ -570,6 +665,10 @@ def main():
         "--initialize", help="reuse only route modules; keep the strong parent policy"
     )
     parser.add_argument("--directory", default="data/generated/trajectory-warmup-v3")
+    parser.add_argument(
+        "--auxiliary-version", choices=("trajectory_v3", "trajectory_v4"), default="trajectory_v4"
+    )
+    parser.add_argument("--chunk-games", type=int, default=128)
     parser.add_argument("--games", type=int, default=256)
     parser.add_argument("--dev-games", type=int, default=64)
     parser.add_argument("--train-start", type=int, default=670000000)
@@ -592,7 +691,15 @@ def main():
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     args = parser.parse_args()
     if (
-        min(args.games, args.dev_games, args.epochs, args.batch_size, args.holdout_seeds) < 1
+        min(
+            args.games,
+            args.dev_games,
+            args.epochs,
+            args.batch_size,
+            args.holdout_seeds,
+            args.chunk_games,
+        )
+        < 1
         or args.lr <= 0
     ):
         parser.error("counts and learning rate must be positive")

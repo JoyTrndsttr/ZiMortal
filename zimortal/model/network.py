@@ -37,11 +37,19 @@ class PolicyValueNet(nn.Module):
             "trajectory",
             "trajectory_v2",
             "trajectory_v3",
+            "trajectory_v4",
         ):
             raise ValueError("unknown auxiliary version")
         if (
             auxiliary_version
-            in ("boundary", "planning", "trajectory", "trajectory_v2", "trajectory_v3")
+            in (
+                "boundary",
+                "planning",
+                "trajectory",
+                "trajectory_v2",
+                "trajectory_v3",
+                "trajectory_v4",
+            )
             and feature_version != "huxi"
         ):
             raise ValueError("boundary heads require huxi features")
@@ -81,19 +89,21 @@ class PolicyValueNet(nn.Module):
         )
         self.belief = nn.Linear(128, 100) if auxiliary_version == "planning" else None
         self.distance = nn.Linear(128, 16) if auxiliary_version == "planning" else None
-        if auxiliary_version in ("trajectory", "trajectory_v2", "trajectory_v3"):
+        if auxiliary_version in ("trajectory", "trajectory_v2", "trajectory_v3", "trajectory_v4"):
             from .trajectory import FAN_NAMES, GROUP_PATTERNS, GroupCandidateEncoder
 
             self.group_candidates = GroupCandidateEncoder(self.input_channels)
             self.final_tiles = nn.Linear(128, 100)
             self.final_groups = nn.Linear(128, len(GROUP_PATTERNS))
+            if auxiliary_version == "trajectory_v4":
+                self.final_presence = nn.Linear(128, len(GROUP_PATTERNS))
             self.final_fans = nn.Linear(128, len(FAN_NAMES))
             self.future_intakes = nn.Linear(128, 20)
             self.trajectory_win = nn.Linear(128, 1)
             self.final_huxi = nn.Linear(128, 1)
-            if auxiliary_version in ("trajectory_v2", "trajectory_v3"):
+            if auxiliary_version in ("trajectory_v2", "trajectory_v3", "trajectory_v4"):
                 self.policy_plan_scale = nn.Parameter(torch.tensor(0.0))
-            if auxiliary_version == "trajectory_v3":
+            if auxiliary_version in ("trajectory_v3", "trajectory_v4"):
                 self.register_buffer("terminal_huxi_constant", torch.tensor(0.0))
                 self.register_buffer("positive_group_counts", torch.tensor(False))
         if self.belief is not None:
@@ -130,28 +140,38 @@ class PolicyValueNet(nn.Module):
 
     def encode_state(self, features):
         latent = self.encoder(features)
-        if self.auxiliary_version in ("trajectory", "trajectory_v2", "trajectory_v3"):
+        if self.auxiliary_version in (
+            "trajectory",
+            "trajectory_v2",
+            "trajectory_v3",
+            "trajectory_v4",
+        ):
             scale = (
                 self.policy_plan_scale
-                if self.auxiliary_version in ("trajectory_v2", "trajectory_v3")
+                if self.auxiliary_version in ("trajectory_v2", "trajectory_v3", "trajectory_v4")
                 else 1.0
             )
             latent = latent + scale * self.group_candidates(features)
         return latent
 
     def forward_trajectory(self, features, actions, mask):
-        if self.auxiliary_version not in ("trajectory", "trajectory_v2", "trajectory_v3"):
+        if self.auxiliary_version not in (
+            "trajectory",
+            "trajectory_v2",
+            "trajectory_v3",
+            "trajectory_v4",
+        ):
             raise ValueError("trajectory heads not enabled")
         base = self.encoder(features)
         route = self.group_candidates(features)
         latent = base + route
         policy_latent = (
             base + self.policy_plan_scale * route
-            if self.auxiliary_version in ("trajectory_v2", "trajectory_v3")
+            if self.auxiliary_version in ("trajectory_v2", "trajectory_v3", "trajectory_v4")
             else latent
         )
         hu = self.final_huxi(latent).squeeze(-1)
-        if self.auxiliary_version == "trajectory_v3":
+        if self.auxiliary_version in ("trajectory_v3", "trajectory_v4"):
             # Conditional on eventually winning, not a current-hand eligibility score.
             floor = (features[:, 22, 0] * 60).round().clamp_min(15) / 60
             hu = floor + torch.nn.functional.softplus(hu) / 4
@@ -161,13 +181,18 @@ class PolicyValueNet(nn.Module):
                 hu,
             )
         groups = self.final_groups(latent)
-        if self.auxiliary_version == "trajectory_v3":
+        if self.auxiliary_version in ("trajectory_v3", "trajectory_v4"):
             groups = torch.where(
                 self.positive_group_counts, torch.nn.functional.softplus(groups), groups
             )
         return self._heads(policy_latent, features, actions, mask), {
             "tiles": self.final_tiles(latent).reshape(-1, 20, 5),
             "groups": groups,
+            **(
+                {"presence": self.final_presence(latent)}
+                if self.auxiliary_version == "trajectory_v4"
+                else {}
+            ),
             "fans": self.final_fans(latent),
             "intakes": self.future_intakes(latent),
             "win": self.trajectory_win(latent).squeeze(-1),

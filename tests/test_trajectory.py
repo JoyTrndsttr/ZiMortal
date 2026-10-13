@@ -221,3 +221,68 @@ def test_positive_group_prior_and_v3_continuation():
     assert continued.positive_group_counts.item()
     assert torch.equal(model.final_groups.bias, continued.final_groups.bias)
     verify_parent_policy(continued, parent)
+
+
+def test_complete_plans_conserve_tiles_and_pair_structure():
+    from collections import Counter
+
+    from zimortal.model.trajectory import complete_group_plans
+
+    fixed = [(t,) * 3 for t in range(6)]
+    scores = [0.0] * len(GROUP_PATTERNS)
+    result = complete_group_plans(scores, [4] * 20, fixed)
+    assert result["plans"]
+    for plan in result["plans"]:
+        assert len(plan["groups"]) == 7
+        assert all(len(p) == 3 for p in plan["groups"])
+        assert max(Counter(t for p in plan["groups"] for t in p).values()) <= 4
+    fixed[0] = (0,) * 4
+    result = complete_group_plans(scores, [4] * 20, fixed)
+    assert result["plans"]
+    assert all(sum(len(p) == 2 for p in plan["groups"]) == 1 for plan in result["plans"])
+    result = complete_group_plans(scores, [0] * 20, fixed)
+    assert result["status"] == "unknown"
+
+
+def test_v4_presence_gradient_and_frozen_policy(tmp_path):
+    parent = PolicyValueNet(feature_version="huxi")
+    model = route_warmup(parent, version="trajectory_v4")
+    x, a = fixture()
+    _, forecast = model.forward_trajectory(
+        torch.tensor(x)[None], torch.tensor(a)[None], torch.ones((1, len(a)), dtype=torch.bool)
+    )
+    forecast["presence"].sum().backward()
+    assert model.final_presence.weight.grad is not None
+    verify_parent_policy(model, parent)
+    save_model(model, tmp_path / "v4.pt")
+    loaded = load_model(tmp_path / "v4.pt")
+    assert loaded.auxiliary_version == "trajectory_v4"
+    assert torch.equal(model.final_presence.weight, loaded.final_presence.weight)
+
+
+def test_chunk_evidence_roundtrip(tmp_path):
+    import gzip
+    import json
+
+    from zimortal.training.trajectory import write_chunk
+
+    x, a = fixture()
+    row = (
+        x,
+        a,
+        0.0,
+        False,
+        [0] * 20,
+        [0] * len(GROUP_PATTERNS),
+        [0] * len(FAN_NAMES),
+        [0] * 20,
+        0.0,
+        1.0,
+        17,
+    )
+    write_chunk(tmp_path / "train-00000", [row], [{"seed": 17}])
+    with np.load(tmp_path / "train-00000.npz") as data:
+        assert data["game_seeds"].tolist() == [17]
+        assert np.array_equal(data["features"][0], x)
+    with gzip.open(tmp_path / "train-00000.games.json.gz", "rt") as stream:
+        assert json.load(stream) == [{"seed": 17}]
