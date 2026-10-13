@@ -260,12 +260,19 @@ def test_v4_presence_gradient_and_frozen_policy(tmp_path):
     assert torch.equal(model.final_presence.weight, loaded.final_presence.weight)
 
 
-def test_chunk_evidence_roundtrip(tmp_path):
+def test_chunk_evidence_roundtrip(tmp_path, monkeypatch):
     import gzip
     import json
+    from types import SimpleNamespace
 
     from zimortal.training.trajectory import write_chunk
 
+    # This test checks serialization; reserve rejection has dedicated tests.
+    # Isolate it from unrelated jobs sharing the nearly full WSL filesystem.
+    monkeypatch.setattr(
+        "zimortal.training.active.shutil.disk_usage",
+        lambda _path: SimpleNamespace(free=3 * 1024**3),
+    )
     x, a = fixture()
     row = (
         x,

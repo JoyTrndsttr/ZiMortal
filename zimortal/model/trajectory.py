@@ -40,7 +40,7 @@ class GroupCandidateEncoder(nn.Module):
         # Compatible warm starts initially preserve the parent's exact decisions.
         nn.init.zeros_(self.fusion.weight)
 
-    def forward(self, features):
+    def encode_groups(self, features):
         required = self.requirements[None]
         hand = (features[:, 0] * 4).round()[:, None]
         unknown = (4 - (features[:, 0] + features[:, 1]) * 4).round().clamp(0, 4)[:, None]
@@ -53,6 +53,10 @@ class GroupCandidateEncoder(nn.Module):
         groups = self.group(
             torch.cat((local, required.expand(len(features), -1, -1) / 4, scalars), -1)
         )
+        return groups
+
+    def forward(self, features):
+        groups = self.encode_groups(features)
         weights = self.attention(groups).softmax(1)
         return self.fusion((weights * groups).sum(1))
 
@@ -101,6 +105,7 @@ def complete_group_plans(scores, capacity, fixed=(), *, beam_size=64, top_k=3):
     # avoid spending the budget on permutations of the same complete plan.
     beam = [(sum(float(scores[i]) for i in indices), tuple(indices), used, 0)]
     pruned = False
+    pair_last = max(j for j, p in enumerate(GROUP_PATTERNS) if len(p) == 2)
     for _ in range(7 - len(indices)):
         expanded = []
         for score, chosen, inventory, first in beam:
@@ -109,6 +114,11 @@ def complete_group_plans(scores, capacity, fixed=(), *, beam_size=64, top_k=3):
                 pairs = sum(len(GROUP_PATTERNS[j]) == 2 for j in candidate)
                 quads = sum(len(GROUP_PATTERNS[j]) == 4 for j in candidate)
                 if pairs > 1 or (len(candidate) == 7 and pairs != int(quads > 0)):
+                    continue
+                # Free additions are sorted. Once the last index passes all
+                # pair patterns, a quad prefix without a pair cannot ever
+                # complete. Do not let such doomed prefixes consume the beam.
+                if quads and not pairs and i > pair_last:
                     continue
                 counts = tuple(inventory[t] + requirements[i][t] for t in range(20))
                 if any(counts[t] > capacity[t] for t in range(20)):
@@ -133,11 +143,14 @@ def complete_group_plans(scores, capacity, fixed=(), *, beam_size=64, top_k=3):
     }
 
 
-def observation_group_plans(observation, scores, **budget):
+def observation_group_plans(observation, scores, *, extra_fixed=(), **budget):
     """Conservative fixed-meld/kan branch using public copy upper bounds only."""
     own = Counter(observation.hand)
     fixed = [m.tiles for m in observation.players[observation.player].melds]
     fixed += [(tile,) * 3 for tile, count in own.items() if count == 3]
+    fixed.extend(extra_fixed)
+    if len(fixed) > 7:
+        return {"status": "unknown", "plans": [], "beam_pruned": False}
     external = Counter(observation.river)
     for player, public in enumerate(observation.players):
         if player != observation.player:

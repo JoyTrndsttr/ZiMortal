@@ -37,7 +37,11 @@ def save_model(model, path, **metadata):
 
 def load_model(path, device="cpu"):
     data = torch.load(path, map_location=device, weights_only=True)
-    if data["architecture"] == "cashq":
+    if data["architecture"] == "routeq":
+        from zimortal.model.routeq import RouteQNet
+
+        model = RouteQNet(data["width"]).to(device)
+    elif data["architecture"] == "cashq":
         from zimortal.model.cashq import CashQNet
 
         model = CashQNet(data["width"]).to(device)
@@ -236,3 +240,36 @@ def predict_group_plans(model, obs, device="cpu", **budget):
         _, forecasts = model.forward_trajectory(features, actions, mask)
         scores = torch.nn.functional.logsigmoid(forecasts["presence"][0])
     return observation_group_plans(obs, scores.cpu().tolist(), **budget)
+
+
+def predict_route_q(model, obs, device="cpu", *, count=4, beam_size=32):
+    """Explicit route/action analysis; existing action policy remains unchanged."""
+    from zimortal.model.routeq import plan_arrays, propose_routes
+
+    if model.architecture != "routeq":
+        raise ValueError("route comparison requires RouteQNet")
+    plans = propose_routes(obs, model.parent, device=device, count=count, beam_size=beam_size)
+    if len(plans) < 2:
+        return {"status": "unknown", "plans": plans}
+    counts, contexts = plan_arrays(obs, plans)
+    x = torch.as_tensor(encode_observation(obs, "huxi")[None], device=device)
+    a = torch.as_tensor(
+        np.stack([encode_action(v, obs.player) for v in obs.legal_actions])[None], device=device
+    )
+    with torch.inference_mode():
+        q, value, original = model.forward_routes(
+            x,
+            a,
+            torch.ones(a.shape[:2], dtype=torch.bool, device=device),
+            torch.as_tensor(counts[None], device=device),
+            torch.as_tensor(contexts[None], device=device),
+            torch.ones((1, len(plans)), dtype=torch.bool, device=device),
+        )
+    return {
+        "status": "experimental_prediction",
+        "plans": plans,
+        "action_route_q_cash": (q[0] * 100).cpu().tolist(),
+        "route_value_cash": (value[0] * 100).cpu().tolist(),
+        "parent_action": int(original[0][0].argmax()),
+        "meaning": "predicted terminal cash under frozen route continuation; not optimal-route EV",
+    }
