@@ -13,6 +13,9 @@ from zimortal.training.runtime import load_model, save_model
 from zimortal.training.trajectory import (
     batch,
     future_intakes,
+    huxi_baselines,
+    initialize_group_prior,
+    initialize_huxi_baseline,
     migrate,
     objective,
     route_warmup,
@@ -134,3 +137,87 @@ def test_terminal_targets_keep_duplicate_groups_and_multilabel_fan():
     assert counts[GROUP_PATTERNS.index((10, 11, 12))] == 2
     assert fans[FAN_NAMES.index("十红系列")] == 1
     assert fans[FAN_NAMES.index("十八大")] == 1
+
+
+def test_terminal_huxi_bounds_initialization_and_roundtrip(tmp_path):
+    parent = PolicyValueNet(feature_version="huxi").eval()
+    model = route_warmup(parent, version="trajectory_v3").eval()
+    initialize_huxi_baseline(model, 6)
+    x, a = fixture()
+    x[22] = 36 / 60
+    inputs = torch.tensor(x)[None], torch.tensor(a)[None], torch.ones((1, len(a)), dtype=torch.bool)
+    _, forecast = model.forward_trajectory(*inputs)
+    assert torch.allclose(forecast["huxi"] * 60, torch.tensor([42.0]))
+    with torch.no_grad():
+        model.final_huxi.bias.fill_(-100)
+    assert (model.forward_trajectory(*inputs)[1]["huxi"] * 60 >= 36).all()
+    model.terminal_huxi_constant.fill_(21)
+    assert torch.allclose(model.forward_trajectory(*inputs)[1]["huxi"] * 60, torch.tensor([36.0]))
+    inputs[0][:, 22] = 0
+    assert torch.allclose(model.forward_trajectory(*inputs)[1]["huxi"] * 60, torch.tensor([21.0]))
+    save_model(model, tmp_path / "bounded.pt")
+    loaded = load_model(tmp_path / "bounded.pt")
+    verify_parent_policy(loaded, parent)
+    assert torch.equal(
+        loaded.forward_trajectory(*inputs)[1]["huxi"], model.forward_trajectory(*inputs)[1]["huxi"]
+    )
+
+
+def test_huxi_baseline_uses_only_training_targets():
+    x, a = fixture()
+    x[22] = 0
+
+    def row(value, seed):
+        return (
+            x,
+            a,
+            0.2,
+            True,
+            [0] * 20,
+            [0] * len(GROUP_PATTERNS),
+            [0] * len(FAN_NAMES),
+            [0.0] * 20,
+            value / 60,
+            1.0,
+            seed,
+        )
+
+    train = [row(18, 1), row(24, 2)]
+    first = huxi_baselines(train, [row(21, 3)])
+    second = huxi_baselines(train, [row(30, 3)])
+    assert first["training_mean_huxi"] == second["training_mean_huxi"] == 21
+    assert first["training_mean_extra_huxi"] == second["training_mean_extra_huxi"] == 6
+    assert first["constant_mean_dev_mae"] == 0
+    assert second["constant_mean_dev_mae"] == 9
+
+
+def test_early_v3_checkpoint_defaults_optional_constant_guard_off(tmp_path):
+    model = PolicyValueNet(feature_version="huxi", auxiliary_version="trajectory_v3")
+    path = tmp_path / "early-v3.pt"
+    save_model(model, path)
+    saved = torch.load(path, weights_only=True)
+    saved["state_dict"].pop("terminal_huxi_constant")
+    saved["state_dict"].pop("positive_group_counts")
+    torch.save(saved, path)
+    loaded = load_model(path)
+    assert loaded.terminal_huxi_constant.item() == 0
+    assert not loaded.positive_group_counts.item()
+
+
+def test_positive_group_prior_and_v3_continuation():
+    parent = PolicyValueNet(feature_version="huxi").eval()
+    model = route_warmup(parent, version="trajectory_v3")
+    x, a = fixture()
+    counts = [0] * len(GROUP_PATTERNS)
+    counts[0] = 1
+    row = (x, a, 0.2, True, [0] * 20, counts, [0] * len(FAN_NAMES), [0.0] * 20, 0.3, 1.0, 1)
+    initialize_group_prior(model, [row])
+    inputs = batch([row], "cpu")
+    _, forecast = model.forward_trajectory(*inputs[:3])
+    assert (forecast["groups"] >= 0).all()
+    assert torch.allclose(forecast["groups"][0, 0], torch.tensor(1.0))
+    assert torch.isfinite(objective(model, parent, inputs))
+    continued = route_warmup(parent, model, version="trajectory_v3")
+    assert continued.positive_group_counts.item()
+    assert torch.equal(model.final_groups.bias, continued.final_groups.bias)
+    verify_parent_policy(continued, parent)

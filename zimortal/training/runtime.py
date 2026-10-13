@@ -48,7 +48,12 @@ def load_model(path, device="cpu"):
             data.get("feature_version", "legacy"),
             data.get("auxiliary_version", "legacy"),
         ).to(device)
-    model.load_state_dict(data["state_dict"])
+    state = dict(data["state_dict"])
+    if data.get("auxiliary_version") == "trajectory_v3":
+        # The optional constant guard defaults off for early v3 pilot checkpoints.
+        state.setdefault("terminal_huxi_constant", model.terminal_huxi_constant)
+        state.setdefault("positive_group_counts", model.positive_group_counts)
+    model.load_state_dict(state)
     model.eval()
     return model
 

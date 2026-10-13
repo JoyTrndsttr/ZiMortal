@@ -1,6 +1,7 @@
 """Whole-game supervised route pilot. Successful routes are feasible, not optimal."""
 
 import argparse
+import math
 import random
 from collections import Counter
 from dataclasses import asdict
@@ -32,6 +33,8 @@ def migrate(parent, version="trajectory"):
         "future_intakes.",
         "trajectory_win.",
         "policy_plan_scale",
+        "terminal_huxi_constant",
+        "positive_group_counts",
     )
     if unexpected or any(not name.startswith(prefixes) for name in missing):
         raise ValueError("incompatible policy migration")
@@ -41,26 +44,34 @@ def migrate(parent, version="trajectory"):
 ROUTE_PREFIXES = ("group_candidates.", "final_", "future_intakes.", "trajectory_win.")
 
 
-def route_warmup(parent, initialize=None):
-    model = migrate(parent, "trajectory_v2")
+def route_warmup(parent, initialize=None, version="trajectory_v2"):
+    model = migrate(parent, version)
     if initialize is not None:
         if (initialize.width, initialize.architecture, initialize.feature_version) != (
             parent.width,
             parent.architecture,
             parent.feature_version,
-        ) or initialize.auxiliary_version not in ("trajectory", "trajectory_v2"):
+        ) or initialize.auxiliary_version not in ("trajectory", "trajectory_v2", "trajectory_v3"):
             raise ValueError("incompatible route initialization")
         model.load_state_dict(
             {k: v for k, v in initialize.state_dict().items() if k.startswith(ROUTE_PREFIXES)},
             strict=False,
         )
+        if initialize.auxiliary_version == "trajectory_v3":
+            if version != "trajectory_v3":
+                raise ValueError("bounded route heads cannot be downgraded to raw v2")
+            model.positive_group_counts.copy_(initialize.positive_group_counts)
+            model.terminal_huxi_constant.copy_(initialize.terminal_huxi_constant)
     for name, parameter in model.named_parameters():
         parameter.requires_grad_(name.startswith(ROUTE_PREFIXES))
     return model
 
 
 def verify_parent_policy(model, parent):
-    if model.auxiliary_version != "trajectory_v2" or model.policy_plan_scale.item() != 0:
+    if (
+        model.auxiliary_version not in ("trajectory_v2", "trajectory_v3")
+        or model.policy_plan_scale.item() != 0
+    ):
         raise ValueError("route warmup must not change the policy gate")
     state = model.state_dict()
     if any(not torch.equal(state[k], v) for k, v in parent.state_dict().items()):
@@ -189,12 +200,17 @@ def objective(model, parent, tensors):
     route = F.cross_entropy(forecast["tiles"].transpose(1, 2), tiles.long(), reduction="none").mean(
         -1
     )
-    route += F.smooth_l1_loss(forecast["groups"], groups.float(), reduction="none").mean(-1)
+    if model.auxiliary_version == "trajectory_v3" and model.positive_group_counts.item():
+        route += F.poisson_nll_loss(
+            forecast["groups"].clamp_min(1e-8), groups.float(), log_input=False, reduction="none"
+        ).mean(-1)
+    else:
+        route += F.smooth_l1_loss(forecast["groups"], groups.float(), reduction="none").mean(-1)
     route += F.binary_cross_entropy_with_logits(
         forecast["fans"], fans.float(), reduction="none"
     ).mean(-1)
     route += F.smooth_l1_loss(forecast["huxi"], huxi.float(), reduction="none")
-    if model.auxiliary_version == "trajectory_v2":
+    if model.auxiliary_version in ("trajectory_v2", "trajectory_v3"):
         expected_tiles = (forecast["tiles"].softmax(-1) * torch.arange(5, device=x.device)).sum(-1)
         group_tiles = forecast["groups"].clamp_min(0) @ model.group_candidates.requirements
         route += 0.1 * F.smooth_l1_loss(group_tiles / 4, expected_tiles / 4, reduction="none").mean(
@@ -230,15 +246,104 @@ def forecast_metrics(model, rows, device, batch_size):
                     success,
                 ),
                 "group_mae": ((predictions["groups"] - groups).abs().mean(-1), success),
+                "negative_group_fraction": ((predictions["groups"] < 0).float().mean(-1), success),
+                "positive_group_mae": (
+                    ((predictions["groups"] - groups).abs() * (groups > 0)).sum(-1)
+                    / (groups > 0).sum(-1).clamp_min(1),
+                    success,
+                ),
                 "fan_brier": ((predictions["fans"].sigmoid() - fans).square().mean(-1), success),
                 "huxi_mae": ((predictions["huxi"] * 60 - hu * 60).abs(), success),
+                "conditional_terminal_huxi_below15_rate": (
+                    (predictions["huxi"] * 60 < 15).float(),
+                    success,
+                ),
                 "intake_mae": ((predictions["intakes"] * 4 - intakes * 4).abs().mean(-1), weights),
                 "win_brier": ((predictions["win"].sigmoid() - won.float()).square(), weights),
             }
             for name, (value, weight) in values.items():
                 totals[name] += (value * weight).sum().item()
                 denominator[name] += weight.sum().item()
-    return {k: totals[k] / denominator[k] if denominator[k] else None for k in totals}
+    result = {k: totals[k] / denominator[k] if denominator[k] else None for k in totals}
+    result["conditional_terminal_huxi_mae"] = result["huxi_mae"]
+    winners = [r for r in rows if r[3]]
+    result["winning_states"] = len(winners)
+    result["winning_games"] = len({r[10] for r in winners})
+    result["fan_positive_games"] = {
+        name: len({r[10] for r in winners if r[6][i]}) for i, name in enumerate(FAN_NAMES)
+    }
+    return result
+
+
+def huxi_baselines(train, dev):
+    winners = [r for r in train if r[3]]
+    weights = np.array([r[9] for r in winners])
+    targets = np.array([r[8] * 60 for r in winners])
+    floors = np.array([max(15, round(float(r[0][22, 0]) * 60)) for r in winners])
+    if np.any(targets < floors - 1e-3):
+        raise ValueError("terminal huxi contradicts locked-huxi lower bound")
+    mean = float(np.average(targets, weights=weights))
+    residual = float(np.average(targets - floors, weights=weights))
+    heldout = [r for r in dev if r[3]]
+    if not heldout:
+        raise ValueError("development has no successful route to evaluate")
+    y = np.array([r[8] * 60 for r in heldout])
+    floor = np.array([max(15, round(float(r[0][22, 0]) * 60)) for r in heldout])
+    if np.any(y < floor - 1e-3):
+        raise ValueError("development terminal huxi violates locked lower bound")
+    w = np.array([r[9] for r in heldout])
+    return {
+        "training_mean_huxi": mean,
+        "training_mean_extra_huxi": residual,
+        "constant_mean_dev_mae": float(np.average(abs(y - mean), weights=w)),
+        "clipped_training_mean_dev_mae": float(
+            np.average(abs(y - np.maximum(floor, mean)), weights=w)
+        ),
+        "locked_plus_training_residual_dev_mae": float(
+            np.average(abs(y - floor - residual), weights=w)
+        ),
+        "meaning": "conditional terminal winning huxi; not current legal huxi",
+        "zero_group_dev_mae": float(np.average([np.mean(r[5]) for r in heldout], weights=w)),
+        "all_zero_tile_dev_accuracy": float(
+            np.average([np.mean(np.array(r[4]) == 0) for r in heldout], weights=w)
+        ),
+        "training_fan_prior_dev_brier": float(
+            np.average(
+                (
+                    (
+                        np.array([r[6] for r in heldout])
+                        - np.average([r[6] for r in winners], axis=0, weights=weights)
+                    )
+                    ** 2
+                ).mean(-1),
+                weights=w,
+            )
+        ),
+    }
+
+
+def initialize_huxi_baseline(model, extra):
+    if model.auxiliary_version != "trajectory_v3":
+        raise ValueError("bounded terminal huxi head required")
+    with torch.no_grad():
+        model.terminal_huxi_constant.zero_()
+        model.final_huxi.weight.zero_()
+        model.final_huxi.bias.fill_(math.log(math.expm1(max(extra / 15, 1e-5))))
+
+
+def initialize_group_prior(model, rows):
+    winners = [r for r in rows if r[3]]
+    prior = np.average([r[5] for r in winners], axis=0, weights=[r[9] for r in winners])
+    with torch.no_grad():
+        model.positive_group_counts.fill_(True)
+        model.final_groups.weight.zero_()
+        model.final_groups.bias.copy_(
+            torch.tensor(
+                np.log(np.expm1(np.maximum(prior, 1e-5))),
+                device=model.final_groups.bias.device,
+                dtype=model.final_groups.bias.dtype,
+            )
+        )
 
 
 def run(args):
@@ -260,7 +365,7 @@ def run(args):
     atomic_json(root / "config.json", config)
     parent = load_model(args.parent, args.device)
     initialize = load_model(args.initialize, args.device) if args.initialize else None
-    model = route_warmup(parent, initialize).to(args.device)
+    model = route_warmup(parent, initialize, "trajectory_v3").to(args.device)
     optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr)
 
     def progress(games, rows):
@@ -279,6 +384,16 @@ def run(args):
         raise ValueError("frozen trajectory producer changed during collection")
     if not train or not dev or not any(r[3] for r in train):
         raise RuntimeError("insufficient successful trajectories")
+    baselines = huxi_baselines(train, dev)
+    if (
+        initialize is None
+        or initialize.auxiliary_version != "trajectory_v3"
+        or model.terminal_huxi_constant.item() > 0
+    ):
+        initialize_huxi_baseline(model, baselines["training_mean_extra_huxi"])
+    if not model.positive_group_counts.item():
+        initialize_group_prior(model, train)
+    atomic_json(root / "huxi-baselines.json", baselines)
     initial_metrics = forecast_metrics(model, dev, args.device, args.batch_size)
     atomic_json(root / "initial-dev-metrics.json", initial_metrics)
     for name, rows, records in (("train", train, train_games), ("dev", dev, dev_games)):
@@ -330,6 +445,7 @@ def run(args):
             "value_target": "undiscounted terminal payments/100",
             "epoch": epoch + 1,
             "route_target": "realized winner decomposition, not optimal plan",
+            "huxi_target": "terminal huxi/60 conditional on winning; not current eligibility",
             "dev_loss": dev_loss,
             "parent_sha256": config["parent_sha256"],
             "policy_frozen": True,
@@ -371,6 +487,38 @@ def run(args):
         raise ValueError("frozen route evaluation producer changed")
     candidate = load_model(root / "best-dev.pt", args.device)
     verify_parent_policy(candidate, parent)
+    before_guard = forecast_metrics(candidate, dev, args.device, args.batch_size)
+    baseline_mode = (
+        "clipped_mean"
+        if baselines["clipped_training_mean_dev_mae"]
+        <= baselines["locked_plus_training_residual_dev_mae"]
+        else "locked_residual"
+    )
+    baseline_error = min(
+        baselines["clipped_training_mean_dev_mae"],
+        baselines["locked_plus_training_residual_dev_mae"],
+    )
+    restored = before_guard["huxi_mae"] > baseline_error + 1e-4
+    if restored:
+        if baseline_mode == "clipped_mean":
+            candidate.terminal_huxi_constant.fill_(baselines["training_mean_huxi"])
+        else:
+            initialize_huxi_baseline(candidate, baselines["training_mean_extra_huxi"])
+        save_model(
+            candidate,
+            root / "selected-model.pt",
+            value_target="undiscounted terminal payments/100",
+            policy_frozen=True,
+            huxi_baseline_restored=True,
+        )
+    else:
+        save_model(
+            candidate,
+            root / "selected-model.pt",
+            value_target="undiscounted terminal payments/100",
+            policy_frozen=True,
+            huxi_baseline_restored=False,
+        )
     opponents = [parent] + [load_model(p, args.device) for p in args.opponents]
     holdout = evaluation(
         candidate,
@@ -402,6 +550,11 @@ def run(args):
             "policy_frozen": True,
             "initial_dev_forecasts": initial_metrics,
             "final_dev_forecasts": forecast_metrics(candidate, dev, args.device, args.batch_size),
+            "huxi_baselines": baselines,
+            "before_huxi_guard_forecasts": before_guard,
+            "huxi_baseline_restored": restored,
+            "huxi_baseline_mode": baseline_mode if restored else "learned",
+            "selected_checkpoint": str(root / "selected-model.pt"),
         },
     )
     atomic_json(
@@ -416,7 +569,7 @@ def main():
     parser.add_argument(
         "--initialize", help="reuse only route modules; keep the strong parent policy"
     )
-    parser.add_argument("--directory", default="data/generated/trajectory-warmup-v2")
+    parser.add_argument("--directory", default="data/generated/trajectory-warmup-v3")
     parser.add_argument("--games", type=int, default=256)
     parser.add_argument("--dev-games", type=int, default=64)
     parser.add_argument("--train-start", type=int, default=670000000)
