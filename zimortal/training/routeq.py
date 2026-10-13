@@ -45,6 +45,7 @@ def route_potential(obs, plan, action=None):
     if obs.hu_disabled:
         return None
     hand = Counter(obs.hand)
+    protected = {t for t, n in hand.items() if n == 3}
     melds = [tuple(sorted(m.tiles)) for m in obs.players[obs.player].melds]
     if action is not None:
         if action not in obs.legal_actions:
@@ -89,8 +90,31 @@ def route_potential(obs, plan, action=None):
         external[action.tile] += 1
     if any(desired[t] > 4 - external[t] for t in range(20)):
         return None
-    missing = sum(max(desired[t] - available[t], 0) for t in range(20))
-    return -missing / 3
+
+    def after_discard(tile=None):
+        inventory = available.copy()
+        public = external.copy()
+        if tile is not None:
+            inventory[tile] -= 1
+            public[tile] += 1
+        if any(desired[t] > 4 - public[t] for t in range(20)):
+            return None
+        missing = sum(max(desired[t] - inventory[t], 0) for t in range(20))
+        # Route template occupation models protected pairs/alternatives without
+        # awarding heuristic cash. Cash labels still come from terminal play.
+        return -missing / 3
+
+    if action is not None and action.kind in (A.CHI, A.PENG):
+        # Opening double-ti exemption is visible in own action history.
+        own_history = [a for a in obs.history if a.player == obs.player]
+        opening_tis = sum(a.kind == A.TI for a in own_history)
+        intervening = any(a.kind in (A.CHI, A.PENG, A.WEI, A.PAO, A.DISCARD) for a in own_history)
+        if opening_tis >= 2 and not intervening:
+            return after_discard()
+        choices = [after_discard(t) for t, n in hand.items() if n > 0 and t not in protected]
+        valid = [v for v in choices if v is not None]
+        return max(valid) if valid else None
+    return after_discard()
 
 
 def route_choices(parent, observations, plans, *, device="cpu", strength=2.0, diagnostics=None):
@@ -221,6 +245,16 @@ def compare_routes(
                     "cash": cash[ai, ri],
                     "settlement": asdict(settlement) if settlement else None,
                     "history_suffix": [action_data(a) for a in suffix],
+                    "own_upgrade_events": [
+                        action_data(a)
+                        for a in suffix
+                        if a.player == obs.player and a.kind in (A.PAO, A.TI)
+                    ],
+                    "claim_followup_discards": [
+                        action_data(a)
+                        for a in suffix
+                        if a.player == obs.player and a.kind == A.DISCARD
+                    ],
                     "terminal_sha256": hashlib.sha256(state.serialize().encode()).hexdigest(),
                 }
             )
@@ -239,7 +273,7 @@ def compare_routes(
         "sampling_attempts": attempts,
         "route_fallback_decisions": abandoned,
         "raw_particles": raw,
-        "policy": "frozen parent logits + bounded visible goal-progress bias; opponents frozen parent; HU/pass unmodified",
+        "policy": "v2 frozen parent + visible route progress with mandatory claim discard preview; opponents frozen; HU/pass unmodified",
         "cash_units": "actual terminal payments/100",
         "strength": strength,
         "meaning": "Q(action, route-following continuation), not optimal route EV",
@@ -384,6 +418,100 @@ def metrics(model, rows, device):
         "diagnostic_pairs": len(agreements),
         "selected_root_switch_mean_cash_delta": float(np.mean(cash_differences)),
         "meaning": "root-local evaluation; noisy fixed-route continuation MC; not certified ranking or full-agent cash strength",
+    }
+
+
+def evaluate_full_games(model, *, start, games=16, device="cpu"):
+    """Fresh full games, rotating actor/dealer; parent opponents, seed clusters.
+
+    The Q actor replans each free decision. This is an experimental agent,
+    separate from the frozen route-following policy used to label Q.
+    """
+    engine = RuleEngine()
+    records, excluded = [], []
+    for seed in range(start, start + games):
+        paired = []
+        try:
+            for seat in range(3):
+                payments = []
+                traces = []
+                for experiment in (False, True):
+                    initial = engine.new_game(seed, seed % 3)
+                    state = initial
+                    changed = 0
+                    for _ in range(1000):
+                        if state.terminal:
+                            break
+                        legal = engine.legal_actions(state)
+                        action = legal[0]
+                        if len(legal) > 1:
+                            obs = engine.observation(state, legal[0].player)
+                            baseline = choose_batch(model.parent, [obs], device)[0]
+                            action = baseline
+                            if experiment and obs.player == seat and not obs.hu_disabled:
+                                plans = propose_routes(obs, model.parent, device=device)
+                                if plans:
+                                    groups, contexts = plan_arrays(obs, plans)
+                                    row = {
+                                        "features": encode_observation(obs, "huxi"),
+                                        "actions": np.stack(
+                                            [encode_action(a, obs.player) for a in legal]
+                                        ),
+                                        "plans": groups,
+                                        "contexts": contexts,
+                                    }
+                                    with torch.inference_mode():
+                                        q = model_root(model, row, device)[0][0].cpu().numpy()
+                                    ai, _ri = np.unravel_index(q.argmax(), q.shape)
+                                    action = legal[ai]
+                                    changed += int(action != baseline)
+                        state = engine.step(state, action)
+                    if not state.terminal:
+                        raise RuntimeError("full cash game exceeded transition budget")
+                    state.validate()
+                    if engine.replay(initial, state.history).serialize() != state.serialize():
+                        raise RuntimeError("full cash replay mismatch")
+                    payments.append(state.settlement.payments[seat] if state.settlement else 0)
+                    traces.append(
+                        {
+                            "experiment": experiment,
+                            "changed": changed,
+                            "history": [action_data(a) for a in state.history],
+                            "settlement": asdict(state.settlement) if state.settlement else None,
+                        }
+                    )
+                paired.append(
+                    {
+                        "seat": seat,
+                        "cash_delta": payments[1] - payments[0],
+                        "payments": payments,
+                        "traces": traces,
+                    }
+                )
+            records.append(
+                {
+                    "seed": seed,
+                    "mean_delta": float(np.mean([r["cash_delta"] for r in paired])),
+                    "seats": paired,
+                }
+            )
+        except (RuleClarificationRequired, ValueError) as exc:
+            excluded.append({"seed": seed, "error": str(exc), "status": "whole seed excluded"})
+    if not records:
+        raise RuntimeError("no valid independent full-game cash seeds")
+    means = [r["mean_delta"] for r in records]
+    bootstrap = (
+        np.random.default_rng(start).choice(means, (2000, len(means)), replace=True).mean(-1)
+    )
+    return {
+        "independent_seeds": len(records),
+        "mean_cash_delta": float(np.mean(means)),
+        "approximate_seed_bootstrap_interval": np.quantile(bootstrap, [0.025, 0.975]).tolist(),
+        "opponents": "frozen parent only",
+        "candidate_policy": "greedy route-Q replanning every free own decision",
+        "meaning": "small independent full-agent experiment; not multi-opponent champion certification",
+        "records": records,
+        "excluded": excluded,
     }
 
 
@@ -586,6 +714,15 @@ def run(args):
         "meaning": "fresh roots/particles after checkpoint selection; one root switch then frozen route continuation; not full-agent cash gate",
     }
     atomic_json(root / "independent-test.json", holdout)
+    full_cash = (
+        evaluate_full_games(
+            selected, start=args.cash_start, games=args.cash_games, device=args.device
+        )
+        if args.cash_games
+        else None
+    )
+    if full_cash is not None:
+        atomic_gzip(root / "independent-full-cash.json.gz", full_cash)
     result = {
         "status": "complete",
         "train_roots": len(train),
@@ -601,7 +738,12 @@ def run(args):
         "policy_frozen": True,
         "formal_champion_changed": False,
         "selected_checkpoint": str(root / "best-dev.pt"),
-        "cash_strength_evaluated": False,
+        "cash_strength_evaluated": full_cash is not None,
+        "full_cash_summary": {
+            k: v for k, v in full_cash.items() if k not in ("records", "excluded")
+        }
+        if full_cash
+        else None,
         "next_gate": "root-switch test review, uncertainty calibration and full-agent cash evaluation before policy integration",
     }
     atomic_json(root / "result.json", result)
@@ -620,6 +762,8 @@ def main():
     parser.add_argument("--test-roots", type=int, default=16)
     parser.add_argument("--test-particles", type=int, default=16)
     parser.add_argument("--test-start", type=int, default=810000000)
+    parser.add_argument("--cash-start", type=int, default=850000000)
+    parser.add_argument("--cash-games", type=int, default=0)
     parser.add_argument("--particles", type=int, default=8)
     parser.add_argument("--max-attempts", type=int, default=256)
     parser.add_argument("--attempt-multiplier", type=int, default=4)

@@ -150,3 +150,74 @@ def test_claim_conditioned_routes_include_legal_chi_and_required_bi():
         if state.terminal:
             break
     raise AssertionError("fixture did not expose a legal chi")
+
+
+def test_locked_triples_can_upgrade_without_splitting_or_double_huxi():
+    from zimortal.model.routeq import upgrade_plan_branches
+    from zimortal.model.trajectory import GROUP_PATTERNS
+
+    _parent, _state, obs, _ = fixture()
+    branches = upgrade_plan_branches(obs, [0.0] * len(GROUP_PATTERNS), beam_size=64)
+    assert branches
+    for plan in branches:
+        tile = plan["upgrade_path"]["tile"]
+        assert obs.hand.count(tile) == 3 or any(
+            m.tiles == (tile,) * 3 for m in obs.players[obs.player].melds
+        )
+        assert (tile,) * 4 in [tuple(p) for p in plan["groups"]]
+        assert sum(len(p) == 2 for p in plan["groups"]) == 1
+        _, context = plan_arrays(obs, [plan])
+        assert context[0, -7] >= context[0, -8]
+        assert context[0, -8] * 60 >= (9 if tile >= 10 else 6)
+        from zimortal.training.routeq import route_potential
+
+        assert route_potential(obs, plan) is not None
+
+
+def test_dead_fourth_tile_does_not_create_locked_upgrade_branch():
+    from dataclasses import replace
+
+    from zimortal.model.routeq import upgrade_plan_branches
+    from zimortal.model.trajectory import GROUP_PATTERNS
+
+    _, _, obs, _ = fixture()
+    tiles = [t for t in set(obs.hand) if obs.hand.count(t) == 3]
+    assert tiles
+    dead = replace(obs, river=obs.river + tuple(tiles))
+    branches = upgrade_plan_branches(dead, [0.0] * len(GROUP_PATTERNS), beam_size=64)
+    assert all(p["upgrade_path"]["tile"] not in tiles for p in branches)
+
+
+def test_claim_preview_matches_actual_mandatory_discard_route_progress():
+    import random
+
+    from zimortal.engine import ActionType as A
+    from zimortal.training.routeq import route_potential
+
+    parent, state, _, _ = fixture()
+    engine = RuleEngine()
+    rng = random.Random(18)
+    for _ in range(1000):
+        legal = engine.legal_actions(state)
+        claims = [a for a in legal if a.kind in (A.CHI, A.PENG)]
+        if claims:
+            obs = engine.observation(state, legal[0].player)
+            plans = propose_routes(obs, parent, count=4)
+            checked = 0
+            for claim in claims:
+                child = engine.step(state, claim)
+                discards = engine.legal_actions(child)
+                if not discards or any(a.kind != A.DISCARD for a in discards):
+                    continue
+                after = engine.observation(child, claim.player)
+                for plan in plans:
+                    values = [route_potential(after, plan, a) for a in discards]
+                    valid = [v for v in values if v is not None]
+                    expected = max(valid) if valid else None
+                    assert route_potential(obs, plan, claim) == expected
+                    checked += 1
+            assert checked
+            break
+        state = engine.step(state, rng.choice(legal))
+    else:
+        raise AssertionError("no claim decision found")

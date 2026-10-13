@@ -17,7 +17,7 @@ from zimortal.engine.tiles import is_red
 
 from .encoding import ACTION_DIM, encode_action, encode_observation
 from .network import PolicyValueNet
-from .trajectory import GROUP_PATTERNS, observation_group_plans
+from .trajectory import GROUP_PATTERNS, complete_group_plans, observation_group_plans
 
 PLAN_FEATURES = 88
 REQUIREMENTS = np.array([[Counter(p)[t] for t in range(20)] for p in GROUP_PATTERNS], np.float32)
@@ -48,19 +48,34 @@ def plan_arrays(obs, plans):
         for meld in obs.players[obs.player].melds:
             pattern = tuple(sorted(meld.tiles))
             if not remaining[pattern]:
-                raise ValueError("plan fails to retain an exposed group")
-            remaining[pattern] -= 1
-            low += meld_huxi(meld)
-            high += meld_huxi(meld)
+                quad = (pattern[0],) * 4
+                if len(pattern) != 3 or len(set(pattern)) != 1 or not remaining[quad]:
+                    raise ValueError("plan fails to retain an exposed group")
+                remaining[quad] -= 1
+                # A public peng promotes to pao; wei may promote to pao/ti.
+                low += meld_huxi(Meld(MeldType.PAO, quad))
+                high += meld_huxi(
+                    Meld(MeldType.PAO if meld.kind == MeldType.PENG else MeldType.TI, quad)
+                )
+            else:
+                remaining[pattern] -= 1
+                low += meld_huxi(meld)
+                high += meld_huxi(meld)
         for tile, n in own.items():
             if n == 3:
                 pattern = (tile,) * 3
                 if not remaining[pattern]:
-                    raise ValueError("plan splits a protected kan")
-                remaining[pattern] -= 1
-                value = meld_huxi(Meld(MeldType.KAN, pattern))
-                low += value
-                high += value
+                    quad = (tile,) * 4
+                    if not remaining[quad]:
+                        raise ValueError("plan splits a protected kan")
+                    remaining[quad] -= 1
+                    low += meld_huxi(Meld(MeldType.PAO, quad))
+                    high += meld_huxi(Meld(MeldType.TI, quad))
+                else:
+                    remaining[pattern] -= 1
+                    value = meld_huxi(Meld(MeldType.KAN, pattern))
+                    low += value
+                    high += value
         for pattern, n in remaining.items():
             if not n:
                 continue
@@ -108,6 +123,57 @@ def plan_arrays(obs, plans):
     return np.asarray(counts, np.float32), np.asarray(contexts, np.float32)
 
 
+def upgrade_plan_branches(obs, scores, *, beam_size=32):
+    """First-upgrade alternatives from visible locked triples; no hidden inputs.
+
+    Existing quads are fixed. Each branch upgrades at most one further locked
+    triple; equivalent inventory targets deduplicate in the proposal layer.
+    Additional upgrades are budgeted only if the existing locked huxi is <15.
+    Source/arrival alternatives remain bounded events, not acquisition proofs.
+    """
+    own = Counter(obs.hand)
+    melds = obs.players[obs.player].melds
+    fixed = [tuple(sorted(m.tiles)) for m in melds]
+    fixed += [(t,) * 3 for t, n in own.items() if n == 3]
+    external = Counter(obs.river)
+    for seat, player in enumerate(obs.players):
+        if seat != obs.player:
+            external.update(t for m in player.melds for t in m.tiles)
+    existing = sum(len(p) == 4 for p in fixed)
+    locked_huxi = sum(meld_huxi(m) for m in melds) + sum(
+        meld_huxi(Meld(MeldType.KAN, (t,) * 3)) for t, n in own.items() if n == 3
+    )
+    if existing and locked_huxi >= 15:
+        return []  # forced upgrades still execute in the rule engine
+    candidates = []
+    for i, group in enumerate(fixed):
+        if len(group) != 3 or len(set(group)) != 1 or external[group[0]]:
+            continue
+        promoted = fixed.copy()
+        promoted[i] = (group[0],) * 4
+        result = complete_group_plans(
+            scores,
+            [4 - external[t] for t in range(20)],
+            promoted,
+            beam_size=beam_size,
+            top_k=8,
+            max_quads=existing + 1,
+        )
+        for plan in result["plans"]:
+            if sum(len(p) == 4 for p in plan["groups"]) != existing + 1:
+                continue
+            plan["upgrade_path"] = {
+                "stage": "first_upgrade" if not existing else "extra_upgrade_huxi_exception",
+                "tile": group[0],
+                "existing_quads": existing,
+                "arrival": "public fourth -> pao; own draw kan/wei -> ti; peng -> pao",
+                "status": "conditional structural target; timing/reachability unknown",
+            }
+            candidates.append(plan)
+            break
+    return candidates
+
+
 def propose_routes(obs, prior, *, device="cpu", count=4, beam_size=32):
     """Diversified visible structural branches, never future settlement targets."""
     x = encode_observation(obs, "huxi")
@@ -151,10 +217,20 @@ def propose_routes(obs, prior, *, device="cpu", count=4, beam_size=32):
             claims.append((action.chi, *action.bi))
         elif action.kind == ActionType.PENG:
             claims.append(((action.tile,) * 3,))
-    proposals = [(scorers[0], ())]
-    proposals += [(scorers[1], claim) for claim in claims[:2]]
+    proposals = [(scorers[1], claim) for claim in claims[:2]]
+    proposals += [(scorers[0], ())]
     proposals += [(score, ()) for score in scorers[1:]]
     candidates, seen = [], set()
+    # Reserve a first-upgrade slot before ordinary terminal targets fill budget.
+    upgraded = upgrade_plan_branches(obs, scorers[1], beam_size=beam_size)
+    for plan in upgraded:
+        _, context = plan_arrays(obs, [plan])
+        if context[0, -1] and len(candidates) < max(1, count // 2):
+            key = tuple(sorted(tuple(p) for p in plan["groups"]))
+            if key not in seen:
+                candidates.append(plan)
+                seen.add(key)
+    existing_quads = sum(len(m.tiles) == 4 for m in obs.players[obs.player].melds)
     for scores, required_claim in proposals:
         # A near-hand beam may contain only low-huxi structures. Try a bounded
         # huxi-biased proposal rather than reporting those as winning routes.
@@ -163,6 +239,7 @@ def propose_routes(obs, prior, *, device="cpu", count=4, beam_size=32):
                 obs,
                 proposal_score.tolist(),
                 extra_fixed=required_claim,
+                max_quads=existing_quads + 1,
                 beam_size=beam_size,
                 top_k=8,
             )
@@ -171,6 +248,17 @@ def propose_routes(obs, prior, *, device="cpu", count=4, beam_size=32):
                 key = tuple(sorted(tuple(p) for p in plan["groups"]))
                 if key in seen:
                     continue
+                if sum(len(p) == 4 for p in plan["groups"]) > existing_quads + 1:
+                    continue
+                plan["upgrade_path"] = {
+                    "stage": "existing_upgrade"
+                    if existing_quads
+                    else "no_upgrade"
+                    if not any(len(p) == 4 for p in plan["groups"])
+                    else "first_upgrade_unlocked",
+                    "existing_quads": existing_quads,
+                    "status": "structural target; timing/reachability unknown",
+                }
                 _, context = plan_arrays(obs, [plan])
                 if context[0, -1] == 0:
                     continue  # structural huxi upper bound is insufficient

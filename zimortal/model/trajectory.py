@@ -78,7 +78,7 @@ def terminal_route_targets(settlement):
     )
 
 
-def complete_group_plans(scores, capacity, fixed=(), *, beam_size=64, top_k=3):
+def complete_group_plans(scores, capacity, fixed=(), *, beam_size=64, top_k=3, max_quads=None):
     """Budgeted structural targets, not reachable-action or >=15-huxi proofs.
 
     capacity is the visible optimistic total inventory bound (including fixed
@@ -113,7 +113,11 @@ def complete_group_plans(scores, capacity, fixed=(), *, beam_size=64, top_k=3):
                 candidate = chosen + (i,)
                 pairs = sum(len(GROUP_PATTERNS[j]) == 2 for j in candidate)
                 quads = sum(len(GROUP_PATTERNS[j]) == 4 for j in candidate)
-                if pairs > 1 or (len(candidate) == 7 and pairs != int(quads > 0)):
+                if (
+                    (max_quads is not None and quads > max_quads)
+                    or pairs > 1
+                    or (len(candidate) == 7 and pairs != int(quads > 0))
+                ):
                     continue
                 # Free additions are sorted. Once the last index passes all
                 # pair patterns, a quad prefix without a pair cannot ever
