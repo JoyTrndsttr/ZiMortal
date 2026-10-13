@@ -30,10 +30,16 @@ class PolicyValueNet(nn.Module):
         self.width = width
         self.feature_version = feature_version
         self.auxiliary_version = auxiliary_version
-        if auxiliary_version not in ("legacy", "boundary", "planning", "trajectory"):
+        if auxiliary_version not in (
+            "legacy",
+            "boundary",
+            "planning",
+            "trajectory",
+            "trajectory_v2",
+        ):
             raise ValueError("unknown auxiliary version")
         if (
-            auxiliary_version in ("boundary", "planning", "trajectory")
+            auxiliary_version in ("boundary", "planning", "trajectory", "trajectory_v2")
             and feature_version != "huxi"
         ):
             raise ValueError("boundary heads require huxi features")
@@ -73,7 +79,7 @@ class PolicyValueNet(nn.Module):
         )
         self.belief = nn.Linear(128, 100) if auxiliary_version == "planning" else None
         self.distance = nn.Linear(128, 16) if auxiliary_version == "planning" else None
-        if auxiliary_version == "trajectory":
+        if auxiliary_version in ("trajectory", "trajectory_v2"):
             from .trajectory import FAN_NAMES, GROUP_PATTERNS, GroupCandidateEncoder
 
             self.group_candidates = GroupCandidateEncoder(self.input_channels)
@@ -83,6 +89,8 @@ class PolicyValueNet(nn.Module):
             self.future_intakes = nn.Linear(128, 20)
             self.trajectory_win = nn.Linear(128, 1)
             self.final_huxi = nn.Linear(128, 1)
+            if auxiliary_version == "trajectory_v2":
+                self.policy_plan_scale = nn.Parameter(torch.tensor(0.0))
         if self.belief is not None:
             nn.init.zeros_(self.belief.weight)
             nn.init.zeros_(self.belief.bias)
@@ -117,15 +125,23 @@ class PolicyValueNet(nn.Module):
 
     def encode_state(self, features):
         latent = self.encoder(features)
-        if self.auxiliary_version == "trajectory":
-            latent = latent + self.group_candidates(features)
+        if self.auxiliary_version in ("trajectory", "trajectory_v2"):
+            scale = self.policy_plan_scale if self.auxiliary_version == "trajectory_v2" else 1.0
+            latent = latent + scale * self.group_candidates(features)
         return latent
 
     def forward_trajectory(self, features, actions, mask):
-        if self.auxiliary_version != "trajectory":
+        if self.auxiliary_version not in ("trajectory", "trajectory_v2"):
             raise ValueError("trajectory heads not enabled")
-        latent = self.encode_state(features)
-        return self._heads(latent, features, actions, mask), {
+        base = self.encoder(features)
+        route = self.group_candidates(features)
+        latent = base + route
+        policy_latent = (
+            base + self.policy_plan_scale * route
+            if self.auxiliary_version == "trajectory_v2"
+            else latent
+        )
+        return self._heads(policy_latent, features, actions, mask), {
             "tiles": self.final_tiles(latent).reshape(-1, 20, 5),
             "groups": self.final_groups(latent),
             "fans": self.final_fans(latent),

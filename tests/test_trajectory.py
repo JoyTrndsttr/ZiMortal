@@ -10,7 +10,14 @@ from zimortal.model.encoding import encode_action, encode_observation
 from zimortal.model.network import PolicyValueNet
 from zimortal.model.trajectory import FAN_NAMES, GROUP_PATTERNS, terminal_route_targets
 from zimortal.training.runtime import load_model, save_model
-from zimortal.training.trajectory import batch, future_intakes, migrate, objective
+from zimortal.training.trajectory import (
+    batch,
+    future_intakes,
+    migrate,
+    objective,
+    route_warmup,
+    verify_parent_policy,
+)
 
 
 def fixture():
@@ -78,6 +85,45 @@ def test_future_acquisitions_count_offered_card_once():
 def test_empty_wall_terminal_draw_is_not_a_future_card():
     history = [Action(A.DRAW, 0, forced=True)]
     assert future_intakes(history, 0, 0, {0: None}) == [0.0] * 20
+
+
+def test_route_warmup_preserves_policy_after_learning_and_save(tmp_path):
+    parent = PolicyValueNet(feature_version="huxi").eval()
+    previous = migrate(parent)
+    with torch.no_grad():
+        previous.encoder[0].weight.add_(0.1)
+        previous.final_fans.weight.add_(0.2)
+    model = route_warmup(parent, previous)
+    assert torch.equal(model.final_fans.weight, previous.final_fans.weight)
+    verify_parent_policy(model, parent)
+    x, a = fixture()
+    row = (
+        x,
+        a,
+        -0.1,
+        False,
+        [0] * 20,
+        [0] * len(GROUP_PATTERNS),
+        [0] * len(FAN_NAMES),
+        [0.0] * 20,
+        0.0,
+        1.0,
+        123,
+    )
+    inputs = batch([row], "cpu")
+    old = [value.detach().clone() for value in parent(*inputs[:3])]
+    weight = model.group_candidates.fusion.weight.detach().clone()
+    optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=0.001)
+    for _ in range(3):
+        optimizer.zero_grad()
+        objective(model, parent, inputs).backward()
+        optimizer.step()
+    verify_parent_policy(model, parent)
+    assert not torch.equal(weight, model.group_candidates.fusion.weight)
+    for left, right in zip(old, model(*inputs[:3]), strict=True):
+        assert torch.equal(left, right)
+    save_model(model, tmp_path / "warmup.pt")
+    verify_parent_policy(load_model(tmp_path / "warmup.pt"), parent)
 
 
 def test_terminal_targets_keep_duplicate_groups_and_multilabel_fan():

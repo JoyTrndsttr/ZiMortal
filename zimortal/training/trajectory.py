@@ -21,15 +21,50 @@ from .online_rl import digest, evaluation, source_hashes
 from .runtime import choose_batch, load_model, save_model
 
 
-def migrate(parent):
+def migrate(parent, version="trajectory"):
     if parent.feature_version != "huxi" or parent.auxiliary_version != "legacy":
         raise ValueError("pilot requires a huxi legacy policy parent")
-    model = PolicyValueNet(parent.architecture, parent.width, "huxi", "trajectory")
+    model = PolicyValueNet(parent.architecture, parent.width, "huxi", version)
     missing, unexpected = model.load_state_dict(parent.state_dict(), strict=False)
-    prefixes = ("group_candidates.", "final_", "future_intakes.", "trajectory_win.")
+    prefixes = (
+        "group_candidates.",
+        "final_",
+        "future_intakes.",
+        "trajectory_win.",
+        "policy_plan_scale",
+    )
     if unexpected or any(not name.startswith(prefixes) for name in missing):
         raise ValueError("incompatible policy migration")
     return model
+
+
+ROUTE_PREFIXES = ("group_candidates.", "final_", "future_intakes.", "trajectory_win.")
+
+
+def route_warmup(parent, initialize=None):
+    model = migrate(parent, "trajectory_v2")
+    if initialize is not None:
+        if (initialize.width, initialize.architecture, initialize.feature_version) != (
+            parent.width,
+            parent.architecture,
+            parent.feature_version,
+        ) or initialize.auxiliary_version not in ("trajectory", "trajectory_v2"):
+            raise ValueError("incompatible route initialization")
+        model.load_state_dict(
+            {k: v for k, v in initialize.state_dict().items() if k.startswith(ROUTE_PREFIXES)},
+            strict=False,
+        )
+    for name, parameter in model.named_parameters():
+        parameter.requires_grad_(name.startswith(ROUTE_PREFIXES))
+    return model
+
+
+def verify_parent_policy(model, parent):
+    if model.auxiliary_version != "trajectory_v2" or model.policy_plan_scale.item() != 0:
+        raise ValueError("route warmup must not change the policy gate")
+    state = model.state_dict()
+    if any(not torch.equal(state[k], v) for k, v in parent.state_dict().items()):
+        raise ValueError("route pretraining changed frozen parent weights")
 
 
 def future_intakes(history, actor, start, draw_tiles):
@@ -159,6 +194,12 @@ def objective(model, parent, tensors):
         forecast["fans"], fans.float(), reduction="none"
     ).mean(-1)
     route += F.smooth_l1_loss(forecast["huxi"], huxi.float(), reduction="none")
+    if model.auxiliary_version == "trajectory_v2":
+        expected_tiles = (forecast["tiles"].softmax(-1) * torch.arange(5, device=x.device)).sum(-1)
+        group_tiles = forecast["groups"].clamp_min(0) @ model.group_candidates.requirements
+        route += 0.1 * F.smooth_l1_loss(group_tiles / 4, expected_tiles / 4, reduction="none").mean(
+            -1
+        )
     intake = F.smooth_l1_loss(forecast["intakes"], intakes.float(), reduction="none").mean(-1)
     win = F.binary_cross_entropy_with_logits(forecast["win"], winners, reduction="none")
     value = F.smooth_l1_loss(outputs[1], cash.float(), reduction="none")
@@ -167,6 +208,37 @@ def objective(model, parent, tensors):
     loss = ((route * winners + intake + win + 0.1 * value + preservation) * weights).sum()
     loss = loss / weights.sum().clamp_min(1e-12)
     return loss
+
+
+def forecast_metrics(model, rows, device, batch_size):
+    totals, denominator = Counter(), Counter()
+    model.eval()
+    with torch.no_grad():
+        for start in range(0, len(rows), batch_size):
+            x, a, mask, _cash, won, tiles, groups, fans, intakes, hu, weights = batch(
+                rows[start : start + batch_size], device
+            )
+            _, predictions = model.forward_trajectory(x.float(), a.float(), mask)
+            success = weights * won
+            tile_prediction = predictions["tiles"].argmax(-1)
+            nonzero = (tiles > 0).float()
+            values = {
+                "final_tile_accuracy": ((tile_prediction == tiles).float().mean(-1), success),
+                "final_nonzero_tile_accuracy": (
+                    ((tile_prediction == tiles).float() * nonzero).sum(-1)
+                    / nonzero.sum(-1).clamp_min(1),
+                    success,
+                ),
+                "group_mae": ((predictions["groups"] - groups).abs().mean(-1), success),
+                "fan_brier": ((predictions["fans"].sigmoid() - fans).square().mean(-1), success),
+                "huxi_mae": ((predictions["huxi"] * 60 - hu * 60).abs(), success),
+                "intake_mae": ((predictions["intakes"] * 4 - intakes * 4).abs().mean(-1), weights),
+                "win_brier": ((predictions["win"].sigmoid() - won.float()).square(), weights),
+            }
+            for name, (value, weight) in values.items():
+                totals[name] += (value * weight).sum().item()
+                denominator[name] += weight.sum().item()
+    return {k: totals[k] / denominator[k] if denominator[k] else None for k in totals}
 
 
 def run(args):
@@ -181,13 +253,15 @@ def run(args):
         "source_hashes": source_hashes(),
         "parent_sha256": digest(args.parent),
         "opponent_sha256": {p: digest(p) for p in args.opponents},
+        "initialize_sha256": digest(args.initialize) if args.initialize else None,
     }
     if (root / "config.json").exists():
         raise ValueError("use a new route training directory")
     atomic_json(root / "config.json", config)
     parent = load_model(args.parent, args.device)
-    model = migrate(parent).to(args.device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
+    initialize = load_model(args.initialize, args.device) if args.initialize else None
+    model = route_warmup(parent, initialize).to(args.device)
+    optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr)
 
     def progress(games, rows):
         atomic_json(
@@ -205,6 +279,8 @@ def run(args):
         raise ValueError("frozen trajectory producer changed during collection")
     if not train or not dev or not any(r[3] for r in train):
         raise RuntimeError("insufficient successful trajectories")
+    initial_metrics = forecast_metrics(model, dev, args.device, args.batch_size)
+    atomic_json(root / "initial-dev-metrics.json", initial_metrics)
     for name, rows, records in (("train", train, train_games), ("dev", dev, dev_games)):
         atomic_json(root / f"{name}-games.json", records)
         atomic_npz(
@@ -227,6 +303,7 @@ def run(args):
         if (
             source_hashes() != config["source_hashes"]
             or digest(args.parent) != config["parent_sha256"]
+            or (args.initialize and digest(args.initialize) != config["initialize_sha256"])
         ):
             raise ValueError("frozen trajectory producer changed")
         model.train()
@@ -242,6 +319,7 @@ def run(args):
             optimizer.step()
             losses.append(loss.item())
         model.eval()
+        verify_parent_policy(model, parent)
         with torch.no_grad():
             dev_loss = sum(
                 objective(model, parent, batch(dev[i : i + args.batch_size], args.device)).item()
@@ -254,6 +332,7 @@ def run(args):
             "route_target": "realized winner decomposition, not optimal plan",
             "dev_loss": dev_loss,
             "parent_sha256": config["parent_sha256"],
+            "policy_frozen": True,
         }
         save_model(model, root / "last-model.pt", **metadata)
         if dev_loss < best:
@@ -282,6 +361,7 @@ def run(args):
                 "dev_loss": dev_loss,
                 "device": args.device,
                 "gpu": torch.cuda.get_device_name(0) if args.device == "cuda" else None,
+                "dev_forecasts": forecast_metrics(model, dev, args.device, args.batch_size),
             },
         )
     atomic_json(root / "progress.json", {"status": "holdout_evaluation", "device": args.device})
@@ -290,6 +370,7 @@ def run(args):
     ):
         raise ValueError("frozen route evaluation producer changed")
     candidate = load_model(root / "best-dev.pt", args.device)
+    verify_parent_policy(candidate, parent)
     opponents = [parent] + [load_model(p, args.device) for p in args.opponents]
     holdout = evaluation(
         candidate,
@@ -318,6 +399,9 @@ def run(args):
             "holdout_aggregate": holdout.get("aggregate"),
             "excluded_train_games": sum("excluded" in g for g in train_games),
             "excluded_dev_games": sum("excluded" in g for g in dev_games),
+            "policy_frozen": True,
+            "initial_dev_forecasts": initial_metrics,
+            "final_dev_forecasts": forecast_metrics(candidate, dev, args.device, args.batch_size),
         },
     )
     atomic_json(
@@ -329,12 +413,15 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--parent", default="data/generated/autonomous-v4/ppo/best-dev.pt")
-    parser.add_argument("--directory", default="data/generated/trajectory-v1")
+    parser.add_argument(
+        "--initialize", help="reuse only route modules; keep the strong parent policy"
+    )
+    parser.add_argument("--directory", default="data/generated/trajectory-warmup-v2")
     parser.add_argument("--games", type=int, default=256)
     parser.add_argument("--dev-games", type=int, default=64)
-    parser.add_argument("--train-start", type=int, default=640000000)
-    parser.add_argument("--dev-start", type=int, default=650000000)
-    parser.add_argument("--holdout-start", type=int, default=660000000)
+    parser.add_argument("--train-start", type=int, default=670000000)
+    parser.add_argument("--dev-start", type=int, default=680000000)
+    parser.add_argument("--holdout-start", type=int, default=690000000)
     parser.add_argument("--holdout-seeds", type=int, default=64)
     parser.add_argument(
         "--opponents",
