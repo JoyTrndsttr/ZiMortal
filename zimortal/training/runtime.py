@@ -27,6 +27,9 @@ def save_model(model, path, **metadata):
             "feature_version": model.feature_version,
             "auxiliary_version": model.auxiliary_version,
             "metadata": metadata,
+            "model_config": {
+                k: getattr(model, k) for k in ("latent", "blocks") if hasattr(model, k)
+            },
         },
         temporary,
     )
@@ -37,7 +40,11 @@ def save_model(model, path, **metadata):
 
 def load_model(path, device="cpu"):
     data = torch.load(path, map_location=device, weights_only=True)
-    if data["architecture"] == "routeq":
+    if data["architecture"] == "mortal_q":
+        from zimortal.model.mortal_q import MortalQNet
+
+        model = MortalQNet(data["width"], **data.get("model_config", {})).to(device)
+    elif data["architecture"] == "routeq":
         from zimortal.model.routeq import RouteQNet
 
         model = RouteQNet(data["width"]).to(device)

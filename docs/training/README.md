@@ -99,3 +99,9 @@ WSL运行安全、CUDA环境与恢复命令见[运行约定](wsl.md)。
 仅在至少5000个认证训练根及独立验证集通过审计后训练下一代现金Q／policy。
 
 主动采样调度分路与恢复见[调度调整](active.md#调度调整候选覆盖与深度精算分路)，新版目录active-v3保留旧证据，认证门槛不变。
+
+## 最新主线：Mortal风格现金Q（2026-10-14）
+
+独立ResNet Brain＋结构化Dueling Q，真实terminal cash MC与CQL对照，
+见[实现与1000局实际结果](mortal-style.md)。A/B/C已完成并停止；旧实验全部保留，
+当前没有新模型晋级证据，不自动做10k／50k或online。

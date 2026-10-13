@@ -340,3 +340,15 @@ fix(engine): 禁止吃后无法出牌的方案
   保留无升级／首次／已有升级和胡息不足例外；默认最多新增一个四张组。
   升级仍是条件结构路径，尚无跑胡到达概率或精确替代进张价值。
   新标签目录与种子独立，正式部署保持父策略；完整对局实验按种子聚合并保留重放。
+
+## Mortal风格主线（2026-10-14最新要求）
+
+- 本轮暂停trajectory／RouteQ／显式路线扩展，保留所有旧代码和实验；主线见
+  `docs/training/mortal-style.md`。不使用人工路线、未来组牌或搜索route作为输入／标签。
+- 独立MortalQNet：55×20可见编码、ResNet Brain、结构化合法动作Dueling Q，
+  均值与CQL仅合法动作，终局payments[seat]/100，默认gamma1，Huber＋正系数CQL。
+- 冻结league-v2/stage-02/best-dev.pt为ZiMortal-v0；一探索learner对两greedy baseline，
+  座位／庄家轮换，完整局shard，未知规则整局排除，全部重放及可见数据核对。
+- 用户明确要求A/B/C：模型和测试、1000局生成、MC与CQL小训练完成后停下来汇报。
+  此停止要求覆盖此前自动无限迭代授权；不要自动做10k／50k或online／替换baseline。
+- Git仅提交代码与重要总结，数据／逐epoch日志／权重保留本机；按既有授权自动push。

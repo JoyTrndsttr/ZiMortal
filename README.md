@@ -52,6 +52,14 @@ The name combines **Zi Pai** (字牌) with a tribute to **Mortal**, the open-sou
 
 Early-stage research and engineering project. The first priority is correctness of the game engine before any large-scale learning.
 
+## 当前研究主线（2026-10-14）
+
+已实现独立的[Mortal风格终局现金Q训练](docs/training/mortal-style.md)：
+55×20可见编码、ResNet Brain、结构化合法动作Dueling Q，MC与CQL小规模对照。
+1000局冒烟及两组CUDA训练完成，当前停在A/B/C汇报阶段，尚未证明强于v0 baseline。
+trajectory／RouteQ／PPO及所有旧实验保留；本轮暂停路线扩展，不自动扩大数据或进入online。
+以下训练记录按历史阶段保留。
+
 ## 神经网络训练与复盘
 
 已完成三轮实验：MLP／1D ResNet 监督预训练、模型状态聚合、自博弈 actor-critic。
