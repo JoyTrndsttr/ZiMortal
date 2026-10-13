@@ -364,9 +364,15 @@ def build_review(case):
         raise ValueError("review prefix does not reproduce saved decision")
     if len(frames) != case["step"]:
         raise ValueError("review step disagrees with saved history")
-    frames[-1]["note"] = (
-        f"待审核第{case['step']}步：模型选择{LABELS[case['chosen']['kind']]}。概率和拆组分析见审核报告。"
-    )
+    if case.get("route_comparison"):
+        frames[-1]["note"] = (
+            f"待审核第{case['step']}步：路线Q建议{LABELS[case['chosen']['kind']]}，"
+            f"父策略选择{LABELS[case['parent']['kind']]}。下方可查看备选路线；Q尚未接管出牌。"
+        )
+    else:
+        frames[-1]["note"] = (
+            f"待审核第{case['step']}步：模型选择{LABELS[case['chosen']['kind']]}。概率和拆组分析见审核报告。"
+        )
     if engine.replay(initial, state.history).serialize() != state.serialize():
         raise ValueError("review replay mismatch")
     policies = [case["opponent_pool"][case["opponent"]]] * 3

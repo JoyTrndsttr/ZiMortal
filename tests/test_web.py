@@ -60,6 +60,12 @@ def test_saved_mixed_policy_review_replays_json_history_and_rejects_corruption()
     assert payload["player_policies"][obs.player] == "learner"
     with pytest.raises(ValueError, match="reproduce"):
         build_review({**case, "hand": case["hand"] + [0]})
+    route_case = {**case, "route_comparison": {"meaning": "experimental route cash Q"}}
+    route_payload = build_review(route_case)
+    assert route_payload["frames"][:-1] == payload["frames"][:-1]
+    assert "路线Q建议" in route_payload["frames"][-1]["note"]
+    assert "Q尚未接管出牌" in route_payload["frames"][-1]["note"]
+    assert route_payload["decision"]["route_comparison"] == route_case["route_comparison"]
 
 
 def test_seed118_drawer_chi_window_after_peng_pass():
