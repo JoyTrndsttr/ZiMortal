@@ -30,9 +30,12 @@ class PolicyValueNet(nn.Module):
         self.width = width
         self.feature_version = feature_version
         self.auxiliary_version = auxiliary_version
-        if auxiliary_version not in ("legacy", "boundary", "planning"):
+        if auxiliary_version not in ("legacy", "boundary", "planning", "trajectory"):
             raise ValueError("unknown auxiliary version")
-        if auxiliary_version in ("boundary", "planning") and feature_version != "huxi":
+        if (
+            auxiliary_version in ("boundary", "planning", "trajectory")
+            and feature_version != "huxi"
+        ):
             raise ValueError("boundary heads require huxi features")
         self.input_channels = HUXI_CHANNELS if feature_version == "huxi" else CHANNELS
         if architecture == "resnet":
@@ -70,6 +73,16 @@ class PolicyValueNet(nn.Module):
         )
         self.belief = nn.Linear(128, 100) if auxiliary_version == "planning" else None
         self.distance = nn.Linear(128, 16) if auxiliary_version == "planning" else None
+        if auxiliary_version == "trajectory":
+            from .trajectory import FAN_NAMES, GROUP_PATTERNS, GroupCandidateEncoder
+
+            self.group_candidates = GroupCandidateEncoder(self.input_channels)
+            self.final_tiles = nn.Linear(128, 100)
+            self.final_groups = nn.Linear(128, len(GROUP_PATTERNS))
+            self.final_fans = nn.Linear(128, len(FAN_NAMES))
+            self.future_intakes = nn.Linear(128, 20)
+            self.trajectory_win = nn.Linear(128, 1)
+            self.final_huxi = nn.Linear(128, 1)
         if self.belief is not None:
             nn.init.zeros_(self.belief.weight)
             nn.init.zeros_(self.belief.bias)
@@ -100,7 +113,26 @@ class PolicyValueNet(nn.Module):
         )
 
     def forward_aux(self, features, actions, mask):
-        return self._heads(self.encoder(features), features, actions, mask)
+        return self._heads(self.encode_state(features), features, actions, mask)
+
+    def encode_state(self, features):
+        latent = self.encoder(features)
+        if self.auxiliary_version == "trajectory":
+            latent = latent + self.group_candidates(features)
+        return latent
+
+    def forward_trajectory(self, features, actions, mask):
+        if self.auxiliary_version != "trajectory":
+            raise ValueError("trajectory heads not enabled")
+        latent = self.encode_state(features)
+        return self._heads(latent, features, actions, mask), {
+            "tiles": self.final_tiles(latent).reshape(-1, 20, 5),
+            "groups": self.final_groups(latent),
+            "fans": self.final_fans(latent),
+            "intakes": self.future_intakes(latent),
+            "win": self.trajectory_win(latent).squeeze(-1),
+            "huxi": self.final_huxi(latent).squeeze(-1),
+        }
 
     def forward_planning(self, features, actions, mask):
         if self.belief is None:

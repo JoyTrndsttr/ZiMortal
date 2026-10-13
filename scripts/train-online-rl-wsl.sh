@@ -19,6 +19,7 @@ exec systemd-run --user --unit="$unit" \
   --property="StandardOutput=append:$PWD/logs/$unit.log" \
   --property="StandardError=append:$PWD/logs/$unit.log" \
   --setenv=OMP_NUM_THREADS=2 --setenv=OPENBLAS_NUM_THREADS=2 \
+  --setenv=PYTHONDONTWRITEBYTECODE=1 \
   --setenv=CUBLAS_WORKSPACE_CONFIG=:4096:8 \
   /usr/bin/flock --nonblock "$PWD/logs/cashq-training.lock" \
   "$python" -m "$module" "${training_args[@]}"
