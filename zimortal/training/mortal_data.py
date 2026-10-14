@@ -68,6 +68,26 @@ def exploration(logits, *, temperature=1.5, epsilon=0.0, top_p=1.0):
     return (1 - epsilon) * p + epsilon / len(p)
 
 
+def action_family(actions):
+    kinds = {a.kind.value for a in actions}
+    return next((f"{k}/pass" for k in ("hu", "chi", "peng") if k in kinds), "discard")
+
+
+def family_exploration(logits, actions, config):
+    family = action_family(actions)
+    p = exploration(logits, temperature=config[family])
+    hu = [i for i, a in enumerate(actions) if a.kind.value == "hu"]
+    passed = [i for i, a in enumerate(actions) if a.kind.value == "pass"]
+    if hu and passed:
+        rate = config["hu_pass_probability"]
+        if not 0.01 <= rate <= 0.05:
+            raise ValueError("HU/PASS exploration must remain within 1%-5%")
+        p[:] = 0
+        p[hu] = (1 - rate) / len(hu)
+        p[passed] = rate / len(passed)
+    return p
+
+
 def specs(start, count):
     # Three seats independently crossed with three dealer positions.
     return [(start + i, i % 3, (i // 3) % 3) for i in range(count)]
@@ -147,6 +167,7 @@ def generate_games(
     top_p=1.0,
     engine=None,
     version="ZiMortal-v0",
+    family_config=None,
 ):
     """Frozen v0 with one exploratory learner vs two greedy v0; all rows atomic per game."""
     engine = engine or RolloutEngine()
@@ -246,18 +267,16 @@ def generate_games(
                 logits = scores[j, : len(candidates)]
                 choice = int(logits.argmax())
                 if obs.player == spec[2]:
-                    p = exploration(logits, temperature=temperature, epsilon=epsilon, top_p=top_p)
+                    p = (
+                        family_exploration(logits, obs.legal_actions, family_config)
+                        if family_config is not None
+                        else exploration(
+                            logits, temperature=temperature, epsilon=epsilon, top_p=top_p
+                        )
+                    )
                     chosen = int(rng.choice(len(p), p=p))
                     entropy = -float(np.sum(p[p > 0] * np.log(p[p > 0])))
-                    family = (
-                        "hu/pass"
-                        if any(a.kind.value == "hu" for a in obs.legal_actions)
-                        else "chi/pass"
-                        if any(a.kind.value == "chi" for a in obs.legal_actions)
-                        else "peng/pass"
-                        if any(a.kind.value == "peng" for a in obs.legal_actions)
-                        else "discard"
-                    )
+                    family = action_family(obs.legal_actions)
                     counters["entropy_sum"] += entropy
                     counters["changed_from_greedy"] += chosen != choice
                     counters["decisions"] += 1
@@ -273,6 +292,11 @@ def generate_games(
                             "history_step": len(state.history),
                             "family": family,
                             "parent_greedy": choice,
+                            "behavior_rank": int(
+                                np.flatnonzero(np.argsort(-logits, kind="stable") == chosen)[0]
+                            )
+                            + 1,
+                            "chosen_kind": obs.legal_actions[chosen].kind.value,
                         }
                     )
                     choice = chosen
@@ -318,6 +342,8 @@ def save_shard(directory, index, games):
                 "history_step",
                 "parent_greedy",
                 "policy_version",
+                "behavior_rank",
+                "chosen_kind",
             )
         },
         "family": np.array([r["family"] for r in rows]),
@@ -380,6 +406,7 @@ def generate_dataset(
     epsilon=0.0,
     top_p=1.0,
     metadata=None,
+    family_config=None,
 ):
     root = Path(directory)
     root.mkdir(parents=True, exist_ok=False)
@@ -411,6 +438,7 @@ def generate_dataset(
                 temperature=temperature,
                 epsilon=epsilon,
                 top_p=top_p,
+                family_config=family_config,
             )
             accepted.extend(result)
             cursor += need

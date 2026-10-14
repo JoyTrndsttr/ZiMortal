@@ -49,10 +49,11 @@ def tensors(rows, device, gamma):
     return x, a, mask, chosen, mc_target(cash, steps, gamma)
 
 
-def regression(model, rows, *, device="cpu", gamma=1.0, batch_size=256):
+def regression(model, rows, *, device="cpu", gamma=1.0, batch_size=256, gate_threshold=None):
     model.eval()
     predictions, targets, legal_q = [], [], []
     changed = {}
+    q_rows = []
     with torch.inference_mode():
         for start in range(0, len(rows), batch_size):
             batch = rows[start : start + batch_size]
@@ -63,12 +64,24 @@ def regression(model, rows, *, device="cpu", gamma=1.0, batch_size=256):
             predictions.extend(q.gather(1, chosen[:, None]).squeeze(-1).cpu().tolist())
             targets.extend(target.cpu().tolist())
             legal_q.extend(q[m].cpu().tolist())
+            q_rows.extend(
+                [v[: len(r["actions"])].cpu().numpy() for v, r in zip(q, batch, strict=True)]
+            )
             for r, choice in zip(batch, q.argmax(-1).cpu().tolist(), strict=True):
                 entry = changed.setdefault(str(r["family"]), {"decisions": 0, "changed": 0})
                 entry["decisions"] += 1
                 entry["changed"] += choice != int(r["parent_greedy"])
+    from .mortal_diagnostics import diagnostics
+
     p, t = np.asarray(predictions), np.asarray(targets)
     return {
+        **diagnostics(
+            rows,
+            p,
+            t,
+            q_rows,
+            thresholds=(0, 0.02, 0.05, 0.1, 0.2) if gate_threshold is None else (gate_threshold,),
+        ),
         "decisions": len(rows),
         "mae": float(np.mean(abs(p - t))),
         "rmse": float(np.sqrt(np.mean((p - t) ** 2))),
@@ -99,6 +112,8 @@ def fit(
     epochs=8,
     batch_size=256,
     seed=1414,
+    patience=None,
+    gated_diagnostic=False,
 ):
     root = Path(directory)
     root.mkdir(parents=True, exist_ok=False)
@@ -109,11 +124,13 @@ def fit(
     initial_dev = regression(model, dev, device=device, gamma=gamma)
     best = float("inf")
     logs = []
+    stale, best_epoch = 0, 0
     started = time.perf_counter()
     for epoch in range(epochs):
         model.train()
         totals = {"mc_loss": 0.0, "cql_loss": 0.0}
         count = 0
+        norms = []
         for indices in np.array_split(
             rng.permutation(len(train)), math.ceil(len(train) / batch_size)
         ):
@@ -128,6 +145,7 @@ def fit(
             norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             if not torch.isfinite(norm):
                 raise RuntimeError("Q gradient nonfinite")
+            norms.append(float(norm))
             optimizer.step()
             for k, v in parts.items():
                 totals[k] += float(v.detach()) * len(batch)
@@ -135,6 +153,8 @@ def fit(
         validation = regression(model, dev, device=device, gamma=gamma)
         log = {
             "epoch": epoch + 1,
+            "gradient_norm_mean": float(np.mean(norms)),
+            "gradient_norm_max": max(norms),
             **{k: v / count for k, v in totals.items()},
             "wait_loss": 0,
             "huxi_loss": 0,
@@ -145,6 +165,7 @@ def fit(
         atomic_json(root / "epochs.json", logs)
         if validation["rmse"] < best:
             best = validation["rmse"]
+            stale, best_epoch = 0, epoch + 1
             save_model(
                 model,
                 root / "best-dev.pt",
@@ -165,19 +186,31 @@ def fit(
                     "cuda_rng": torch.cuda.get_rng_state_all() if device == "cuda" else [],
                 },
             )
+        else:
+            stale += 1
         atomic_json(
             root.parent / "progress.json",
             {"status": "training", "variant": root.name, "epoch": epoch + 1, "epochs": epochs},
         )
+        if patience is not None and stale >= patience:
+            break
     selected = load_model(root / "best-dev.pt", device)
+    selected_dev = regression(selected, dev, device=device, gamma=gamma)
+    from .mortal_diagnostics import select_gate
+
+    threshold = select_gate(selected_dev) if gated_diagnostic else None
     result = {
         "alpha_cql": alpha,
         "gamma": gamma,
         "parameters": sum(p.numel() for p in model.parameters()),
         "initial_train": initial_train,
         "initial_dev": initial_dev,
+        "best_epoch": best_epoch,
+        "epochs_run": len(logs),
+        "early_stopped": len(logs) < epochs,
+        "selected_dev": selected_dev,
         "selected_train": regression(selected, train, device=device, gamma=gamma),
-        "heldout": regression(selected, test, device=device, gamma=gamma),
+        "heldout": regression(selected, test, device=device, gamma=gamma, gate_threshold=threshold),
         "seconds": time.perf_counter() - started,
         "epochs": logs,
         "cash_strength_evaluated": False,
