@@ -1526,3 +1526,133 @@ history_step字段零基，所以诊断中的55/45对应网页下一动作56/46�
 导出入口`.venv/bin/python -m zimortal.web.test_reviews`，生成的JSON仅留本地。
 HTTP接口、完整重放/终局收益、JS语法和现有367项测试验证通过（另1项跳过）；
 本轮只增加复盘能力，没有继续训练。高强度策略仍需解决条件动作支持与泛化。
+
+## 20k过渡数据量实验（2026-10-15）
+
+本轮只检验独立数据量，固定faithful128×12/1024、MC现金/100、½MSE、CQL=.1、
+support=.1、AdamW lr3e-4/betas(.9,.999)/eps1e-8/weight_decay=.01、clip1、
+batch256和冻结baseline。探索分布沿用原mortal-v2：discard/chi温度1.5、peng2.5、
+hu1.0，HU/PASS=.98/.02，epsilon0、top_p1，不换对手或新增loss。
+
+新增1080000000～1080009999的独立10k轨迹，按game_id%10分8k train、1k全新
+ dev、1k全新test。原8k train保留为A，合并新8k为B；旧dev/test不参与选型。
+数据完整重放、可见输入、终局现金审计通过，10000局零排除/替换。新现金筛选
+保留1090000000～1090000499，500seed×3学习者座位，另两家固定baseline。
+
+严格匹配优化步数：A/B从同一初始化开始，**各跑满5200更新**，各见1,331,200
+决策样本，每260更新评估新dev（共20次）。训练数据长度不同，shuffle采用相同
+seed的各自循环全排列，不能宣称具体batch内容/顺序相同。跨周期拼接保持每批256。
+没有各自早停；不能把更多epoch、更新或重复样本当新增独立数据。
+
+**现金评估权重也取相同update**：新dev上A/B RMSE均值最小的共同update，
+平分时取较早点，两组都取这个点，锁定SHA后才评估新test。各自最佳dev权重仅
+作诊断，不用于主要现金比较。初版只匹配总预算、未匹配选中权重更新数，在
+新test未评估且B未训练前停止；v1保留已生成数据及A部分训练记录，v2检查
+数据生成器/模型/探索分布一致后重用同一10k，在新目录重训，不混用初版权重。
+
+数据在mortal-volume20k-v1/data；有效训练/评估在mortal-volume20k-v2。
+模型及sampler/optimizer/RNG按共同候选点原子保存，源文件与数据SHA锁定。
+训练没有读取新test的模型指标；完整数据审计不用于选模型。
+
+最终报告同更新时点的train-dev gap、共同test raw低支持推翻率、按动作族
+及HU/PASS实际覆盖，并做A/B raw和护栏相对baseline与彼此的现金比较。
+按500seed簇bootstrap95%：保守扩50k证据要求raw B−A区间下界>0、护栏
+B−A下界≥0。若仅点估计未退但区间跨零，报告证据不足，不将“无显著差异”
+当“已证明不退”。本轮无论结果如何停止，不自动50k或online。
+
+复现：`ZIMORTAL_TRAINING_MODULE=zimortal.training.mortal_data_volume bash scripts/train-online-rl-wsl.sh --data-source data/generated/mortal-volume20k-v1/data`。
+全新采集可不指定data-source；已有目录不覆写。详细日志、原始数据与权重只留本地。
+
+### 完整结果与停止结论
+
+有效新增数据为10,000局、83,068条非强制决策：新train66,267、新dev8,356、
+新test8,445。A保留66,424条，B合并为132,691条。两组初始化SHA相同
+`28c8ffaed03ad9a0e61bc64bb22633f4ca4a92cc404029cdb128f185be2bfd53`。
+20次共同dev检查后，共同最佳update为520，恰好也是两组各自最佳点。
+完整训练各5200更新，现金模型实际各520更新；配套optimizer内部step计数已核验。
+选型锁文件先于test评估落盘，A/B权重SHA分别为
+`ad3273967aeb13f52e76ae37fdf229ba94545f840e9135617eb44f277f4b2b93`、
+`5250b0c24765ce9d66911c0519f41297e2e99b667aaa80e63b76ad3e98619b2b`。
+
+下面误差和gap均换算为元，correlation无单位：
+
+|共同520更新指标|A：原8k|B：合并16k|
+|---|---:|---:|
+|train RMSE|56.98|68.67|
+|新dev RMSE|80.35|79.77|
+|dev−train RMSE gap|23.37|11.10|
+|新test MAE|43.67|41.20|
+|新test RMSE|84.87|83.39|
+|新test correlation|0.210|0.312|
+|raw推翻父动作率（同一新test）|47.93%|48.25%|
+|推翻中新动作behavior probability≤.1比例|77.12%|77.37%|
+
+完整5200更新时，A/B train RMSE为18.36/25.62，新dev为86.23/84.59，
+gap为67.87/58.97。更多独立数据减小gap，改善chosen-action收益预测；
+但各组train集合不同，不能把gap改善等同于反事实动作排序改善。
+低支持推翻比例没有下降。
+
+|新test动作族|条数|A correlation|B correlation|
+|---|---:|---:|---:|
+|discard|4014|0.168|0.293|
+|chi/pass|2228|0.114|0.140|
+|peng/pass|1958|0.133|0.252|
+|hu/pass|245|0.360|0.476|
+
+|train动作族|A条数及实际动作|B条数及实际动作|
+|---|---|---|
+|discard|31784|63568|
+|chi/pass|17069：CHI7722、PASS9347|34001：CHI15321、PASS18680|
+|peng/pass|15607：PENG14237、PASS1370|31217：PENG28481、PASS2736|
+|hu/pass|1964：HU1922、PASS42|3905：HU3830、PASS75|
+
+覆盖数量接近翻倍，类别失衡仍在：peng主要是碰，hu主要是胡。
+新dev HU238/PASS2，新test HU242/PASS3；不能凭hu相关性改善断言过胡排序可靠。
+完整现金档位、行为概率、分族校准保存在本地coverage/offline JSON中。
+全局模板出现次数增加，也不保证同一Observation的替代动作充分采样。
+
+### 独立现金筛选
+
+1090000000～1090000499，每seed三个学习者座位，另外两家固定同一baseline。
+四个模型方案及baseline共7500局，429034步均完整重放，逐步80张守恒、
+合法动作及终局现金审计通过。按seed簇进行配对bootstrap，避免把三个座位当独立样本。
+表中现金为相对冻结baseline元/局，区间为95%bootstrap：
+
+|方案|平均现金差|95%区间|
+|---|---:|---|
+|冻结baseline|0|[0,0]|
+|A raw|−18.63|[−21.29,−15.98]|
+|B raw|−19.62|[−22.63,−16.64]|
+|A support=.1|−5.43|[−8.57,−2.32]|
+|B support=.1|−3.83|[−6.91,−0.78]|
+|B−A raw（直接配对）|−0.99|[−4.11,1.98]|
+|B−A support（直接配对）|+1.60|[−0.76,3.94]|
+
+raw没有明显改善；护栏点估计改善，但区间仍包含退步，未证明不退。
+两组护栏在这批新种子上仍弱于baseline，不晋级。不能把旧筛选的−0.46元
+与本轮直接比较：种子、dev和共同选型点均不同。
+
+现金轨迹上的推翻动作中，A/B低支持比例分别75.80%/76.30%。弃牌推翻
+4270/4239次，其中89.34%/89.81%低支持；吃牌1561/1469次，其中
+41.13%/39.69%低支持；碰牌50/47次，其中2.00%/2.13%；均无胡牌推翻。
+不同模型会访问不同状态，这些是部署描述统计，主要同状态证据仍是上表新test。
+
+**本轮不支持“主要瓶颈只是同分布独立数据不足”**：预测泛化有所改善，
+raw动作支持风险及现金没有改善。有限500seed筛选不能证明任何更大数据都无效，
+但不足以授权继续堆同分布数据到50k。停止扩量，不启动online，不换baseline。
+
+下一步应先设计小规模behavior coverage/受控探索实验：固定网络、MC+CQL和
+训练预算，只改变数据采样支持；优先弃牌、吃/过的高概率候选，记录候选行为
+概率和真实现金，保留冻结baseline安全锚点与独立dev/test、撤退阈值。
+HU/PASS稀少且代价大，应单独审查覆盖需求，不盲目放大过胡。
+该方向只作建议，尚未采集、训练或进入online；先验证增加条件动作覆盖是否
+改善排序与现金，再决定扩大规模。
+
+复核命令：`.venv/bin/python -m zimortal.training.mortal_data_volume_review`。
+本地result.json、review.json、selection-lock.json、逐检查点统计与现金完整轨迹
+可复核，不纳入Git；runtime-source.tar.gz保留实际运行源码。训练服务正常退出
+（Result=success、ExecMainStatus=0），没有残留训练进程。本轮完成后停止。
+
+最终验证：`.venv/bin/python -m pytest -q`为370通过、1跳过；
+`.venv/bin/ruff check .`及`git diff --check`通过。新增测试覆盖循环batch不丢尾部、
+固定更新预算约束和共同dev更新点选型；只提交控制器、复核代码、测试及摘要。

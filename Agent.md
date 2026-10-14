@@ -394,3 +394,10 @@ fix(engine): 禁止吃后无法出牌的方案
 - 区分HU与PASS条件统计、全局动作模板覆盖与给定状态行为支持；相关性/实现收益不能冒充反事实EV。
 - 原500种子raw/support只读取已有日志做同状态比较，不新增counterfactual训练。
 - 六组完成后停止；20k过渡及50k仅为后续建议，未经新指令不采集、训练、online或晋级。
+
+## 20k过渡实验完成（2026-10-15）
+
+- 固定faithful/MC/CQL=.1/support=.1/探索，新增独立10k；A旧8k与B合并16k各5200更新、每260检查，按新dev共同选择同一update520，锁SHA后看新test。
+- 新test预测与train-dev gap改善，但raw现金B−A=−0.99，95%[−4.11,1.98]；护栏+1.60，95%[−0.76,3.94]；低支持推翻比例77.12%→77.37%，未改善。
+- 本轮停止，不继续同分布50k、online、改baseline或增loss。下一步建议先设计behavior coverage/受控探索验证，未经新指令不执行。
+- 完整协议、结果与复核见docs/training/mortal-style.md；日志、JSON、权重本地保留，重要代码/总结commit并自动push。

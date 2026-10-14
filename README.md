@@ -63,6 +63,9 @@ Early-stage research and engineering project. The first priority is correctness 
 停止扩展pairwise/counterfactual训练；RouteQ、trajectory、PPO与历史证据全部保留。
 最新离线诊断：LR/patience对照支持快速过拟合，未修复原epoch1最佳；胡／过负相关
 主要受稀少的高收益PASS影响。低支持argmax仍是raw风险，暂不直接扩50k，详见同一报告。
+20k过渡实验完成：同更新预算下16k改善新test收益预测，但raw现金相对8k差−0.99元/局，
+95%区间[−4.11,1.98]；护栏差+1.60，区间[−0.76,3.94]，低支持推翻比例未下降。
+停止同分布扩量，不进入50k/online；下一步建议研究behavior coverage，baseline保持冻结。
 以下训练记录按历史阶段保留。
 
 ## 神经网络训练与复盘
