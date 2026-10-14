@@ -117,6 +117,8 @@ def fit(
     n_step=0,
     target_sync_updates=250,
     evaluate_test=True,
+    pair_rows=None,
+    pair_coefficient=0.05,
 ):
     root = Path(directory)
     root.mkdir(parents=True, exist_ok=False)
@@ -130,6 +132,7 @@ def fit(
     links = future_indices(train, n_step) if n_step else None
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
     rng = np.random.default_rng(seed)
+    pair_rng = np.random.default_rng(seed + 1)
     initial_train = regression(model, train, device=device, gamma=gamma)
     initial_dev = regression(model, dev, device=device, gamma=gamma)
     best = float("inf")
@@ -141,6 +144,7 @@ def fit(
         totals = {"mc_loss": 0.0, "cql_loss": 0.0}
         count = 0
         norms = []
+        pair_losses = []
         batch_order = __import__("hashlib").sha256()
         bootstrap_counts = 0
         target_values = []
@@ -158,6 +162,13 @@ def fit(
             target_values.extend(target.detach().cpu().tolist())
             q = model.forward_q(x, a, m)[0]
             loss, parts = q_loss(q, chosen, target, m, alpha)
+            if pair_rows:
+                from .mortal_pairwise import auxiliary_loss
+
+                pairs = [pair_rows[i] for i in pair_rng.integers(len(pair_rows), size=64)]
+                pair_loss = auxiliary_loss(model, pairs, device)
+                loss = loss + pair_coefficient * pair_loss
+                pair_losses.append(float(pair_loss.detach()))
             if not torch.isfinite(loss) or not torch.isfinite(q[m]).all():
                 raise RuntimeError("Q loss nonfinite")
             optimizer.zero_grad(set_to_none=True)
@@ -174,6 +185,7 @@ def fit(
             count += len(batch)
         validation = regression(model, dev, device=device, gamma=gamma)
         log = {
+            "pairwise_loss": float(np.mean(pair_losses)) if pair_losses else 0.0,
             "epoch": epoch + 1,
             "batch_order_sha256": batch_order.hexdigest(),
             "training_target_mean": float(np.mean(target_values)),
@@ -218,6 +230,7 @@ def fit(
                     "target_updates": target_net.updates if target_net else 0,
                     "target_sync_updates": target_net.interval if target_net else None,
                     "target_sync_history": target_net.sync_history.copy() if target_net else [],
+                    "pair_numpy_rng": pair_rng.bit_generator.state,
                     "numpy_rng": rng.bit_generator.state,
                     "torch_rng": torch.get_rng_state(),
                     "cuda_rng": torch.cuda.get_rng_state_all() if device == "cuda" else [],
