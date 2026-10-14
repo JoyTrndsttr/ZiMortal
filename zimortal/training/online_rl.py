@@ -78,12 +78,16 @@ def play(
     audit_parent=None,
     sampling_temperature=1.0,
     replay_sink=None,
+    decision_recorder=None,
+    decision_sink=None,
 ):
     """Each spec is seed, dealer, learner seat, opponent index (-1=self-play).
 
     Complete games are committed together; undefined-rule games contribute no
     rows or fabricated zero rewards. Engine states never enter neural inputs.
     """
+    if decision_recorder is not None and (decision_sink is None or audit is not None):
+        raise ValueError("decision recorder requires sink and separate legacy audit")
     engine = RolloutEngine()
     generator = torch.Generator(device=device).manual_seed(seed) if training else None
     model.eval()
@@ -110,6 +114,8 @@ def play(
                 {**r, "terminal_cash": payments[r["player"]], "winner": state.winner}
                 for r in active[index][4]
             )
+        if decision_sink is not None:
+            decision_sink([{**r, "terminal_cash": payments[spec[2]]} for r in active[index][4]])
         for seat, trajectory in enumerate(trajectories):
             rows.extend((*row, payments[seat] / 100.0) for row in trajectory)
         results.append(
@@ -187,6 +193,8 @@ def play(
             for j, (index, obs) in enumerate(items):
                 state, spec, trajectories, steps, audit_trail = active[index]
                 action = obs.legal_actions[indices[j]]
+                if owner == -1 and decision_recorder is not None:
+                    audit_trail.append(decision_recorder(obs, j, indices[j], spec, steps + 1))
                 if j in parent_choices:
                     hu = next((a for a in obs.legal_actions if a.kind.value == "hu"), None)
                     cash = engine.step(state, hu).settlement.payments[obs.player] if hu else None

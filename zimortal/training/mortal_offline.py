@@ -116,6 +116,7 @@ def fit(
     gated_diagnostic=False,
     n_step=0,
     target_sync_updates=250,
+    evaluate_test=True,
 ):
     root = Path(directory)
     root.mkdir(parents=True, exist_ok=False)
@@ -253,7 +254,9 @@ def fit(
         "early_stopped": len(logs) < epochs,
         "selected_dev": selected_dev,
         "selected_train": regression(selected, train, device=device, gamma=gamma),
-        "heldout": regression(selected, test, device=device, gamma=gamma, gate_threshold=threshold),
+        "heldout": regression(selected, test, device=device, gamma=gamma, gate_threshold=threshold)
+        if evaluate_test
+        else None,
         "seconds": time.perf_counter() - started,
         "epochs": logs,
         "cash_strength_evaluated": False,

@@ -58,7 +58,9 @@ Early-stage research and engineering project. The first priority is correctness 
 55×20可见编码、ResNet Brain、结构化合法动作Dueling Q，MC与CQL小规模对照。
 1000局冒烟、1500局探索pilot及独立10k两组CUDA离线训练完成，按要求停止。
 同10k的MC／3-step／5-step SARSA对照及500新种子现金筛选完成；
-3-step检验correlation约0.220，但现金仍弱于v0 baseline，完成后停止，详见实验报告。
+3-step检验correlation约0.220，但现金仍弱于v0 baseline。
+同10k的CQL／behavior support对照及新500种子筛选完成；组合现金−1.03元／局，
+raw为−21.06元／局，尚未证明超过父策略。参数仅由dev选择，全部实验完成后停止，详见报告。
 trajectory／RouteQ／PPO及所有旧实验保留；本轮暂停路线扩展，不自动扩大数据或进入online。
 以下训练记录按历史阶段保留。
 
