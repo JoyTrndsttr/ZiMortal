@@ -77,6 +77,7 @@ def play(
     audit=None,
     audit_parent=None,
     sampling_temperature=1.0,
+    replay_sink=None,
 ):
     """Each spec is seed, dealer, learner seat, opponent index (-1=self-play).
 
@@ -99,6 +100,10 @@ def play(
         initial = replay_engine.new_game(spec[0], spec[1])
         if replay_engine.replay(initial, state.history).serialize() != state.serialize():
             raise RuntimeError("RL terminal replay mismatch")
+        if replay_sink is not None:
+            replay_sink(
+                {"seed": spec[0], "dealer": spec[1], "seat": spec[2], "state": state.serialize()}
+            )
         payments = state.settlement.payments if state.settlement else (0, 0, 0)
         if audit is not None:
             audit.extend(

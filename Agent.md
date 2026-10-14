@@ -358,3 +358,11 @@ fix(engine): 禁止吃后无法出牌的方案
 - 本轮仅按动作族探索pilot与独立10,000局MC／CQL对照，保持55×20、32宽3块256 latent；
   开发RMSE早停、开发选择门控阈值，保留全量审计。完成后停止，不自动50k、online或晋级。
 - 数据、原始profile和逐epoch日志仅留mortal-v2本地；重要代码与总结提交并自动push。
+
+## Mortal credit assignment对照（2026-10-14最新授权）
+
+- 复用mortal-v2原10k，同结构／初始权重／optimizer／batch序列／开发早停，仅比较MC、3-step、5-step行为SARSA。
+- bootstrap只用同局同玩家`t+n`真实动作；独立冻结target network，按optimizer update可配置hard sync。
+- 开发及检验均对真实终局现金评估，不用TD标签评价收益预测；不得max-Q bootstrap或跨游戏／split链接。
+- 离线明显改善才做独立500 seed×3座位现金screening，原始完整重放留本地；不正式晋级。
+- 完成后停止，不扩50k、online、RouteQ／trajectory或替换baseline。

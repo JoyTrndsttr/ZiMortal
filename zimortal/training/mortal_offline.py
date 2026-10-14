@@ -114,10 +114,19 @@ def fit(
     seed=1414,
     patience=None,
     gated_diagnostic=False,
+    n_step=0,
+    target_sync_updates=250,
 ):
     root = Path(directory)
     root.mkdir(parents=True, exist_ok=False)
     model = copy.deepcopy(initial).to(device)
+    from .mortal_sarsa import HardTarget, future_indices, parameter_hash, sarsa_target
+
+    if n_step < 0:
+        raise ValueError("nonnegative own-decision horizon required")
+    initial_hash = parameter_hash(model)
+    target_net = HardTarget(model, target_sync_updates) if n_step else None
+    links = future_indices(train, n_step) if n_step else None
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
     rng = np.random.default_rng(seed)
     initial_train = regression(model, train, device=device, gamma=gamma)
@@ -131,11 +140,21 @@ def fit(
         totals = {"mc_loss": 0.0, "cql_loss": 0.0}
         count = 0
         norms = []
+        batch_order = __import__("hashlib").sha256()
+        bootstrap_counts = 0
+        target_values = []
         for indices in np.array_split(
             rng.permutation(len(train)), math.ceil(len(train) / batch_size)
         ):
+            batch_order.update(indices.astype(np.int64).tobytes())
             batch = [train[i] for i in indices]
             x, a, m, chosen, target = tensors(batch, device, gamma)
+            if target_net is not None:
+                target = sarsa_target(
+                    train, indices, links, target_net.model, n=n_step, device=device, gamma=gamma
+                )
+                bootstrap_counts += int((links[indices] >= 0).sum())
+            target_values.extend(target.detach().cpu().tolist())
             q = model.forward_q(x, a, m)[0]
             loss, parts = q_loss(q, chosen, target, m, alpha)
             if not torch.isfinite(loss) or not torch.isfinite(q[m]).all():
@@ -147,12 +166,21 @@ def fit(
                 raise RuntimeError("Q gradient nonfinite")
             norms.append(float(norm))
             optimizer.step()
+            if target_net is not None:
+                target_net.advance(model)
             for k, v in parts.items():
                 totals[k] += float(v.detach()) * len(batch)
             count += len(batch)
         validation = regression(model, dev, device=device, gamma=gamma)
         log = {
             "epoch": epoch + 1,
+            "batch_order_sha256": batch_order.hexdigest(),
+            "training_target_mean": float(np.mean(target_values)),
+            "training_target_std": float(np.std(target_values)),
+            "bootstrap_rows": bootstrap_counts,
+            "terminal_rows": count - bootstrap_counts,
+            "target_sync_history": target_net.sync_history.copy() if target_net else [],
+            "training_huber_loss": totals["mc_loss"] / count,
             "gradient_norm_mean": float(np.mean(norms)),
             "gradient_norm_max": max(norms),
             **{k: v / count for k, v in totals.items()},
@@ -169,7 +197,11 @@ def fit(
             save_model(
                 model,
                 root / "best-dev.pt",
-                target="terminal payments[seat]/100",
+                target="terminal payments[seat]/100"
+                if not n_step
+                else f"{n_step}-step behavior SARSA cash/100",
+                n_step=n_step,
+                target_sync_updates=target_sync_updates if n_step else None,
                 gamma=gamma,
                 alpha_cql=alpha,
             )
@@ -181,6 +213,10 @@ def fit(
                     "checkpoint_sha256": __import__("hashlib")
                     .sha256((root / "best-dev.pt").read_bytes())
                     .hexdigest(),
+                    "target_network": target_net.model.state_dict() if target_net else None,
+                    "target_updates": target_net.updates if target_net else 0,
+                    "target_sync_updates": target_net.interval if target_net else None,
+                    "target_sync_history": target_net.sync_history.copy() if target_net else [],
                     "numpy_rng": rng.bit_generator.state,
                     "torch_rng": torch.get_rng_state(),
                     "cuda_rng": torch.cuda.get_rng_state_all() if device == "cuda" else [],
@@ -201,6 +237,13 @@ def fit(
     threshold = select_gate(selected_dev) if gated_diagnostic else None
     result = {
         "alpha_cql": alpha,
+        "n_step": n_step,
+        "initial_parameter_sha256": initial_hash,
+        "target_sync_updates": target_sync_updates if n_step else None,
+        "loss_meaning": "Huber against terminal MC"
+        if not n_step
+        else "Huber against frozen behavior SARSA target; mc_loss legacy key is not MC regression",
+        "evaluation_target": "realized terminal cash, never TD bootstrap",
         "gamma": gamma,
         "parameters": sum(p.numel() for p in model.parameters()),
         "initial_train": initial_train,
