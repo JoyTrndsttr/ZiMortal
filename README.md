@@ -52,7 +52,7 @@ The name combines **Zi Pai** (字牌) with a tribute to **Mortal**, the open-sou
 
 Early-stage research and engineering project. The first priority is correctness of the game engine before any large-scale learning.
 
-## 当前研究主线（2026-10-14）
+## 当前研究主线（2026-10-15）
 
 当前建立[Mortal-faithful-v1主线](docs/training/mortal-style.md)：55×20可见编码，
 128通道×12块的1D ResNet＋Channel Attention、1024 latent和结构化合法动作Dueling Q。
@@ -61,6 +61,8 @@ Early-stage research and engineering project. The first priority is correctness 
 新模型MC护栏现金−0.46元/局；相对旧CQL+support为+2.07，95%区间[−0.65,5.07]，
 未证明达到预先设定门槛；raw仍为−17.87元/局。停止，不进入online或替换baseline。
 停止扩展pairwise/counterfactual训练；RouteQ、trajectory、PPO与历史证据全部保留。
+最新离线诊断：LR/patience对照支持快速过拟合，未修复原epoch1最佳；胡／过负相关
+主要受稀少的高收益PASS影响。低支持argmax仍是raw风险，暂不直接扩50k，详见同一报告。
 以下训练记录按历史阶段保留。
 
 ## 神经网络训练与复盘

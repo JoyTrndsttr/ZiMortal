@@ -126,6 +126,8 @@ def fit(
     pair_rows=None,
     pair_coefficient=0.05,
     regression_loss="huber",
+    learning_rate=3e-4,
+    epoch_diagnostics=False,
 ):
     root = Path(directory)
     root.mkdir(parents=True, exist_ok=False)
@@ -137,7 +139,9 @@ def fit(
     initial_hash = parameter_hash(model)
     target_net = HardTarget(model, target_sync_updates) if n_step else None
     links = future_indices(train, n_step) if n_step else None
-    optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+    if not math.isfinite(learning_rate) or learning_rate <= 0:
+        raise ValueError("positive finite learning rate required")
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     rng = np.random.default_rng(seed)
     pair_rng = np.random.default_rng(seed + 1)
     initial_train = regression(model, train, device=device, gamma=gamma)
@@ -212,6 +216,18 @@ def fit(
             "auxiliary_heads_enabled": False,
             "development": validation,
         }
+        if epoch_diagnostics:
+            log["training_evaluation"] = regression(model, train, device=device, gamma=gamma)
+            log["test_diagnostic_only"] = regression(model, test, device=device, gamma=gamma)
+            save_model(
+                model,
+                root / f"epoch-{epoch + 1:02d}.pt",
+                diagnostic_only=True,
+                learning_rate=learning_rate,
+                n_step=n_step,
+                alpha_cql=alpha,
+                regression_loss=regression_loss,
+            )
         logs.append(log)
         atomic_json(root / "epochs.json", logs)
         if validation["rmse"] < best:
@@ -261,6 +277,9 @@ def fit(
 
     threshold = select_gate(selected_dev) if gated_diagnostic else None
     result = {
+        "learning_rate": learning_rate,
+        "patience": patience,
+        "epoch_diagnostics": epoch_diagnostics,
         "regression_loss": regression_loss,
         "alpha_cql": alpha,
         "n_step": n_step,

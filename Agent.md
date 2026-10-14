@@ -386,3 +386,11 @@ fix(engine): 禁止吃后无法出牌的方案
 - 新主线不加入pairwise、RouteQ、trajectory等辅助loss。固定10k与2×2对照，先锁定权重再看test。
 - 与当前旧CQL+support在独立同种子现金筛选比较；达到证据门槛才设计受控online，不能自动启动。
 - 本轮训练和评估完成后停止，冻结baseline，详细日志/权重只留本地，重要代码/总结commit并按既有授权push。
+
+## Mortal-faithful离线诊断（2026-10-15）
+
+- 本轮只做LR3e-4/1e-4/3e-5与patience4/8诊断，保持网络、MC、CQL=.1与support=.1；不新增loss或对局。
+- 逐epoch train/dev/test指标允许用于诊断，checkpoint仍只按dev选择；已重复观察的test不能当下一轮盲测。
+- 区分HU与PASS条件统计、全局动作模板覆盖与给定状态行为支持；相关性/实现收益不能冒充反事实EV。
+- 原500种子raw/support只读取已有日志做同状态比较，不新增counterfactual训练。
+- 六组完成后停止；20k过渡及50k仅为后续建议，未经新指令不采集、训练、online或晋级。
