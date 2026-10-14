@@ -30,13 +30,19 @@ def mc_target(cash, steps, gamma=1.0):
     return cash * gamma**steps
 
 
-def q_loss(q, chosen, target, mask, alpha=0.0):
+def q_loss(q, chosen, target, mask, alpha=0.0, regression_loss="huber"):
     if not math.isfinite(alpha) or alpha < 0 or not mask.any(-1).all():
         raise ValueError("invalid CQL coefficient/mask")
     if not mask.gather(1, chosen[:, None]).all():
         raise ValueError("dataset chosen action must be legal")
     selected = q.gather(1, chosen[:, None]).squeeze(-1)
-    mc = F.smooth_l1_loss(selected, target)
+    if regression_loss not in ("huber", "mse"):
+        raise ValueError("unknown Q regression loss")
+    mc = (
+        0.5 * F.mse_loss(selected, target)
+        if regression_loss == "mse"
+        else F.smooth_l1_loss(selected, target)
+    )
     cql = (q.masked_fill(~mask, -torch.inf).logsumexp(-1) - selected).mean()
     return mc + alpha * cql, {"mc_loss": mc, "cql_loss": cql}
 
@@ -119,6 +125,7 @@ def fit(
     evaluate_test=True,
     pair_rows=None,
     pair_coefficient=0.05,
+    regression_loss="huber",
 ):
     root = Path(directory)
     root.mkdir(parents=True, exist_ok=False)
@@ -161,7 +168,7 @@ def fit(
                 bootstrap_counts += int((links[indices] >= 0).sum())
             target_values.extend(target.detach().cpu().tolist())
             q = model.forward_q(x, a, m)[0]
-            loss, parts = q_loss(q, chosen, target, m, alpha)
+            loss, parts = q_loss(q, chosen, target, m, alpha, regression_loss)
             if pair_rows:
                 from .mortal_pairwise import auxiliary_loss
 
@@ -193,7 +200,10 @@ def fit(
             "bootstrap_rows": bootstrap_counts,
             "terminal_rows": count - bootstrap_counts,
             "target_sync_history": target_net.sync_history.copy() if target_net else [],
-            "training_huber_loss": totals["mc_loss"] / count,
+            "training_huber_loss": totals["mc_loss"] / count
+            if regression_loss == "huber"
+            else None,
+            "training_regression_loss": totals["mc_loss"] / count,
             "gradient_norm_mean": float(np.mean(norms)),
             "gradient_norm_max": max(norms),
             **{k: v / count for k, v in totals.items()},
@@ -217,6 +227,7 @@ def fit(
                 target_sync_updates=target_sync_updates if n_step else None,
                 gamma=gamma,
                 alpha_cql=alpha,
+                regression_loss=regression_loss,
             )
             atomic_checkpoint(
                 root / "best-optimizer.pt",
@@ -250,13 +261,14 @@ def fit(
 
     threshold = select_gate(selected_dev) if gated_diagnostic else None
     result = {
+        "regression_loss": regression_loss,
         "alpha_cql": alpha,
         "n_step": n_step,
         "initial_parameter_sha256": initial_hash,
         "target_sync_updates": target_sync_updates if n_step else None,
-        "loss_meaning": "Huber against terminal MC"
+        "loss_meaning": f"{regression_loss} against terminal MC"
         if not n_step
-        else "Huber against frozen behavior SARSA target; mc_loss legacy key is not MC regression",
+        else f"{regression_loss} against frozen behavior SARSA target; mc_loss legacy key is not MC regression",
         "evaluation_target": "realized terminal cash, never TD bootstrap",
         "gamma": gamma,
         "parameters": sum(p.numel() for p in model.parameters()),

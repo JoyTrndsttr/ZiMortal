@@ -375,3 +375,14 @@ fix(engine): 禁止吃后无法出牌的方案
 - 抽样按动作族/Q差分层，不按原终局收益筛选；训练频率只取train，动作全局频率和精确输入覆盖分开。
 - 配对SE/CI、零均值与未区分根分开；一次独立粒子复核不冒称严格排序认证。本轮标签全部not_for_training。
 - 下一步优先研究选择性pairwise ranking，处理继续策略及隐藏世界口径；未经新指令不启动后续训练、探索或替换baseline。
+
+## Mortal-faithful-v1（2026-10-14最新主线）
+
+- 停止扩展pairwise/counterfactual训练；保留历史代码与证据，不混入新主线。
+- 默认terminal MC现金/100 + offline CQL，以½MSE回归；3-step实际行为SARSA仅作对照。
+- 保留55×20可见Observation、structured legal action、合法均值Dueling与真实现金结算。
+- Mortal-like主干为更宽更深1D ResNet、Channel Attention、约1024 latent；具体宽深和官方差异见mortal-style.md。
+- support仅为offline评估/部署护栏，不进入损失、采样或主干合法均值；同时报告raw结果。
+- 新主线不加入pairwise、RouteQ、trajectory等辅助loss。固定10k与2×2对照，先锁定权重再看test。
+- 与当前旧CQL+support在独立同种子现金筛选比较；达到证据门槛才设计受控online，不能自动启动。
+- 本轮训练和评估完成后停止，冻结baseline，详细日志/权重只留本地，重要代码/总结commit并按既有授权push。

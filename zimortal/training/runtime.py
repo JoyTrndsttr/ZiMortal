@@ -40,7 +40,11 @@ def save_model(model, path, **metadata):
 
 def load_model(path, device="cpu"):
     data = torch.load(path, map_location=device, weights_only=True)
-    if data["architecture"] == "mortal_q":
+    if data["architecture"] == "mortal_faithful_v1":
+        from zimortal.model.mortal_faithful import MortalFaithfulQNet
+
+        model = MortalFaithfulQNet(data["width"], **data.get("model_config", {})).to(device)
+    elif data["architecture"] == "mortal_q":
         from zimortal.model.mortal_q import MortalQNet
 
         model = MortalQNet(data["width"], **data.get("model_config", {})).to(device)

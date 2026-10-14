@@ -1,10 +1,14 @@
-# Mortal风格终局现金Q：独立主线
+# Mortal-faithful-v1与历史现金Q实验
 
-2026-10-14按用户本轮明确要求，暂停扩展trajectory／RouteQ／显式路线。
-routeq-v2任务已停止，保存50个训练根及1个整根排除，未完成训练，全部旧代码、
-权重和结果保留。此前PPO、现金Q和路线试验均不删除、不混入新数据。
-本轮只执行A/B/C：独立模型、1000局审计、两种小训练，完成后停下汇报。
-不自动扩大10k／50k，不进入online，也不替换baseline。
+当前主线为 **Mortal-faithful-v1**：55×20可见Observation、1D ResNet +
+Channel Attention、1024 latent、structured legal-action Dueling Q，默认
+terminal现金MC + offline CQL；3-step SARSA仅为对照。support只作离线安全
+评估/部署护栏，主算法结果必须同时报告raw Q。
+
+本轮固定原10k数据，完成small/faithful × MC/3step四组对照和独立现金筛选后
+停止，不自动进入online或替换baseline。pairwise/counterfactual训练停止扩展；
+trajectory／RouteQ／PPO和所有旧证据保留。以下保留各历史阶段，最新协议和
+完整结论见文末“Mortal-faithful-v1”部分，不将历史指令视为当前授权。
 
 ## 官方实现调研与对应
 
@@ -1163,3 +1167,166 @@ ZIMORTAL_TRAINING_MODULE=zimortal.training.mortal_pairwise bash scripts/train-on
 # 上一任务结束后，只做锁定后诊断：
 ZIMORTAL_TRAINING_MODULE=zimortal.training.mortal_pairwise_review bash scripts/train-online-rl-wsl.sh
 ```
+
+## Mortal-faithful-v1：当前主线（2026-10-14）
+
+按本轮指令停止扩展pairwise/counterfactual训练。旧代码、诊断证据和权重保留，
+本轮不加载其标签、不新增任何pairwise、RouteQ、trajectory或其他辅助loss。
+默认主目标恢复terminal MC+CQL；3-step SARSA仅为对照。support用于离线
+安全筛选/部署，不进入损失、采样或Dueling合法均值，不宣称为最终算法核心。
+旧小网络检查点保持可加载，冻结baseline不替换。
+
+参考官方[model.py](https://github.com/Equim-chan/Mortal/blob/main/mortal/model.py)
+和[train.py](https://github.com/Equim-chan/Mortal/blob/main/mortal/train.py)。本轮
+自行实现其架构与目标形式，未导入上游源码或权重，不宣称完整复现Mortal。
+
+| 部分 | 本轮对齐/适配 |
+| --- | --- |
+| 主干 | 1D卷积、pre-activation残差、BatchNorm(momentum=.01, eps=.001)、Mish |
+| 通道注意力 | 每个残差支路使用平均/最大池化，共享两层MLP，sigmoid通道门控 |
+| 表征 | 卷积投影至32通道，flatten后映射1024维latent |
+| Dueling | V+A−合法动作A均值；padding不参与均值或CQL |
+| MC回归 | terminal return，½MSE；离线加logsumexp(Q_legal)−Q_behavior的CQL |
+| Observation | 跑胡子55×20可见编码，替代日麻牌种和频道；暗手/牌堆顺序不进网络 |
+| 动作头 | 保留structured legal action编码、共享动作条件advantage；吃及下比方案可变，不能照搬固定日麻动作表 |
+| 奖励 | 实际三人终局净现金/100，流局0；没有日麻排名GRP或next-rank辅助任务 |
+
+Mortal-like使用128通道、12个残差块、1024 latent，value和advantage隐藏层256；
+小模型仍为32通道、3块、256 latent。这个容量是本机小规模对照选择，并非
+声称与官方某个训练检查点的宽度、深度完全相同。Mortal-faithful-v1是主线名，
+不是Mortal代码版本号。未复制其完整数据管线、排名奖励、优化调度/AMP、
+网络对战和online系统；这些不属于本轮严格对齐范围。
+
+### 固定2×2实验协议（结果查看前锁定）
+
+四组：small-MC、small-3step、faithful-MC、faithful-3step。全部使用原mortal-v2
+10k、同一train/dev/test游戏划分、CQL=.1、gamma=1、½MSE、AdamW lr3e-4
+weight_decay=.01、batch256、梯度clip1、最多20epoch、dev终局现金RMSE早停
+patience4。与历史Huber实验区分：四组内部统一MSE，旧Huber+CQL+support
+仅作现金锚点，不能据其差异单独归因容量。没有辅助损失或新训练数据。
+
+同一架构的MC/3step从相同参数和BN状态深拷贝开始，记录initial SHA；不同
+架构维度不同，不能宣称参数相同。主批次shuffle seed1414，所有组共同epoch
+逐一核对batch SHA。3step仍沿本玩家三次非强制决策bootstrap实际行为动作，
+中途终局用现金，独立target network每250更新hard sync；MC不使用target net。
+BN统计也随hard sync复制，target始终eval、不更新统计。
+
+最佳权重按同一dev指标选择并先锁定SHA，再一次读取test。四组均报告终局
+MAE/RMSE/correlation、分动作族、calibration、Q差和raw/guarded改动作率。
+没有根据test选择alpha、support、宽度、深度或epoch。
+
+现金筛选使用新1060000000～1060000499，共500独立seed×3学习者座位，
+庄家seed%3，另两家冻结baseline。四组均报告raw legal argmax及support=.1护栏，
+另比较冻结baseline和当前旧CQL+support锚点，合计10方案×1500局。主算法
+报告raw结果，护栏结果不能替代raw结论。按seed聚合三座位，bootstrap10000次。
+全部完整对局审计逐步四张守恒、合法重放及终局真实金额。
+
+受控online设计前的保守证据门槛预先设为：faithful-MC护栏相对当前锚点的
+配对现金差95%区间下界≥0；raw表现必须另报。若仅点估计相近或区间跨零，
+不能认定已经证明“至少达到”。无论门槛是否通过，本轮都停止，不自动启动
+online、不换baseline。若通过，仅写下一轮小规模受控自博弈设计。
+
+本地入口：`ZIMORTAL_TRAINING_MODULE=zimortal.training.mortal_faithful bash scripts/train-online-rl-wsl.sh`。
+GPU训练沿用8G进程内存/1G swap/3核CPU限制；检查点、优化器、target、RNG、
+源文件和数据SHA留在`data/generated/mortal-faithful-v1`，机器日志不入Git。
+
+### Mortal-faithful-v1完整结果
+
+原10k全审计通过：10,000局、83,012决策，重放、可见输入和现金标签核对。
+train/dev/test决策仍为66,424/8,214/8,374。新模型2,451,074参数，小模型249,922。
+小模型两target初始SHA为`dcc8c69e84d829a9875bf48ebe7bb0900f6eed7c9659290715235d82d13a414e`；
+新模型均为`28c8ffaed03ad9a0e61bc64bb22633f4ca4a92cc404029cdb128f185be2bfd53`。
+所有六组两两比较的共同epoch批次SHA均一致（本地fairness-audit.json），
+训练实际为PyTorch2.7.1+cu128、RTX5080。无pairwise/counterfactual标签进入本轮。
+
+| 模型/目标 | best/总epoch | dev RMSE元 | test MAE元 | test RMSE元 | test correlation |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| small MC | 1/5 | 73.49 | 39.52 | 68.00 | .1931 |
+| small 3step | 4/8 | 73.34 | 39.74 | 67.88 | .1959 |
+| faithful MC | 1/5 | 73.98 | 37.21 | 67.89 | .1666 |
+| faithful 3step | 5/9 | 73.49 | 40.21 | 67.85 | .2031 |
+
+新模型MC在epoch1达到本协议最佳dev后早停；不能据此宣称更大网络收敛充分。
+四组没有非有限loss/gradient，优化器/随机状态及3step target同步状态均保存。
+以下chosen-action correlation对实际终局标签计算，不是未选动作Q真值。
+
+| 模型/目标 | discard | chi/pass | peng/pass | hu/pass |
+| --- | ---: | ---: | ---: | ---: |
+| small MC | .1105 | .1247 | .1168 | .1198 |
+| small 3step | .1106 | .1213 | .1578 | .0933 |
+| faithful MC | .0784 | .0865 | .0771 | −.1549 |
+| faithful 3step | .1409 | .1567 | .1417 | .2398 |
+
+胡/过test只有229行，新MC的负相关尤其需要注意，不能只看overall RMSE。
+faithful 3step分族相关性较好，但这没有转化为已证明的现金优势。
+
+| 模型/目标 | test raw改父动作率 | 护栏改动作率 | raw平均margin元 | 护栏平均margin元 |
+| --- | ---: | ---: | ---: | ---: |
+| small MC | 48.83% | 18.40% | 12.88 | 7.78 |
+| small 3step | 48.20% | 18.43% | 12.16 | 7.47 |
+| faithful MC | 49.38% | 18.63% | 9.66 | 6.04 |
+| faithful 3step | 49.00% | 18.77% | 13.01 | 8.03 |
+
+raw margin基于全部合法候选，护栏margin只对至少两个保留候选的3,443行计。
+其余4,931行为护栏单候选；不把其margin记零冲淡均值。完整过滤比例、
+behavior probability分布、Q范围/标准差和分族误差在offline-test.json。
+
+Chosen Q五等频calibration，每格为“预测均值/实际终局均值”，单位元：
+
+| 模型/目标 | 最低五分位 | 第二 | 第三 | 第四 | 最高五分位 |
+| --- | --- | --- | --- | --- | --- |
+| small MC | −23.65/−13.66 | −13.08/−6.83 | −5.55/−5.00 | 3.25/−1.39 | 29.95/19.83 |
+| small 3step | −18.89/−16.08 | −6.43/−8.49 | −.31/−1.97 | 6.11/.46 | 30.34/19.04 |
+| faithful MC | −12.76/−10.84 | −8.04/−6.59 | −5.46/−.06 | −1.35/−.67 | 9.30/11.10 |
+| faithful 3step | −24.89/−13.25 | −7.48/−8.28 | −.51/−4.10 | 7.25/−.98 | 30.24/19.57 |
+
+各模型按自身Q分桶，不能把同列当同一批状态。新MC输出较收缩，最高分位
+收益排序仍弱；上述calibration不认证argmax候选的counterfactual EV。
+
+### 同批独立现金筛选与2×2对比
+
+10个方案各1500局，共15,000局、855,598次动作。四张守恒、合法完整重放、
+真实现金结算均通过；模型、baseline、数据及源码SHA在实验前后未改变。
+进程正常退出，MainPID=0，结果状态complete_offline_stop。
+
+| 方案 | 相对冻结baseline 元/局 | seed-cluster bootstrap95% |
+| --- | ---: | --- |
+| 冻结baseline | 0.00 | [0,0] |
+| 当前旧3step+CQL+support锚点 | −2.53 | [−5.07,−.06] |
+| small MC raw | −18.97 | [−21.61,−16.41] |
+| small 3step raw | −18.67 | [−21.84,−15.56] |
+| faithful MC raw | −17.87 | [−20.97,−14.62] |
+| faithful 3step raw | −17.37 | [−20.11,−14.72] |
+| small MC护栏 | −.84 | [−3.86,2.25] |
+| small 3step护栏 | −.83 | [−3.55,1.89] |
+| faithful MC护栏 | −.46 | [−2.97,2.19] |
+| faithful 3step护栏 | −1.88 | [−4.46,.74] |
+
+旧锚点在本批为−2.53，而上一批约−1；必须用同批配对差，不能跨批只比较均值。
+以下直接现金差bootstrap，正数表示表内前者更好；未作多重比较校正。
+
+| 配对对照 | raw差元/局及95% | 护栏差元/局及95% |
+| --- | --- | --- |
+| faithful−small，MC | +1.10 [−1.74,4.12] | +.38 [−2.62,3.42] |
+| faithful−small，3step | +1.30 [−1.24,3.87] | −1.04 [−3.49,1.42] |
+| MC−3step，small | −.31 [−3.68,2.95] | −.003 [−2.58,2.63] |
+| MC−3step，faithful | −.50 [−3.76,2.77] | +1.42 [−.92,3.76] |
+
+faithful-MC护栏相对**当前锚点**的配对差为 **+2.07元/局，95%[−.65,5.07]**。
+点估计更好，但区间跨零，未通过预设的“至少达到”的证据门槛。所有容量/
+target对照区间也跨零，不能宣称MC必然更优或增大模型已提升棋力。
+
+本轮停止。按用户方向，将MC+CQL保留为新主线目标，3step保留对照，这个
+主线选择不是宣称统计上已经战胜3step。更接近官方结构并未解决offline
+未覆盖动作的收益排序；raw仍明显弱于baseline，护栏收益也不证明算法已经
+能脱离行为支持。没有替换baseline、扩50k、继续pairwise或进入online。
+
+尚未满足受控online设计的前提，本轮不启动也不把待办包装成已完成的online
+方案。下一步应先检查MC组早停/欠拟合、胡/过负相关和chosen标签的收益覆盖，
+保持MC主目标且不用test重调本轮配置，明确新的开发协议后再做有限对照。
+若未来同协议独立筛选达到门槛，再设计有限局数、冻结对手/快照、合法探索、
+真实现金、独立晋级与回退机制的受控self-play；support仍只作安全护栏。
+
+完整机器结果、calibration、参数/优化器/BN状态、配对对照及replay SHA均在
+本地mortal-faithful-v1，未上传逐JSON或权重。代码验证：pytest363通过、1跳过；
+ruff和git diff --check通过。

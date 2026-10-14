@@ -54,16 +54,13 @@ Early-stage research and engineering project. The first priority is correctness 
 
 ## 当前研究主线（2026-10-14）
 
-已实现独立的[Mortal风格终局现金Q训练](docs/training/mortal-style.md)：
-55×20可见编码、ResNet Brain、结构化合法动作Dueling Q，MC与CQL小规模对照。
-1000局冒烟、1500局探索pilot及独立10k两组CUDA离线训练完成，按要求停止。
-同10k的MC／3-step／5-step SARSA对照及500新种子现金筛选完成；
-3-step检验correlation约0.220，但现金仍弱于v0 baseline。
-同10k的CQL／behavior support对照及新500种子筛选完成；组合现金−1.03元／局，
-raw为−21.06元／局，尚未证明超过父策略。参数仅由dev选择，全部实验完成后停止，详见报告。
-高支持反事实诊断完成：272根、每动作32次共同粒子，非零均值排序准确率约52.6%；
-独立复核确认部分稳定正负信号，尚不足以扩大探索，标签未用于训练。
-trajectory／RouteQ／PPO及所有旧实验保留；本轮暂停路线扩展，不自动扩大数据或进入online。
+当前建立[Mortal-faithful-v1主线](docs/training/mortal-style.md)：55×20可见编码，
+128通道×12块的1D ResNet＋Channel Attention、1024 latent和结构化合法动作Dueling Q。
+默认terminal现金MC＋offline CQL，3-step SARSA仅作对照；support只作离线安全护栏。
+固定10k的小模型/新模型×MC/3-step四组CUDA对照和新500种子×3座位筛选已完成。
+新模型MC护栏现金−0.46元/局；相对旧CQL+support为+2.07，95%区间[−0.65,5.07]，
+未证明达到预先设定门槛；raw仍为−17.87元/局。停止，不进入online或替换baseline。
+停止扩展pairwise/counterfactual训练；RouteQ、trajectory、PPO与历史证据全部保留。
 以下训练记录按历史阶段保留。
 
 ## 神经网络训练与复盘
