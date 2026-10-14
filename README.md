@@ -61,6 +61,8 @@ Early-stage research and engineering project. The first priority is correctness 
 3-step检验correlation约0.220，但现金仍弱于v0 baseline。
 同10k的CQL／behavior support对照及新500种子筛选完成；组合现金−1.03元／局，
 raw为−21.06元／局，尚未证明超过父策略。参数仅由dev选择，全部实验完成后停止，详见报告。
+高支持反事实诊断完成：272根、每动作32次共同粒子，非零均值排序准确率约52.6%；
+独立复核确认部分稳定正负信号，尚不足以扩大探索，标签未用于训练。
 trajectory／RouteQ／PPO及所有旧实验保留；本轮暂停路线扩展，不自动扩大数据或进入online。
 以下训练记录按历史阶段保留。
 
