@@ -409,3 +409,15 @@ fix(engine): 禁止吃后无法出牌的方案
 - 真实替代执行增加，但新test原概率低支持推翻76.37%→75.86%不稳定，chi31.65%→44.49%；raw B−A+0.63元，95%[−2.18,3.53]，护栏−1.11元[−3.91,1.62]，回归点估计略差。
 - 本轮结束停止加探索，不自动50k、online、改baseline或增loss。下一步仅建议固定权重的policy extraction诊断，未经新指令不执行。
 - 主支持口径/现金护栏对两组均为原探索p>.1，避免用改变概率定义机械宣称覆盖改善。完整细节见docs/training/mortal-style.md。
+
+## Fixed-Q policy extraction诊断（2026-10-15最新授权）
+
+- 本轮禁止训练：固定B-coverage update260的selected-common.pt、冻结baseline、原behavior概率与规则引擎；不改变网络/Q值/训练数据/loss，不进入online。
+- 全新dev1130000000起200seed×3座位选择C family规则、D λ∈{.01,.03,.1,.3}、E弃牌/吃牌k∈{2,3}；锁定后全新test1140000000起500seed×3座位，一次评估不调参。
+- family约束仅弃牌/吃牌，peng raw、HU/PASS父策略；另有HU父策略控制组，保证仅弃牌/仅吃牌/两者消融可解释。当前support全族>.1、D平滑anchor保留全合法动作。
+- 记录分族改动作、低支持比例、Q margin、父候选保留及实际选择率，现金按种子簇配对区间；不能用退回父动作的收益恢复证明Q已强于baseline。
+- 完成报告、pytest/ruff/diff后停止；下一步仅根据结果建议受控actor设计或重审Q ranking，不自动启动。
+
+- 本轮已完成：dev锁C-both、λ=.3、top(3,2)；test raw−19.29、support/family+0.12、anchor+0.45、top−12.95元/局。anchor相对raw+19.74[16.56,22.91]，对baseline[−1.13,1.94]，未证明超越。
+- 弃牌约束单独+14.76元；已有弃牌约束再约束吃牌+4.64元。anchor98.30%仍选父动作，不能把恢复父行为当Q已更强。
+- 实验优化更新0，权重及BN buffers、规则与模型SHA不变；22500评估局完整审计。停止；下一步仅建议受控行为锚定actor设计，不自动online或重训。

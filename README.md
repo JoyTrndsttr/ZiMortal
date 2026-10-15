@@ -69,6 +69,9 @@ Early-stage research and engineering project. The first priority is correctness 
 小规模behavior coverage对照也已完成：弃牌/吃过替代动作执行显著增加，但raw现金
 B−A仅+0.63元/局[−2.18,3.53]，回归略差，护栏依赖仍大；停止追加探索，
 下一步建议诊断固定权重的policy extraction，尚未启动online或替换baseline。
+Fixed-Q提取诊断已完成（无训练）：同一Q的raw为−19.29元/局，support/family为+0.12，
+λ=.3的behavior anchor为+0.45[−1.13,1.94]；相对raw显著改善，但未证明超过baseline。
+弃牌最需锚定；anchor98.30%仍选择父动作。下一步仅建议受控actor设计，当前已停止。
 以下训练记录按历史阶段保留。
 
 ## 神经网络训练与复盘
