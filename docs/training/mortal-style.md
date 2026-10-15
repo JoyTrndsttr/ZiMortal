@@ -2274,3 +2274,150 @@ ruff与git diff --check通过。本地`result.json`状态为`complete_30k_valida
 距离高强度AI的关键差距仍是可验证的policy-improvement；本轮只排除了较大的offline
 anchor收益，未建立能稳定超过冻结baseline的闭环。下一步建议正式online闭环设计，
 独立于本轮统计种子、保留冻结对照和晋级门槛，不再用本轮test选规则。
+
+## 第一轮受控 Mortal-style online self-play（2026-10-15，预声明）
+
+本轮最新授权覆盖此前“不得online”的阶段性停止约定，但只运行本次小规模闭环。
+不增加offline数据、不扩50k、不人工挑case、不调family或λ、不增加辅助loss，
+不使用raw actor生成训练数据。全部新数据来自当代trainee实际参与的完整对局。
+
+### 官方online源码复核
+
+本轮重新核对官方commit `0cff2b52982be5b1163aa9a62fb01f03ce91e0d2`：
+[train.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/train.py)、
+[player.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/player.py)、
+[dataloader.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/dataloader.py)、
+[engine.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/engine.py)、
+[lr_scheduler.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/lr_scheduler.py)。
+原始train/player/scheduler只读快照及SHA保留本地，不导入执行或复制进本项目。
+
+| 项目 | 官方实现 | 本轮 |
+|---|---|---|
+| 数据来源 | online drain新日志，仅trainee | 当代固定actor对新seed真实访问状态，仅trainee非强制决策 |
+| 对手 | 一名trainee对三个冻结baseline | 三人跑胡子，一名trainee对两个冻结baseline |
+| Q回归 | MC回报，½MSE | 唯一loss为½MSE(Q_chosen, terminal payments[seat]/100)，gamma=1 |
+| CQL | `if not online`才计算惩罚 | online彻底关闭，不用CQL或额外约束loss |
+| 辅助头 | 官方有下一局排名辅助目标 | 按用户要求不使用排名、pairwise、RouteQ、trajectory等辅助loss |
+| 优化器切换 | offline→online不沿用offline optimizer；online恢复时沿用 | 新建online AdamW，随后跨代保留全部动量和step；权重从指定offline点继续 |
+| 优化 | AdamW，Linear/Conv weight decay分组，梯度裁剪，warmup+cosine | 同类优化逻辑，pilot固定小LR和有限调度；无AMP、无多batch梯度累积 |
+| actor | 支持greedy/Boltzmann混合及top-p | 固定全合法动作Q+.3log(p_reference+1e-8)的greedy；不额外加探索 |
+| 更新发布 | 参数提交给actor，异步产生新日志 | 为便于审计，代内actor冻结，同步收集→更新→下一代；不冒充异步吞吐实现 |
+| reward | 麻将排名积分增量与折扣 | 三人实际现金终局回报；不增加麻将GRP或裁剪胜负reward |
+| 输入/动作 | 麻将固定牌型与离散动作mask | 不改55×20 Observation、structured legal action及合法均值Dueling |
+| 晋级 | 官方平均排名/积分纪录 | 独立现金seed簇CI；附多代校正，保持原baseline文件不变 |
+
+本轮不是完全对称的全员自博弈；它是官方one-vs-frozen-baseline形式的受控online。
+anchor是当前pilot的actor安全约束，不加入Q loss，不宣称为官方Mortal算法核心。
+实际actor为确定性分布，保存的训练behavior probability为所选动作one-hot（logprob=0）；
+冻结baseline经原探索配置得到的p_reference单独保存，不能冒充真实执行概率。
+不调原p_reference的HU/PASS、温度或family定义。
+
+### 固定预算与停止协议
+
+- 最多3代，每代3,000个新seed/完整对局。起点固定B-coverage update260的同一checkpoint，
+  baseline仍为league-v2/stage-02/best-dev.pt；原文件SHA必须匹配30k检验记录。
+- 第g代训练seed为1170000000+g×10000起的3,000个，独立轮换座位和庄家；
+  每个seed只用于一个训练局，不回放其他动作、不生成反事实标签。
+- 每代只使用本代新数据的一遍随机shuffle；batch256（末batch保留），gamma1。
+  AdamW betas(.9,.999)、eps1e-8，Linear/Conv权重decay=.01，其他参数0，clip norm1。
+  offline→online新建optimizer；generation间不重置。LR从3e-6线性20步至3e-5，
+  再300步cosine至3e-6；这些参数预声明，结果出来后不搜索或重跑选择。
+- 收集阶段eval模式，训练阶段更新原有BN，评估阶段eval模式并检查全部权重与BN不变。
+  代内收集前后actor state_dict哈希相同；更新后保存checkpoint、optimizer、随机状态、
+  producer hash、数据manifest和源码哈希。原offline/parent始终只读。
+- 每代评估seed为1180000000+g×10000起的全新500seed，每seed三个座位。
+  相同seed/座位运行baseline、初始offline anchor、当代anchor、当代raw各1500局。
+  raw只做冻结推理诊断，不进入下一代数据或部署。额外初始anchor只用于同seed比较online增量。
+- 每代全部训练数据独立重放核对Observation、合法动作和真实现金；评估全部逐步重放、
+  四张守恒/结算审计。未知规则、漏局或哈希变化直接失败，不替换种子或伪造标签。
+- 每代按500个seed簇重采样10,000次，报告现金差95%CI。晋级候选还要求Bonferroni
+  98.333%区间下界>0（3次预定检查），避免多代挑最高点冒充可靠提升。
+  任何候选也不自动覆盖baseline；独立评估不用于调λ、LR、family或选训练epoch。
+- anchor对baseline的95%CI上界<0时立即判明显退化、停止并回退起点；
+  连续3代没有可靠改善时停止并回退；无论结果如何最多3代，不自动扩量。
+  回退采用本实验active-checkpoint指向原offline文件，所有失败代checkpoint保留用于复现。
+- 每代报告真实训练/评估偏离率、四族改动作、低支持覆盖、Q margin、现金以及
+  raw与anchor差距；选择后分组结果仅描述，不做动作因果EV解释。
+
+入口`zimortal.training.mortal_online_experiment`，本地目录`data/generated/mortal-online-v1`。
+原始对局、数据、逐update日志和权重仅本地；实现、测试、协议与重要总结入Git。
+本轮完成后停止，不自动下一阶段或替换baseline。
+
+### 第一轮online完整结果
+
+严格执行3代×3,000局新训练对局，合计**9,000局、75,297个真实决策、296次更新**。
+全部决策每代仅消费一遍，不使用旧offline行或评估标签。每代新500seed×3座位，
+baseline/初始anchor/当代anchor/raw共6,000局，三代共18,000局独立评估。
+
+每代bootstrap使用本代500个seed簇，10,000次重采样；以下金额均为元/局。
+不同代使用不同seed，不将各代现金合并为单个checkpoint的证据。
+
+| 代 | 新训练决策 | 本代/累计更新 | anchor−baseline（95% CI） | raw−baseline（95% CI） | 晋级 |
+|---|---:|---:|---|---|---|
+| 1 | 25,141 | 99/99 | -1.0800 [-2.5101, +0.1834] | -20.7533 [-23.8468, -17.6600] | 未通过 |
+| 2 | 25,093 | 99/198 | -0.6167 [-1.6301, +0.2967] | -17.7467 [-20.8534, -14.5000] | 未通过 |
+| 3 | 25,063 | 98/296 | -0.7333 [-1.8634, +0.2767] | -18.2633 [-21.0733, -15.2633] | 未通过 |
+
+#### 与初始actor严格同seed比较
+
+| 代 | 初始anchor−baseline | online anchor−初始anchor | 配对95% CI |
+|---|---:|---:|---|
+| 1 | -0.5633 | -0.5167 | [-1.2034, +0.0500] |
+| 2 | -0.7033 | +0.0867 | [-0.2733, +0.4967] |
+| 3 | -0.8033 | +0.0700 | [-0.2867, +0.4267] |
+
+三代相对baseline的95%区间全部跨零，多代校正98.333%区间也全部跨零；
+没有首次稳定超越baseline的checkpoint。第2/3代对初始anchor略正的点估计同样未获区间支持。
+三代初始anchor在各自小样本都偏负，与30k总体检验不矛盾，不能据此重写原30k结论。
+
+#### 偏离、动作族与Q排序
+
+| 代 | 训练生产actor偏离率 | 同seed初始anchor评估偏离率 | 更新后anchor偏离率（次数/决策） | discard/chi/peng/hu偏离次数 |
+|---|---:|---:|---|---|
+| 1 | 1.655% | 1.600% | 1.466% (185/12,616) | 116/34/35/0 |
+| 2 | 1.447% | 1.508% | 1.183% (146/12,339) | 97/23/26/0 |
+| 3 | 1.221% | 1.583% | 1.242% (156/12,563) | 96/30/30/0 |
+
+偏离率没有持续上升：1.466%→1.183%→1.242%，均低于本代同seed初始actor。
+这只说明总体比例变化，不能断言所有变化都是删除旧动作，也不能将条件现金解释为动作因果EV。
+整体策略相对初始actor没有可靠改善，因此不能说新增或调整的偏离创造了收益。
+
+| 代 | raw改父动作率 | raw改动作中原参考p≤.1比例 | anchor低参考支持偏离 | anchor Q margin均值（cash/100） |
+|---|---:|---:|---:|---:|
+| 1 | 51.201% | 76.943% | 0.000% | 0.09212 |
+| 2 | 50.891% | 76.080% | 0.000% | 0.08761 |
+| 3 | 50.435% | 76.530% | 0.000% | 0.09275 |
+
+anchor的0%低参考支持偏离是本批实际结果，不是新增support过滤器。raw仍约一半决策推翻父动作，
+其中约76%～77%属于原参考低支持动作，三代raw现金95%上界始终<0，依赖anchor的问题没有解决。
+Q margin未持续增长，也不代表真实优势；不同代raw现金点估计不能直接当同seed代际提升。
+本轮没有反事实排序标签，不能报告未经测量的动作排序准确率。
+
+#### chosen-Q拟合诊断（仅当代训练行）
+
+| 代 | 更新前→后训练MAE | 更新前→后训练RMSE | 更新前→后训练correlation |
+|---|---|---|---|
+| 1 | 0.4369→0.4164 | 0.8566→0.8515 | 0.1358→0.2476 |
+| 2 | 0.3958→0.3919 | 0.7963→0.7785 | 0.1642→0.3144 |
+| 3 | 0.3832→0.3829 | 0.7214→0.7051 | 0.2232→0.2919 |
+
+训练拟合改善，但这些是已训练行的描述，不是泛化验证，也没有转化为已证明的现金收益。
+实际执行behavior为one-hot；回归日志中的执行概率不能用于宣称替代动作覆盖变好，
+排序诊断中的低支持比例始终使用冻结baseline原p_reference口径。
+
+#### checkpoint与停止
+
+| 代 | checkpoint SHA256 |
+|---|---|
+| 1 | `add6d760e687420aa327e4ec2a8f685938d1dd136893fb770d6dde4977c224fc` |
+| 2 | `46a8065e281b899f7543f96c135ff03203d1d00c8754e96ec8beaaea116bc5a7` |
+| 3 | `94766cd04c28a8df289713fa5c2986ef188cb4219941a9173433e94d468f7ba5` |
+
+各代文件位于本地`mortal-online-v1/gen-01..03/checkpoint.pt`，同目录保存对应optimizer与随机状态。
+第2代生产哈希=第1代更新后state hash，第3代生产哈希=第2代更新后state hash，
+确认数据确实来自不断更新的actor。各代评估前后模型及BN不变，冻结baseline和初始offline文件SHA不变。
+
+连续3代无可靠改善，触发`three_generations_without_reliable_improvement_rollback`。
+`active-checkpoint.json`已回指原B-coverage `selected-common.pt`，SHA仍为
+`4e2bbee3204630d949753ad92dcaa94a0ef6a2b6e19dc8c862b6dd13d4737a8f`。
+未晋级、未替换baseline、未启动第4代，所有实验权重保留本地。
