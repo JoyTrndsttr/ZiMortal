@@ -439,3 +439,11 @@ fix(engine): 禁止吃后无法出牌的方案
 - 固定同一checkpoint、冻结baseline、原behavior及Q+.3log(p+1e-8)，主指标按完整seed簇配对bootstrap；分族现金仅描述，不按结果改过滤器。
 - 完整样本现金差+.0225元/局，95%[−.153444,+.196411]，未证明稳定正收益；偏离12,127次/752,303决策（1.611983%），11,382局受影响。
 - 区间已接近零，不继续为同一offline actor扩检验；下一步仅建议正式online闭环设计，未经新指令不启动online或替换baseline。本轮审计、文档与pytest/ruff/diff完成后停止，原始记录仅本地，重要实现/总结commit并自动push。
+
+## 首轮受控Mortal-style online完成（2026-10-15最新授权）
+
+- 用户授权的小闭环已执行3代×3000真实新局；每代当代anchored trainee对两家固定baseline，生成→MC-only更新→新actor，评估独立500seed×3座位。官方commit及差异详见mortal-style.md。
+- 按官方online逻辑关闭CQL，唯一½MSE终局现金/100 loss；未新增pairwise/RouteQ/trajectory/辅助头，不用raw收集训练数据。AdamW跨代延续，累计296更新，9,000训练局/75,297决策。
+- 三代anchor−baseline为−1.08[−2.51,.18]、−.62[−1.63,.30]、−.73[−1.86,.28]元/局；都未通过95%或预声明多代校正门槛。raw仍显著负，偏离率1.47%→1.18%→1.24%，不得宣称online已提升棋力。
+- 连续3代无可靠改善已停止；本地active-checkpoint回指原B-coverage offline文件，baseline从未替换。27,000局完整审计，392测试通过/1跳过、ruff/diff通过。
+- 本轮停止覆盖此前自动连续训练授权；仅建议下一步小预算研究anchored score的官方式Boltzmann混合访问，不自动执行、不扩量或加loss。原始日志/数据/权重本地保留，重要实现与总结commit并自动push。

@@ -5,10 +5,10 @@ Channel Attention、1024 latent、structured legal-action Dueling Q，默认
 terminal现金MC + offline CQL；3-step SARSA仅为对照。support只作离线安全
 评估/部署护栏，主算法结果必须同时报告raw Q。
 
-本轮固定原10k数据，完成small/faithful × MC/3step四组对照和独立现金筛选后
-停止，不自动进入online或替换baseline。pairwise/counterfactual训练停止扩展；
-trajectory／RouteQ／PPO和所有旧证据保留。以下保留各历史阶段，最新协议和
-完整结论见文末“Mortal-faithful-v1”部分，不将历史指令视为当前授权。
+原10k四组对照及后续离线诊断已完成。最新首轮MC-only online小闭环执行3代，
+未证明稳定改善，已回退offline起点并停止；baseline未替换。pairwise/counterfactual
+训练停止扩展，trajectory／RouteQ／PPO和所有旧证据保留。以下按历史阶段保留，
+最新协议与结果见文末“第一轮受控 Mortal-style online self-play”，旧阶段授权不自动延续。
 
 ## 官方实现调研与对应
 
@@ -2421,3 +2421,34 @@ Q margin未持续增长，也不代表真实优势；不同代raw现金点估计
 `active-checkpoint.json`已回指原B-coverage `selected-common.pt`，SHA仍为
 `4e2bbee3204630d949753ad92dcaa94a0ef6a2b6e19dc8c862b6dd13d4737a8f`。
 未晋级、未替换baseline、未启动第4代，所有实验权重保留本地。
+
+### 第一轮审计、复现与后续边界
+
+9,000局训练、489,349步已独立重放核对全部Observation、legal action、chosen和现金；
+18,000局评估、1,001,397步通过完整逐步合法性/80张守恒/结算核验。
+合计27,000局、1,490,746步，未排除或替换种子，没有人工筛case。
+三对checkpoint/optimizer文件逐一核对SHA及optimizer step，累计99/198/296，
+确认跨代延续而非重置；全部冻结源码/初始checkpoint/baseline文件SHA复核一致。
+
+实际CUDA为RTX 5080、PyTorch 2.7.1+cu128；CPU执行规则，峰值内存约4.07GB，
+服务正常结束（Result=success、MainPID=0）。完整pytest **392 passed, 1 skipped**，
+ruff及git diff --check通过。重要源码/总结提交，全部数据、逐update日志、官方快照与权重本地保留。
+
+```bash
+ZIMORTAL_TRAINING_MODULE=zimortal.training.mortal_online_experiment \
+  bash scripts/train-online-rl-wsl.sh
+```
+
+默认目录拒绝覆盖；若另行复现，须通过`--directory`指定全新目录，不能混入本轮样本。
+模块复用`play(training=False)`是为了禁用旧PPO随机收集；通过显式decision recorder
+保存Mortal的真实MC训练行，再由独立MC updater反向传播，不表示本轮没有训练。
+
+本轮实现并实际运行了online数据→更新→新actor→新数据闭环，但**未出现可靠policy improvement**。
+样本小、确定性anchor的访问分布仍窄，训练回归改善不能证明未执行候选的排序可靠，
+也不能据此否定带探索的官方Mortal online路线。距高强度AI仍缺可在独立现金评估中
+稳定超过冻结baseline的策略和足够可靠的动作排序。
+
+下一步仅建议：在另行授权的小预算实验中，比较固定greedy anchor与施加在
+anchored score上的预声明Boltzmann混合，研究真实替代动作访问；维持MC-only、固定λ、
+冻结对手和独立评估，不切raw，不先扩大同一greedy配方或加loss。
+本轮不执行此建议，不自动扩大online、自博弈或offline规模。
