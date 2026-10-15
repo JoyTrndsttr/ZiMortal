@@ -401,3 +401,11 @@ fix(engine): 禁止吃后无法出牌的方案
 - 新test预测与train-dev gap改善，但raw现金B−A=−0.99，95%[−4.11,1.98]；护栏+1.60，95%[−0.76,3.94]；低支持推翻比例77.12%→77.37%，未改善。
 - 本轮停止，不继续同分布50k、online、改baseline或增loss。下一步建议先设计behavior coverage/受控探索验证，未经新指令不执行。
 - 完整协议、结果与复核见docs/training/mortal-style.md；日志、JSON、权重本地保留，重要代码/总结commit并自动push。
+
+## Behavior coverage对照完成（2026-10-15）
+
+- 仅改变discard/chi行为探索，各4k独立训练局、共享新1k dev/1k test；同模型/MC/CQL=.1/support=.1，均5200更新，共同选中260；冻结baseline。
+- p_B=.5p_A+.5×原p≥.03的前三非greedy候选均匀分布，无合格替代不变；peng、HU/PASS不变。全部概率及终局现金本地可审计。
+- 真实替代执行增加，但新test原概率低支持推翻76.37%→75.86%不稳定，chi31.65%→44.49%；raw B−A+0.63元，95%[−2.18,3.53]，护栏−1.11元[−3.91,1.62]，回归点估计略差。
+- 本轮结束停止加探索，不自动50k、online、改baseline或增loss。下一步仅建议固定权重的policy extraction诊断，未经新指令不执行。
+- 主支持口径/现金护栏对两组均为原探索p>.1，避免用改变概率定义机械宣称覆盖改善。完整细节见docs/training/mortal-style.md。

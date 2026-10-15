@@ -85,6 +85,10 @@ def family_exploration(logits, actions, config):
         p[:] = 0
         p[hu] = (1 - rate) / len(hu)
         p[passed] = rate / len(passed)
+    if "coverage" in config:
+        from .mortal_coverage_sampling import enhance_probability
+
+        p = enhance_probability(p, int(np.argmax(logits)), family, config)
     return p
 
 
@@ -299,6 +303,11 @@ def generate_games(
                             "chosen_kind": obs.legal_actions[chosen].kind.value,
                         }
                     )
+                    if family_config and family_config.get("record_reference"):
+                        reference_config = {k: v for k, v in family_config.items() if k != "coverage"}
+                        rows[-1]["reference_probabilities"] = family_exploration(
+                            logits, obs.legal_actions, reference_config
+                        ).astype(np.float32)
                     choice = chosen
                 action = obs.legal_actions[choice]
                 if action not in engine.legal_actions(state):
@@ -348,6 +357,8 @@ def save_shard(directory, index, games):
         },
         "family": np.array([r["family"] for r in rows]),
     }
+    if rows and "reference_probabilities" in rows[0]:
+        arrays["reference_probabilities"] = np.concatenate([r["reference_probabilities"] for r in rows])
     buffer = io.BytesIO()
     np.savez_compressed(buffer, **arrays)
     data_name = f"shard-{index:04d}.npz"
@@ -383,13 +394,15 @@ def load_rows(directory, manifest):
                 {
                     k: v[i]
                     for k, v in arrays.items()
-                    if k not in ("actions", "action_offsets", "behavior_probabilities")
+                    if k not in ("actions", "action_offsets", "behavior_probabilities", "reference_probabilities")
                 }
                 | {
                     "actions": arrays["actions"][lo:hi],
                     "behavior_probabilities": arrays["behavior_probabilities"][lo:hi],
                 }
             )
+            if "reference_probabilities" in arrays:
+                rows[-1]["reference_probabilities"] = arrays["reference_probabilities"][lo:hi]
     return rows
 
 

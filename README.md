@@ -66,6 +66,9 @@ Early-stage research and engineering project. The first priority is correctness 
 20k过渡实验完成：同更新预算下16k改善新test收益预测，但raw现金相对8k差−0.99元/局，
 95%区间[−4.11,1.98]；护栏差+1.60，区间[−0.76,3.94]，低支持推翻比例未下降。
 停止同分布扩量，不进入50k/online；下一步建议研究behavior coverage，baseline保持冻结。
+小规模behavior coverage对照也已完成：弃牌/吃过替代动作执行显著增加，但raw现金
+B−A仅+0.63元/局[−2.18,3.53]，回归略差，护栏依赖仍大；停止追加探索，
+下一步建议诊断固定权重的policy extraction，尚未启动online或替换baseline。
 以下训练记录按历史阶段保留。
 
 ## 神经网络训练与复盘
