@@ -5,10 +5,11 @@ Channel Attention、1024 latent、structured legal-action Dueling Q，默认
 terminal现金MC + offline CQL；3-step SARSA仅为对照。support只作离线安全
 评估/部署护栏，主算法结果必须同时报告raw Q。
 
-原10k四组对照及后续离线诊断已完成。最新首轮MC-only online小闭环执行3代，
-未证明稳定改善，已回退offline起点并停止；baseline未替换。pairwise/counterfactual
-训练停止扩展，trajectory／RouteQ／PPO和所有旧证据保留。以下按历史阶段保留，
-最新协议与结果见文末“第一轮受控 Mortal-style online self-play”，旧阶段授权不自动延续。
+原10k四组对照及后续离线诊断已完成。首轮MC-only online已停止并回退；最新第二轮
+固定T=.5的anchored Boltzmann A/B也完成各3代：真实替代动作访问显著增加，
+但三代B−A现金区间均包含0，未证明探索优于greedy；baseline未替换，不自动扩量。
+pairwise/counterfactual训练停止扩展，trajectory／RouteQ／PPO和所有旧证据保留。
+最新协议与结果见文末“第二轮online：anchored Boltzmann A/B”，旧阶段授权不自动延续。
 
 ## 官方实现调研与对应
 
@@ -2452,3 +2453,242 @@ ZIMORTAL_TRAINING_MODULE=zimortal.training.mortal_online_experiment \
 anchored score上的预声明Boltzmann混合，研究真实替代动作访问；维持MC-only、固定λ、
 冻结对手和独立评估，不切raw，不先扩大同一greedy配方或加loss。
 本轮不执行此建议，不自动扩大online、自博弈或offline规模。
+
+## 第二轮online：anchored Boltzmann A/B（2026-10-15，预声明）
+
+只检验训练收集是否需要受控Boltzmann探索，未修改网络、55×20 Observation、
+structured action、三人现金reward、MC-only loss、optimizer或LR调度。
+共同起点为原offline B-coverage checkpoint（不接首轮失败权重），baseline保持冻结。
+A/B初始化state_dict必须完全相同，各自新建相同AdamW并跨代延续。
+不加CQL、pairwise、counterfactual、trajectory、RouteQ或任何新loss，不用raw收集训练数据。
+
+### 固定处理与评估口径
+
+- A训练actor：`argmax(score)`，`score=Q+.3log(p_reference+1e-8)`。
+- B训练actor：合法候选中按`softmax(score/.5)`抽样，**T固定0.5**，无温度网格、
+  epsilon混合、top-k、support截断或新的family规则。Q和p_reference原值均保持不变。
+- 唯一保守边界：合法候选中有HU时，B与A一样取本模型原anchored greedy动作，
+  不在HU/PASS上额外采样。这没有强制胡，也不改变规则合法性。
+- sampler使用按(seed,seat,salt20261016)独立的随机流，不依赖推理slot或batch形状。
+  seed/座位只用于随机流标识，不进入网络或动作价值。保存实际actor概率、logprob，
+  原p_reference单独保存；B不再错误使用one-hot执行概率。
+- 两组最多各3代，每代各3,000个全新完整训练局。一名当代trainee对两名固定baseline。
+  同代A/B使用同一套训练seed/庄家/座位（共同牌局起点，访问历史可不同）。
+  第g代训练seed从1190000000+g×10000开始，A/B各取3,000个，座位/庄家独立轮换。
+- 每代actor冻结收集→独立核验真实访问轨迹→本代数据只训练一遍→保存Q/optimizer/RNG→下一代。
+  不混入旧offline行或任何评估标签，不按终局现金挑样本，不补充反事实标签。
+- batch256、末batch保留，MC gamma1和½MSE、AdamW分组decay、clip1、20步warmup+
+  300步cosine及3e-6/3e-5/3e-6 LR原样复用首轮函数。两组optimizer/shuffle随机源相同初始化，
+  各自跨代连续；真实决策数可不同，因此单遍更新数可不同，不人为给某组补训练步。
+- 第g代评估seed从1200000000+g×10000起500个，每seed三个座位，完全独立于训练及首轮种子。
+  **主比较B-anchor−A-anchor**：A/B训练后的Q均采用固定greedy anchored提取，隔离训练访问差异。
+  另报告A/B各自对baseline现金，以及**B-sampling−A-anchor**，衡量真正采样actor的执行成本。
+  B-sampling只是同seed诊断，不按结果在两种提取方式中选择。A-raw、B-raw只作诊断。
+  每代baseline、A-anchor、B-anchor、B-sampling、A-raw、B-raw共9,000局评估。
+- 每个完整seed簇保留三个座位，bootstrap10,000次、统计随机种子1515，报告95%CI。
+  B-anchor对A或baseline的95%下界>0记方向性信号，同时附3代×2主对比的99.167%区间，
+  不挑代数、温度、λ或family。不把不同checkpoint的评估混成一个冠军区间。
+- 若B-anchor相对A及baseline两个95%区间上界都<0，提前停止整个A/B；否则最多3代即停。
+  若只提高偏离而未改善现金，停止此配方，不加代数、不做温度搜索。无论结果如何不自动替换baseline。
+- 所有训练行独立核对可见编码、合法候选、实际chosen、执行概率和真实现金；评估全部逐步重放、
+  80张守恒与结算审计。未知规则/缺局/哈希变化直接失败，不替换seed。
+- 每代保存分族偏离、chosen p_reference分布及固定概率分桶、chosen-Q训练MAE/RMSE/corr、
+  raw/anchored现金和B−A。训练拟合指标不当泛化或策略改进证据。
+
+入口`zimortal.training.mortal_boltzmann_experiment`，目录
+`data/generated/mortal-online-exploration-v1`。数据/逐update日志/权重本地保留。
+完成本轮及pytest/ruff/diff后停止，不自动扩大online或offline规模。
+
+### 第二轮A/B完整结果
+
+两组各完成3代×3,000局真实训练，共18,000局；同代共用3,000个训练seed，
+所以总共9,000个训练seed、18,000个实际对局，不冒称18,000个独立牌局起点。
+A/B各累计294次MC更新，更新数完全相同。评估3代×500新seed×3座位×6策略，共27,000局。
+本轮没有根据结果追加温度、代数、评估策略或人工挑选case。
+
+#### 实际训练访问
+
+| 代 | 组 | 实际训练决策 | 累计更新 | 偏离baseline比例 | 偏离次数 |
+|---|---|---|---|---|---|
+| 1 | A | 24956 | 98 | 1.651% | 412 |
+| 1 | B | 24955 | 98 | 25.157% | 6278 |
+| 2 | A | 25083 | 196 | 1.399% | 351 |
+| 2 | B | 24921 | 196 | 24.903% | 6206 |
+| 3 | A | 24892 | 294 | 1.205% | 300 |
+| 3 | B | 24834 | 294 | 25.332% | 6291 |
+
+偏离定义为当前访问Observation中实际执行动作与冻结baseline greedy动作不同，
+强制动作不计入分母。两组访问历史可以不同，不能按同一步号假定是同一个状态。
+
+训练访问率差按同代3,000个共同seed配对，重采样10,000次；每次用所选seed的
+偏离总数/决策总数求两组比率，再计算B−A，不把所有决策当独立样本。
+
+| 代 | B−A训练偏离率（百分点） | paired-seed 95% CI（百分点） |
+|---|---|---|
+| 1 | 23.506 | [22.960, 24.083] |
+| 2 | 23.503 | [22.969, 24.038] |
+| 3 | 24.127 | [23.573, 24.683] |
+
+三代访问率差下界均>0，**Boltzmann显著增加了真实替代动作访问**，不是只增加候选数量。
+固定T=.5的实际探索约25%，不能仅凭“温度小于1”称其接近greedy。
+数学上本轮采样权重为`exp(Q/.5) * (p_reference+1e-8)^.6`，
+参考概率的.6次方可以使其变平；本轮记录这一事实，但没有据此调温度。
+
+| 代 | 组 | discard偏离 | chi/pass偏离 | peng/pass偏离 | hu/pass偏离 |
+|---|---|---|---|---|---|
+| 1 | A | 232 | 90 | 90 | 0 |
+| 1 | B | 3665 | 2017 | 596 | 0 |
+| 2 | A | 202 | 80 | 69 | 0 |
+| 2 | B | 3624 | 1952 | 630 | 0 |
+| 3 | A | 182 | 59 | 59 | 0 |
+| 3 | B | 3633 | 1951 | 707 | 0 |
+
+#### 实际执行动作的p_reference分布
+
+以下p_reference均来自同一冻结baseline与原概率配置；不是B真实执行概率。
+真实执行概率另存于behavior_probabilities，A为one-hot，B为实际Boltzmann分布，
+HU/PASS为原anchor greedy one-hot。完整日志、NPZ及其logprob可逐行核对。
+
+| 代 | 组 | p_ref均值 | p_ref P5 | p_ref中位数 | p_ref P95 | 实际chosen概率均值 |
+|---|---|---|---|---|---|---|
+| 1 | A | 0.8325 | 0.4516 | 0.9120 | 0.9982 | 1.0000 |
+| 1 | B | 0.7023 | 0.0219 | 0.8909 | 0.9986 | 0.6521 |
+| 2 | A | 0.8324 | 0.4568 | 0.9119 | 0.9983 | 1.0000 |
+| 2 | B | 0.7034 | 0.0194 | 0.8915 | 0.9987 | 0.6512 |
+| 3 | A | 0.8335 | 0.4582 | 0.9128 | 0.9983 | 1.0000 |
+| 3 | B | 0.7010 | 0.0218 | 0.8891 | 0.9986 | 0.6480 |
+
+| 代 | 组 | p<.01 | .01≤p<.03 | .03≤p<.1 | .1≤p<.3 | .3≤p<.5 | .5≤p≤1 |
+|---|---|---|---|---|---|---|---|
+| 1 | A | 0 | 0 | 0 | 188 | 1637 | 23131 |
+| 1 | B | 815 | 686 | 1446 | 2066 | 1718 | 18224 |
+| 2 | A | 0 | 0 | 0 | 183 | 1624 | 23276 |
+| 2 | B | 822 | 743 | 1358 | 2078 | 1634 | 18286 |
+| 3 | A | 0 | 0 | 0 | 159 | 1588 | 23145 |
+| 3 | B | 792 | 718 | 1357 | 2181 | 1655 | 18131 |
+
+上述区间预先固定，仅作分布描述，未用作采样过滤器或family规则。
+
+#### chosen-Q训练拟合
+
+每一格为同代同组训练行的更新前→更新后，单位cash/100（误差×100才是元）。
+不同组的现金标签来自不同实际continuation，回归误差不能直接当组间策略优势；
+这些已训练行也不是独立泛化集，不用于选epoch或调参。
+
+| 代 | 组 | MAE | RMSE | correlation |
+|---|---|---|---|---|
+| 1 | A | 0.4213→0.3971 | 0.7862→0.7760 | 0.1323→0.2609 |
+| 1 | B | 0.3753→0.3481 | 0.7166→0.7032 | 0.1217→0.2276 |
+| 2 | A | 0.4125→0.4091 | 0.8705→0.8515 | 0.1938→0.3438 |
+| 2 | B | 0.3573→0.3531 | 0.7516→0.7264 | 0.1630→0.3617 |
+| 3 | A | 0.4168→0.4151 | 0.8385→0.8102 | 0.2290→0.3321 |
+| 3 | B | 0.3463→0.3441 | 0.7808→0.7655 | 0.2353→0.3250 |
+
+#### 独立现金主比较
+
+以下金额均为元/局。每代只有本代500个seed簇、每簇三个座位，bootstrap10,000次。
+A-anchor/B-anchor为两组训练后的固定greedy提取；B-sampling是另报的实际采样actor。
+
+| 代 | A-anchor−baseline（95% CI） | B-anchor−baseline（95% CI） | B-anchor−A-anchor（95% CI） |
+|---|---|---|---|
+| 1 | +2.3500 [+0.6733, +4.5701] | +2.4533 [+0.7899, +4.6567] | +0.1033 [+0.0000, +0.2333] |
+| 2 | +0.1067 [-0.9634, +1.1667] | -0.1467 [-1.2934, +0.9700] | -0.2533 [-0.8267, +0.1033] |
+| 3 | -1.8100 [-3.9434, -0.1733] | -1.8033 [-3.9068, -0.1900] | +0.0067 [-0.3167, +0.3400] |
+
+第1代B对baseline的95%下界>0，**满足预声明的单代方向性信号门槛**。
+但同代A也显著为正，B−A下界恰为0、未严格>0，
+因此该结果不证明Boltzmann有独立增益或必要性。第2代未延续正现金，第3代A/B都显著负。
+
+三代主B−A区间均包含0。不能从第1代共同正收益中只挑B归功于探索，
+也不能把不同代checkpoint混成一个区间来宣布持续改善。未设置初始offline anchor评估臂，
+因此本轮也不能分离共同起点自身对该批种子的收益；没有事后追加此评估臂。
+
+| 代 | B−baseline 99.167% CI | B−A 99.167% CI |
+|---|---|---|
+| 1 | [+0.3644, +5.6045] | [-0.0233, +0.2933] |
+| 2 | [-1.6900, +1.3478] | [-1.0922, +0.1711] |
+| 3 | [-4.8678, +0.1245] | [-0.4300, +0.4567] |
+
+第1代B−baseline多代校正下界也>0，该checkpoint作为本轮方向候选保留。
+按固定baseline协议，候选只记录、不覆盖baseline；它仍不是探索优于A的证明。
+
+#### 采样执行成本与raw诊断
+
+| 代 | B-sampling−baseline（95% CI） | B-sampling−A-anchor（95% CI） |
+|---|---|---|
+| 1 | -7.3067 [-9.9234, -4.7633] | -9.6567 [-12.9601, -6.5499] |
+| 2 | -7.6700 [-10.2667, -5.1898] | -7.7767 [-10.5133, -5.0800] |
+| 3 | -12.7700 [-16.2301, -9.4699] | -10.9600 [-14.5267, -7.3067] |
+
+| 代 | A-raw−baseline（95% CI） | B-raw−baseline（95% CI） |
+|---|---|---|
+| 1 | -17.4867 [-19.8500, -15.0633] | -18.0333 [-20.4967, -15.5533] |
+| 2 | -21.8900 [-24.7335, -19.0633] | -20.3767 [-22.9667, -17.8633] |
+| 3 | -18.2700 [-21.8068, -14.4665] | -18.7500 [-22.4301, -14.7732] |
+
+直接采样三代均显著亏损；这是探索执行成本，不等于训练后greedy提取的收益。
+两组raw也始终显著负，增加真实访问没有在本预算内解决Q排名可靠性或anchor依赖。
+没有把raw作为下一代数据生产actor，也没有利用这些结果改family、HU/PASS或温度。
+
+| 代 | 评估actor | 偏离率 | discard | chi/pass | peng/pass | hu/pass |
+|---|---|---|---|---|---|---|
+| 1 | A-anchor | 1.484% | 97 | 41 | 46 | 0 |
+| 1 | B-anchor | 1.499% | 98 | 42 | 46 | 0 |
+| 1 | B-sampling | 25.083% | 1786 | 1000 | 314 | 0 |
+| 2 | A-anchor | 1.223% | 82 | 37 | 36 | 0 |
+| 2 | B-anchor | 1.200% | 82 | 37 | 33 | 0 |
+| 2 | B-sampling | 25.116% | 1815 | 999 | 323 | 0 |
+| 3 | A-anchor | 1.200% | 83 | 35 | 32 | 0 |
+| 3 | B-anchor | 1.088% | 76 | 32 | 28 | 0 |
+| 3 | B-sampling | 25.747% | 1874 | 993 | 339 | 0 |
+
+#### checkpoint与停止
+
+| 代 | 组 | checkpoint SHA256 |
+|---|---|---|
+| 1 | A | `4d31bc7cce35e586bc3efaf0c5bf7b57b0886975ece5e7e931b4be8d95f00f84` |
+| 1 | B | `f04dcb67d35781301291d8b8244cf8161a22e67373095fd8abcb70aac49932a5` |
+| 2 | A | `e037482d3bf6dc2876f3fe192fbe5f8639d5c4476296de290b00f8944128ebf3` |
+| 2 | B | `a91e720773532be1895b7b9f3689baa9f05884e16cf9673445915a4faa8f1c01` |
+| 3 | A | `2ae840fb1c1ff6913fb55fcd83d0642a2860d3b1532945e6f02b6525114085fe` |
+| 3 | B | `020baf02cda69e0ee5884e2a34c29a66c363c71c60c68809040a1d4a8060bc0c` |
+
+各文件在本地`mortal-online-exploration-v1/gen-01..03/A|B/checkpoint.pt`，
+同目录保存匹配的optimizer和随机状态。第1代B方向候选为`gen-01/B/checkpoint.pt`，
+仅保留记录，未按test在各代中自动选冠军。
+
+已执行完固定3代并停止，状态`complete_online_exploration_AB_stop`。
+本实验active-checkpoint仍指向原offline B-coverage checkpoint，baseline未替换。
+结论是：**访问提升已证实，探索相对greedy的现金增益未证实；不继续扩代或温度搜索。**
+这只评价本次T=.5、固定anchor、单遍MC的小预算方案，不证明所有online探索方法都无效。
+
+### 第二轮审计、复现与停止边界
+
+18,000局训练、988,449步逐一核对真实Observation/合法候选/chosen/执行概率/终局现金；
+27,000局评估、1,513,435步通过逐步合法性、80张守恒和结算核验。
+共**45,000局、2,501,884步、149,641个实际训练决策**，无排除或替换种子。
+149,641个训练记录另行独立重算anchored score与B的softmax/HU保守分布，全部一致。
+A/B初始化state_dict相同，各自第2/3代生产哈希分别等于各自上一代更新后Q；
+全部六对checkpoint/optimizer SHA及step核对通过（每组98→196→294），无重置动量。
+所有冻结源码、原offline checkpoint、baseline文件SHA复核一致；评估未改变权重或BN buffers。
+
+RTX 5080执行冻结推理和MC更新，CPU执行规则；峰值内存约3.64GB。
+systemd服务正常退出，Result=success、MainPID=0，无训练进程残留。
+完整pytest **396 passed, 1 skipped**，ruff、git diff --check通过。
+核心改动仅增加采样actor及collector对真实随机执行概率/context的支持，
+`mc_loss`、`update`、`make_optimizer`、`learning_rate`、网络和规则逻辑保持首轮实现。
+
+```bash
+ZIMORTAL_TRAINING_MODULE=zimortal.training.mortal_boltzmann_experiment \
+  bash scripts/train-online-rl-wsl.sh
+```
+
+默认目录拒绝覆盖，另行复现须指定全新`--directory`。原始NPZ/回放/逐update日志/
+概率审计/权重保留本地`mortal-online-exploration-v1`，不提交机器记录或扩大offline训练集。
+模型、源码与重要总结按既有授权提交并push；本轮不再运行任何新增对局或训练。
+
+距高强度AI仍缺**可归因、可持续的policy improvement和可靠Q动作排序**。
+本轮已解决“是否真的执行更多替代动作”的验证，但没有证明这能在当前预算下产生探索特有的收益。
+下一步仅建议利用现有真实online轨迹诊断MC回报噪声、Q数值尺度及动作优势头的变化，
+而不是继续扩大当前采样配方或搜索温度。本轮未执行该后续研究，不启动第4代，
+不增加loss、family规则或人工case筛选，baseline保持原样。

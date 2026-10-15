@@ -108,13 +108,18 @@ def collect(policy, parent, specs, directory, name, *, training_rows=False, devi
                 decisions.write(json.dumps(evidence) + "\n")
                 records.append({k: v for k, v in evidence.items() if k not in ("actions", "q", "scores", "probabilities")})
                 if training_rows:
-                    # Actual deployed actor is deterministic, unlike frozen reference p.
-                    probability = np.zeros(len(r["actions"]), np.float32)
-                    probability[r["chosen"]] = 1.
+                    # Actual execution distribution is separate from frozen reference p.
+                    if "actor_probabilities" in r:
+                        probability = np.asarray(r["actor_probabilities"], dtype=np.float32)
+                    else:
+                        probability = np.zeros(len(r["actions"]), np.float32)
+                        probability[r["chosen"]] = 1.
+                    if (probability < 0).any() or not np.isclose(probability.sum(), 1) or probability[r["chosen"]] <= 0:
+                        raise RuntimeError("invalid executed actor probability")
                     rows.append({
                         "features": r["_features"], "actions": r["_actions"],
                         "chosen": r["chosen"], "parent_greedy": r["parent"],
-                        "behavior_probabilities": probability, "behavior_logprob": 0.,
+                        "behavior_probabilities": probability, "behavior_logprob": float(np.log(float(probability[r["chosen"]]))),
                         "reference_probabilities": np.array(r["probabilities"], np.float32),
                         "history_step": r["step"] - 1, "family": r["family"],
                         "chosen_kind": r["actions"][r["chosen"]]["kind"],
@@ -130,7 +135,8 @@ def collect(policy, parent, specs, directory, name, *, training_rows=False, devi
                 atomic_json(root / "progress.json", {"name": name, "completed": completed, "total": len(specs)})
         unused, games, errors = play(policy, [parent], specs, device=device,
                                     decision_recorder=record, decision_sink=decision_sink,
-                                    replay_sink=sink, training=False)
+                                    replay_sink=sink, training=False,
+                                    decision_context=getattr(policy, "prepare", None))
     if unused or errors or len(games) != len(specs) or completed != len(specs):
         atomic_json(root / "errors.json", errors)
         raise RuntimeError("incomplete online generation/evaluation; no replacements")
