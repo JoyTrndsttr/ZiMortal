@@ -80,6 +80,7 @@ def play(
     replay_sink=None,
     decision_recorder=None,
     decision_sink=None,
+    decision_context=None,
 ):
     """Each spec is seed, dealer, learner seat, opponent index (-1=self-play).
 
@@ -171,6 +172,8 @@ def play(
         for owner, items in waiting.items():
             observations = [obs for _, obs in items]
             details = {} if audit is not None and owner == -1 else None
+            if owner == -1 and decision_context is not None:
+                decision_context([active[index][1] for index, _ in items])
             indices, logp, values, features, actions = infer(
                 model if owner == -1 else opponents[owner],
                 observations,

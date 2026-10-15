@@ -421,3 +421,14 @@ fix(engine): 禁止吃后无法出牌的方案
 - 本轮已完成：dev锁C-both、λ=.3、top(3,2)；test raw−19.29、support/family+0.12、anchor+0.45、top−12.95元/局。anchor相对raw+19.74[16.56,22.91]，对baseline[−1.13,1.94]，未证明超越。
 - 弃牌约束单独+14.76元；已有弃牌约束再约束吃牌+4.64元。anchor98.30%仍选父动作，不能把恢复父行为当Q已更强。
 - 实验优化更新0，权重及BN buffers、规则与模型SHA不变；22500评估局完整审计。停止；下一步仅建议受控行为锚定actor设计，不自动online或重训。
+
+## Anchored actor偏离价值验证（2026-10-15最新授权）
+
+- 本轮不训练：固定上一轮同一checkpoint/baseline/原behavior及Q+.3log(p+1e-8)，不改网络/Q/规则/support/loss。
+- 预声明1150000000起3000seed×3座位；baseline、all、first(1次)、max2(2次)各9000局。不搜索budget、λ或分桶，不用test选规则，结束停止。
+- 只统计实际非强制决策对同局面父greedy的偏离，按(seed,seat)计数，禁用并行slot作局标识。额度耗尽回父策略，不改变引擎。
+- 分桶与bootstrap协议见mortal-style.md；单次/多次偏离子集为描述统计，不冒称动作反事实EV。全部95%CI跨零不宣称改进，不自动进入online。
+
+- 本轮已完成36000局/1945930步审计：all相对baseline+.113元95%[−.45,.71]，first+.103[−.46,.70]，max2+.105[−.46,.70]；全部区间跨零，不宣称稳定policy-improvement、不进入online。
+- all偏离1174次（discard711/chi207/peng255/hu1），1106局受影响；一次1042局、多次64局。预算对比也未确认“越偏离越差”，不得从test挑新预算。
+- 下一步仅建议审查本地全部偏离CSV及配对轨迹，关注拆组/对子/123/15胡；未启动此下一步、不改loss或训练。重要总结/代码commit并按既有授权push，原始记录仅本地。
