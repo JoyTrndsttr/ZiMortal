@@ -42,7 +42,8 @@ def learning_rate(step):
     return 3e-6 + .5 * (3e-5 - 3e-6) * (1 + math.cos(math.pi * phase))
 
 
-def update(model, optimizer, rows, rng, updates, *, device="cpu", batch_size=256):
+def update(model, optimizer, rows, rng, updates, *, device="cpu", batch_size=256,
+           lr_schedule=None):
     if not rows:
         raise ValueError("no current-policy online rows")
     model.requires_grad_(True).train()
@@ -53,7 +54,7 @@ def update(model, optimizer, rows, rng, updates, *, device="cpu", batch_size=256
         batch = [rows[i] for i in order[start:start + batch_size]]
         x, a, legal, chosen, target = tensors(batch, device, 1.)
         for group in optimizer.param_groups:
-            group["lr"] = learning_rate(updates)
+            group["lr"] = (learning_rate if lr_schedule is None else lr_schedule)(updates)
         q = model.forward_q(x, a, legal)[0]
         loss = mc_loss(q, chosen, target, legal)
         if not torch.isfinite(loss):
@@ -153,5 +154,6 @@ def checkpoint(model, optimizer, path, updates, rng, **metadata):
         "numpy_rng": rng.bit_generator.state, "torch_rng": torch.get_rng_state(),
         "cuda_rng": torch.cuda.get_rng_state_all() if next(model.parameters()).is_cuda else [],
         "checkpoint_sha256": __import__("hashlib").sha256(Path(path).read_bytes()).hexdigest(),
-        "schedule": "linear20+cosine300", "metadata": metadata,
+        "schedule": metadata.get("learning_rate_schedule", "linear20+cosine300"),
+        "metadata": metadata,
     })

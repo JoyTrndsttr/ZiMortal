@@ -472,3 +472,13 @@ fix(engine): 禁止吃后无法出牌的方案
 - Gen1同输入/实际根动作/完整前缀一致，B−A真实标签+7.292元95%[5.242,9.372]；但最终固定Gen3 holdout B−A−.00722[−.07889,.05667]，B−baseline+.050[−.505,.60946]，B−initial−.03611[−.22444,.14778]。未见修正带来稳定actor改善，不把标签差异直接当主瓶颈证据。
 - 12万完整对局审计、采样/切换/一次消费/Adam/RNG/冻结SHA复核通过。baseline未换，本轮停止；原始证据本地，重要代码/总结commit并自动push。
 - 下一步仅建议单因素LR时间尺度／更新稳定性验证，不同时改BN、探索或target；未经新指令不执行。详细源码参数流、协议、限制和结果见docs/training/mortal-style.md。
+
+
+## Online LR时间尺度单因素对照完成（2026-10-16）
+
+- 从同一原offline B-coverage起点，各10×5000真实新局；A保持warm20/cos300，B采集前按历史415284行预估1630更新，锁cos1609。全部真实非强制决策单遍训练，MC-only/CQL0，T=.5/λ=.3/BN/optimizer/网络均不改，无continuation变体。
+- A/B分别414760/414651行、均1625更新；A的post-warmup floor1305次（80.31%），B未提前到floor且未事后重算。Gen3–9 B/A centered advantage漂移比中位数2.83，旧LR确实限制更新幅度。
+- 固定Gen10、独立5000seed×3最终holdout：B−A+.12267[−.084,.33867]，B−initial+.11633[−.19334,.42202]，B−baseline−.01867[−.37067,.32536]元/局。未满足预声明提升门槛；不能用中间代或argmax运动量宣称更强。
+- 34万完整对局轨迹审计、独立实际采样/Adam/RNG/LR/参数/BN/共同probe Q漂移复算通过。baseline未换、服务正常结束，本轮停止，不自动扩大或启动下一阶段。
+- 仍缺可靠超越baseline的棋力证据；下一步仅建议研究MC信用分配与更新稳定性对相对动作排序的影响，未经新指令不执行。完整曲线/指标见docs/training/mortal-style.md。
+- 为磁盘余量，五个已完成历史实验无损归档到Windows盘，原路径保留目录链接；逐文件SHA清单见本地data/generated/storage-archive-20261016.json。历史证据和权重不得按“链接/旧日志”直接删除，访问原明确路径可读取完整内容。
