@@ -2303,7 +2303,7 @@ anchor收益，未建立能稳定超过冻结baseline的闭环。下一步建议
 | 优化 | AdamW，Linear/Conv weight decay分组，梯度裁剪，warmup+cosine | 同类优化逻辑，pilot固定小LR和有限调度；无AMP、无多batch梯度累积 |
 | actor | 支持greedy/Boltzmann混合及top-p | 固定全合法动作Q+.3log(p_reference+1e-8)的greedy；不额外加探索 |
 | 更新发布 | 参数提交给actor，异步产生新日志 | 为便于审计，代内actor冻结，同步收集→更新→下一代；不冒充异步吞吐实现 |
-| reward | 麻将排名积分增量与折扣 | 三人实际现金终局回报；不增加麻将GRP或裁剪胜负reward |
+| reward | GRP排名期望点逐kyoku差值（最后端点用实际排名）及折扣 | 三人实际现金终局回报；不增加麻将GRP或裁剪胜负reward |
 | 输入/动作 | 麻将固定牌型与离散动作mask | 不改55×20 Observation、structured legal action及合法均值Dueling |
 | 晋级 | 官方平均排名/积分纪录 | 独立现金seed簇CI；附多代校正，保持原baseline文件不变 |
 
@@ -2843,7 +2843,7 @@ ZIMORTAL_TRAINING_MODULE=zimortal.training.mortal_online_long bash scripts/train
 执行设备RTX 5080、PyTorch2.7.1+cu128/CUDA；CPU规则与重放、GPU批量推理/更新。
 独立systemd服务限制MemoryMax8G/SwapMax1G/CPU300%，峰值内存约4.34GB。
 `active-checkpoint.json`回指原offline，冻结baseline未动；没有因普通波动早停，完整完成十代。
-官方MC-only/CQL关闭与AdamW调度形状沿用前节核对；本轮为同步generation控制实验，
+chosen-Q MC、online CQL关闭与AdamW调度形状沿用前节核对；官方仍有排名辅助项，本项目按要求为MC-only。本轮为同步generation控制实验，
 并不冒称官方异步actor–learner系统的等价复刻。55×20/structured action/三人现金和
 冻结参考策略anchor是本项目适配。baseline证据中的通用`q`字段是父策略logits，
 不参与本节现金Q分析；真实Q统计仅针对initial/anchor/raw。
@@ -2856,3 +2856,241 @@ MPLCONFIGDIR=/tmp/zimortal-matplotlib .venv/bin/python scripts/plot-mortal-onlin
 ```
 
 最终检查：pytest 399通过、1跳过；ruff与git diff --check通过。
+
+## Continuation mismatch：官方固定commit重新核对（2026-10-16）
+
+本节直接重新下载并阅读官方commit
+`0cff2b52982be5b1163aa9a62fb01f03ce91e0d2`，不是沿用旧摘要。
+指定五文件及参数、奖励、Rust实际动作读取等共13个文件均与GitHub该commit的
+Git blob SHA1逐个匹配，另保存SHA256。证据在本地
+`data/generated/mortal-continuation-v1/official-source/manifest.json`。
+下面区分**源码行为、示例配置、推测的作用**；示例自述参数是占位值，不能当官方生产超参。
+
+| 核对问题 | 官方的代码逻辑和参数流 | 当前ZiMortal的具体差别 |
+|---|---|---|
+| 1. MC对应什么continuation | `TrainPlayer`构造的trainee在一次train_play批次中冻结权重，直到批次结束都按同一个epsilon/Boltzmann/top-p混合策略行动；不会在当前动作后自动切greedy。[player.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/player.py#L109) | 同样整局按当代冻结producer；但当前每个非HU决策都走完整Boltzmann采样。 |
+| 2. greedy与采样如何组合 | 设自身合法Q的greedy为g，b为对Q/T做top-p后的分布，则执行概率为`(1−epsilon)·onehot(g)+epsilon·b`。先Bernoulli决定分支；采样分支仍可能抽中g。[engine.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/engine.py#L76) | 当前对`Q+.3log(p_reference+1e-8)`全量softmax/T=.5采样；没有外层greedy混合，等价于采样分支概率1，但并非动作总是非greedy。 |
+| top-p的确切含义 | p≥1用完整Categorical，p≤0返回argmax；中间值按概率排序，将“当前牌之前累计概率>p”的候选置零后multinomial。包含跨越p的边界候选，属于nucleus截断，不是固定top-k。[engine.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/engine.py#L87) | 当前无nucleus截断，所有合法动作均保留；HU/PASS例外，保持当前anchored greedy。 |
+| 3. 探索是否自动衰减 | `TRAIN_PLAY_PROFILE`选择配置；epsilon/temp/top_p在TrainPlayer初始化时读取并传入每次engine。该路径没有按训练步或generation调整三参数的日程；分支随机性一直存在，实际非greedy率又随Q分布变化。epsilon≤0时纯greedy。[player.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/player.py#L109)、[engine.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/engine.py#L76) | 固定T=.5和lambda=.3，不搜索、不衰减；实测对父baseline偏离约25%，不能直接把该比例称epsilon。 |
+| 示例探索量，不是生产断言 | example的default profile是epsilon=.005、T=.05、top_p=1、games=800、repeats=1；因此仅对该示例，单次网络决策偏离自身Q-greedy的概率上界是0.5%，不是25%。[config.example.toml](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/config.example.toml#L24) | 对已完成50k真实轨迹重新统计：415,284次决策中，偏离父baseline为25.2459%，偏离自身anchored greedy为25.2044%。后者才对应官方自身greedy的比较口径；相对示例上限约50倍。旧轨迹只诊断，不进入本轮训练。 |
+| 4. 实际chosen action是否受监督 | online只加载名字为trainee的日志；Rust从实际事件推导action，dataloader读取实际actions和mask，没有按is_greedy筛掉探索动作，也没有importance ratio/greedy重标。[train.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/train.py#L148)、[gameplay.rs](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/libriichi/src/dataset/gameplay.rs#L341) | 当前同样对真实执行动作监督，无反事实标签或重要性修正。 |
+| MC标签严格定义 | loader将当前kyoku索引对应的reward分配给该局每个实际动作，计算steps_to_done，train回归`gamma**steps_to_done * kyoku_reward`，仅gather实际chosen Q并做半MSE。不是Q-learning max/target bootstrap。[dataloader.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/dataloader.py#L94)、[train.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/train.py#L215) | 当前是一局跑胡子终局实际payments/100，gamma=1，所有该玩家训练行共享终局cash。不能把官方标签描述为同一整场terminal cash。 |
+| reward究竟来自哪里 | GRP预测各kyoku边界的排名概率，乘env.pts得到期望点；取相邻边界差，最后端点用真实终场排名one-hot。不是直接最终麻将原始点数，更不是仅赢输。Rust的apply_gamma决定哪些条目计折扣步。[reward_calculator.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/reward_calculator.py#L24)、[dataloader.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/dataloader.py#L94) | 三人现金reward是用户要求的必要适配；继续使用原terminal MC，不引入GRP或新reward。官方是当前kyoku结束的shaped return目标，不是把未来整场所有动作的现金直接贴到当前行。 |
+| 5. 评估是否也探索 | TestPlayer构造challenger时不传三个探索参数，engine默认epsilon=0，因此greedy；train trainee显式传profile探索参数。由此官方也有behavior continuation和greedy评估不一致。[player.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/player.py#L41) | 当前评估greedy anchored，训练full Boltzmann；不是“发现官方从来没有的mismatch”，而是其程度和目标窗口有显著差别。 |
+| 6. 参数刷新与持续数据流 | trainer按submit_every提交参数，save处必要时也提交，批次末提交idle；client每批train_play前请求最新快照，批次中不刷新。异步模式server可回同一版本，不保证每次请求都有新参数；force_sequential才按idle version门控。[train.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/train.py#L268)、[client.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/client.py#L33)、[server.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/server.py#L54) | 当前每代5000局收集完后才单遍更新、发布下一代；没有批内或异步参数发布。 |
+| 数据调度与reuse | server以capacity限流，drain移动当前buffer日志；train循环继续drain新日志。profile的repeats可复用牌局seed，dataset.num_epochs/augmentation可重复读行。example中sample_reuse_rate/threshold字段在该server没有实现消费路径，不能据配置名宣称有replay；实际生产规模从这些源码无法确定。[server.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/server.py#L74)、[dataloader.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/dataloader.py#L39) | 当前一次消费、不混offline、不重复replay；本轮维持，不增加reuse机制。 |
+| 其他训练机制 | online条件只关掉CQL，next-rank辅助CE仍由权重控制；BN由config开关控制，example注释建议online为true但值仍是占位false，并非online自动强制冻结。[train.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/train.py#L73)、[model.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/model.py#L169) | 当前CQL0、无auxiliary loss，BN运行统计随MC更新。只记录差异，不在本轮同时修改。 |
+| 学习率 | scheduler可warmup、cosine到final，可有offset/epoch_size循环；它不改变epsilon/temp/top_p。示例LR配置为常数1e-4，不是我们20+300的参数。[lr_scheduler.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/lr_scheduler.py#L4) | 当前继续原linear20+cosine300到3e-6的固定调度，不能称数值严格复制官方示例。 |
+
+官方trainee未显式启用rule-based agari guard（其baseline启用），网络探索分支可覆盖HU/PASS合法候选；本项目按现有保守处理，HU/PASS保持anchored greedy，不加过胡探索。探索公式限定在网络决策调用；Rust quick-eval会直接执行唯一合法弃牌，不进行这次抽样。GameplayLoader依据实际事件保存行，并未按mask只有一个合法动作来过滤；跳过网络推理不等于删掉训练行。我们只训练非强制决策。`is_greedy`记录Bernoulli分支，不是“实际动作是否恰好等于argmax”；采样分支仍能选中greedy。[agent/mortal.rs](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/libriichi/src/agent/mortal.rs#L210)
+
+官方client提交日志时带param_version，但server.handle_submit_replay并不据此剔除旧版本或修正标签；多个worker不同版本可进入同一drain。每条MC标签对应其收集轨迹时的冻结behavior，而不是必然对应trainer当前参数。不能宣称官方严格on-policy；当前ZiMortal同步代内的producer版本是统一的。[server.py](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/server.py#L74)
+
+**源码可以证明存在mismatch，不能证明官方用哪一个机制“解决了”它。**
+小epsilon使行为接近greedy、持续流与周期发布缩短策略陈旧、逐kyoku的GRP奖励缩短目标窗口，
+都具有可能减轻问题的机制；逐kyoku是相对于其整场麻将缩短信用窗口，不能据此断言比跑胡子决策更少或方差必然更低。没有源码中的反事实消偏、importance correction或greedy-return重标。
+也不能把生产数据量、未公开配置或其他机制的因果贡献当成已核实事实。
+另一个结构差别是greedy分支的中心：官方以自身Q argmax为主要执行动作，当前以Q加冻结reference先验的score为actor。若某raw argmax被错排到很高，官方greedy分支会实际执行并获得反馈；当前anchor可能长期压住它。仅复制MC/CQL开关不等于复制这种覆盖反馈路径；这只是代码结构差异，不是本轮已经证明的失败原因。
+
+补充单位边界：官方client/TestPlayer显示的90/45/0/−135评估积分不进入这里的Q标签；训练使用env.pts经GRP算出的逐kyoku差值。T=.05与.5因Q单位不同，不能仅凭数值比大小。800 games、400提交步、512 batch也只是示例，不能直接按局数断言双方刷新速度倍数。
+
+部署入口允许显式配置策略；本节能严格确认的是给定commit的TestPlayer默认greedy，
+不冒称所有外部部署都固定同一参数。
+
+### Continuation A/B预声明协议
+
+这是单因素MC continuation验证，不是新增loss或再次扩大训练。共同起点仍为原offline
+B-coverage `selected-common.pt`，SHA256
+`4e2bbee3204630d949753ad92dcaa94a0ef6a2b6e19dc8c862b6dd13d4737a8f`；
+baseline仍为`league-v2/stage-02/best-dev.pt`。网络、55×20、structured action、
+reward、lambda=.3、T=.5、MC半MSE、CQL0、AdamW/clip/batch及原LR函数全部保持。
+
+**训练行匹配是这个对照的必要口径。** B每局只有一个探索动作可提供所要求的
+“本动作＋greedy continuation”标签。如果A仍训练全局约8行、B只训练1行，
+将混入训练样本数、更新数和LR进度差异。因此A/B都只训练各局**首个非HU多选决策**。
+A的执行仍为当前整局Boltzmann，B在同一位置用同一个Boltzmann选一次，随后切greedy。
+这是对当前A采样器的**匹配行控制**，不冒称复制旧全行训练预算。
+
+- 每组3代×5000真实新局，同代使用相同seed、庄家和trainee座位。
+  每代双方actor均冻结收集完后再更新；B后续用**本代producer的greedy anchored版本**，
+  不是对手baseline，也不是跨三代始终固定初始offline模型。
+- 触发以首次合法Boltzmann抽样动作真正执行为准，**不要求抽到与greedy不同的动作**，
+  避免按偏离或结果选择根。HU/PASS沿用既有保守greedy，不作为探索根。
+  前缀只可能有保守HU决策，故初始共同权重时两组根前行为一致。
+- B根后所有非强制动作均greedy，验证actual probability=1且chosen=anchored argmax；
+  记录器紧接着执行step，step失败则整局拒绝，不生成触发成功的训练记录。
+- 全部后续合法动作、真实分布、特征、终局现金仍写入审计数据；**仅根行进入update**。
+  第一步有多少有效根按真实轨迹计数，无根局保留、缺根不补采。
+  只按两组均存在根的(seed,seat)交集匹配，不看动作、cash、CI或胜负。
+- 两组根按(seed,seat)排序、共享初始化的独立shuffle RNG，单遍一次消费，batch256含末批。
+  根数相同，因此optimizer更新数和LR步数完全相同；各组跨代连续，不重置、不replay。
+  每代最多5000根，约20更新/代，三代约60更新；原LR函数不改，故不会到320步的最低值。
+- Gen1额外严格核对两组根Observation、合法候选及实际chosen完全一致。
+  两组从各自完整开局真实执行，不clone中局、不跑多动作分支；不生成pairwise或counterfactual标签。
+- 标签分别估计`Q(action, frozen exploratory continuation)`与
+  `Q(action, frozen greedy-anchored continuation)`的真实终局cash/100，不冒充Q*。
+  Gen1同输入同动作的A/B终局差可用于验证continuation对标签的影响，**不是额外训练loss**。
+
+种子在采集前完整锁定：训练`1240000000+generation*100000`起5000；
+每代评估`1250000000+generation*100000`起1000×3座位；
+最终holdout `1260000000`起3000×3座位。互不重叠，不进入训练。
+每代比较baseline、initial、A-anchor、B-anchor、A-raw、B-raw；最终只比较前四个。
+最终候选固定**A-Gen3和B-Gen3**，读holdout前锁SHA；不用每代test选冠军。
+
+主因果对比为holdout B-anchor−A-anchor；同时报告B−baseline、B−initial及A−initial，
+均为10,000次seed-cluster bootstrap 95%CI。中途区间只描述，不调参数。
+预声明稳定正差要求Gen2、Gen3和最终holdout B−A下界均>0；
+实用接近定义为最终B−A整个区间落在±0.5元/局以内。
+区间跨零但仍很宽只能说证据不足，不能把不显著当成等价。
+B显著更差则不扩此方向。任何结果都不自动换baseline。
+
+范围限制：根集中在早期，HU不探索；本轮不是所有中局吃碰和晚局状态的充分检验。
+A/B即使接近，也只支持“此根分布和预算下未见主要收益瓶颈”，不否认存在continuation口径差。
+未改变官方核对中发现的BN、GRP或探索混合差异，避免多因素混入。
+
+入口和证据：`zimortal.training.mortal_continuation_experiment`，
+本地`data/generated/mortal-continuation-v1/`；每代完整checkpoint/optimizer/RNG、
+producer/hash/manifest、训练根选择清单和所有轨迹保留。此前精确重复的历史检查点
+用硬链接保留全部路径与SHA，释放367,121,231字节；存储操作审计单独留本地。
+
+```bash
+ZIMORTAL_TRAINING_MODULE=zimortal.training.mortal_continuation_experiment bash scripts/train-online-rl-wsl.sh
+```
+
+### Continuation A/B完整结果
+
+下面金额均为元/局，括号为seed-cluster bootstrap 95%CI；逐代结果仅描述，不参与候选选择。
+
+| 代 | A-anchor−baseline | B-anchor−baseline | B-anchor−A-anchor | B-anchor−初始offline | A-anchor−初始offline |
+|---|---|---|---|---|---|
+| 1 | +0.148 [-0.727, +0.998] | +0.135 [-0.733, +0.983] | -0.013 [-0.057, +0.017] | +0.050 [-0.127, +0.238] | +0.063 [-0.112, +0.248] |
+| 2 | -0.613 [-1.645, +0.297] | -0.657 [-1.688, +0.255] | -0.043 [-0.128, +0.010] | -0.263 [-0.637, +0.150] | -0.220 [-0.598, +0.200] |
+| 3 | -0.010 [-0.708, +0.697] | -0.008 [-0.730, +0.727] | +0.002 [-0.155, +0.195] | -0.003 [-0.260, +0.278] | -0.005 [-0.325, +0.315] |
+
+### 实际访问、切换与训练根
+
+每组每代5000真实局；表中全局偏离率相对父baseline。各组只训练匹配根，完整后续行只用于审计。Boltzmann抽样次数包括抽中greedy，不能当作实际偏离次数；B在第一次抽样实际执行后即切换。
+
+| 代/组 | 训练根/全决策 | 全局偏离父率 | 全局偏离自身anchor率 | 弃/吃/碰/HU实际抽样数 | B切换次数 | chosen p_ref根均值/全局均值 |
+|---|---|---|---|---|---|---|
+| 1/A | 4986/41549 | 25.17% | 25.10% | 20129/10824/9586/0 | 0 | 0.6882/0.7021 |
+| 1/B | 4986/41821 | 4.45% | 3.09% | 2000/1480/1506/0 | 4986 | 0.6882/0.8186 |
+| 2/A | 4989/41259 | 25.00% | 24.82% | 19881/10869/9523/0 | 0 | 0.6852/0.7035 |
+| 2/B | 4989/41489 | 4.60% | 3.17% | 2006/1562/1421/0 | 4989 | 0.6851/0.8183 |
+| 3/A | 4990/41495 | 25.34% | 25.30% | 19900/11034/9545/0 | 0 | 0.6755/0.7003 |
+| 3/B | 4990/41697 | 4.59% | 3.29% | 1960/1552/1478/0 | 4990 | 0.6755/0.8167 |
+
+各族显示“训练根数/实际偏离父动作次数”，不按终局结果筛选：
+
+| 代/组 | discard | chi/pass | peng/pass | hu/pass |
+|---|---|---|---|---|
+| 1/A | 2000/657 | 1480/439 | 1506/208 | 0/0 |
+| 1/B | 2000/657 | 1480/439 | 1506/208 | 0/0 |
+| 2/A | 2006/658 | 1562/484 | 1421/184 | 0/0 |
+| 2/B | 2006/658 | 1562/484 | 1421/184 | 0/0 |
+| 3/A | 1960/653 | 1552/510 | 1478/213 | 0/0 |
+| 3/B | 1960/653 | 1552/510 | 1478/213 | 0/0 |
+
+### MC标签：目标口径差异与拟合
+
+Gen1匹配根Observation、合法动作、chosen及从开局到根动作的完整前缀哈希一致。故Gen1配对终局差隔离了同一已执行根动作之后的continuation效应；它不是新生成的反事实分支，也没有作为pairwise loss。Gen2/3模型已分化，根动作可分叉，训练现金差仅描述闭环结果。
+
+| 代 | 匹配根数 | 实际训练轨迹B−A现金 |
+|---|---|---|
+| 1 | 4986 | +7.292 [+5.242, +9.372] |
+| 2 | 4989 | +6.920 [+5.017, +8.904] |
+| 3 | 4990 | +7.548 [+5.516, +9.642] |
+
+| 代/组 | 根cash均值/标准差 | cash P5/P50/P95 | MAE前→后 | RMSE前→后 | corr前→后 |
+|---|---|---|---|---|---|
+| 1/A | -7.761/67.446 | -80.000/-10.000/70.000 | 0.3742→0.3630 | 0.6854→0.6810 | 0.0140→0.0203 |
+| 1/B | -0.468/76.971 | -80.000/-10.000/90.000 | 0.4133→0.4072 | 0.7718→0.7705 | 0.0275→0.0359 |
+| 2/A | -9.547/65.497 | -100.000/-10.000/60.000 | 0.3526→0.3467 | 0.6639→0.6613 | 0.0184→0.0264 |
+| 2/B | -2.627/79.185 | -100.000/-10.000/80.000 | 0.4036→0.3972 | 0.7931→0.7916 | 0.0351→0.0444 |
+| 3/A | -7.503/67.075 | -100.000/-10.000/60.000 | 0.3520→0.3523 | 0.6741→0.6737 | 0.0357→0.0452 |
+| 3/B | +0.045/78.179 | -80.000/-10.000/90.000 | 0.3908→0.3942 | 0.7811→0.7805 | 0.0538→0.0605 |
+
+回归误差单位为现金/100，全部为当代**训练根**，不是泛化测试。两组target对应不同继续策略和收益方差，不能单凭跨组RMSE大小判断哪种目标更好；主结论依赖共同独立种子的真实现金。完整分族现金/概率分布保留本地JSON。
+
+### Q排序、参数变化与同输入漂移
+
+| 代/组 | raw改父率 | raw改动中p_ref≤.1 | greedy anchor偏离率 | raw Q margin均值 | raw−baseline | 累计updates | 参数ΔL2/相对变化 | 合法Q漂移RMSE |
+|---|---|---|---|---|---|---|---|---|
+| 1/A | 51.49% | 76.90% | 1.58% | 0.0726 | -19.435 | 20 | 0.1993/0.270% | 0.0262 |
+| 1/B | 51.41% | 77.03% | 1.57% | 0.0728 | -19.510 | 20 | 0.1878/0.255% | 0.0171 |
+| 2/A | 51.65% | 75.92% | 1.51% | 0.0684 | -20.825 | 40 | 0.2595/0.352% | 0.0136 |
+| 2/B | 51.50% | 75.94% | 1.52% | 0.0683 | -20.787 | 40 | 0.2609/0.354% | 0.0207 |
+| 3/A | 50.79% | 76.15% | 1.49% | 0.0669 | -19.222 | 60 | 0.2123/0.288% | 0.0084 |
+| 3/B | 50.69% | 75.96% | 1.52% | 0.0685 | -19.230 | 60 | 0.2073/0.281% | 0.0200 |
+
+Q及漂移单位为现金/100；Q margin为完整合法候选前两名之差。Q漂移在同一当代根输入上比较更新前后eval输出，包含BN统计效应；不是反事实排序准确率。
+
+### 最终封存holdout：只评估固定Gen3
+
+| 策略或对比 | 现金差及95%CI |
+|---|---|
+| initial−baseline | +0.086 [-0.488, +0.656] |
+| A-anchor−baseline | +0.057 [-0.500, +0.618] |
+| B-anchor−baseline | +0.050 [-0.505, +0.609] |
+| B_minus_A | -0.007 [-0.079, +0.057] |
+| B_minus_initial | -0.036 [-0.224, +0.148] |
+| A_minus_initial | -0.029 [-0.227, +0.172] |
+
+最终A-Gen3 SHA256：`0833bb648c5e4b858842ed46a0f975ef03876a24b27f158572179d902dca95a8`。
+
+最终B-Gen3 SHA256：`8b8268cb3dd1d3c3551e93b509d7fa4966e93d544c0a1fce595c9e6d4eed1ef5`。
+
+完整规模：30,000训练局、249,310条真实决策审计行，其中仅29,930根参与单遍训练；逐代54,000评估局、最终36,000评估局，共120,000局、6,634,467步。
+
+所有完整历史重放、四张守恒、现金、可见Observation和合法候选均核验；额外独立复核了每条真实采样概率/随机选择、B切换后的greedy、共同根选择、一次消费batch计数、连续Adam与RNG、冻结源码与模型SHA。候选在读取holdout前锁定，没有按test选择代冠军，baseline未替换。
+
+详细结果与checkpoint/optimizer/RNG/producer/manifest/种子锁保留本地 `data/generated/mortal-continuation-v1/`。复核命令：
+
+```bash
+PYTHONPATH=. .venv/bin/python scripts/audit-mortal-continuation.py
+```
+
+
+### 只读Q漂移分解（描述诊断，无额外训练或对局）
+
+对每代同一批匹配A训练根，用固定producer/updated检查点做eval推理。对B−A定义ΔQ，取每个状态合法候选的均值m和中心化项ΔQ−m；平方位移满足总量=共同项+中心化项。共同项的候选均值不是策略加权的真实Vπ；平方占比也不是现金因果贡献。
+
+| 代 | B−A总Q RMS | 共同项RMS | 中心化advantage RMS | 共同项平方占比 | raw argmax分歧率 |
+|---|---|---|---|---|---|
+| 1 | 0.00955 | 0.00953 | 0.00065 | 99.53% | 0.50% |
+| 2 | 0.00459 | 0.00452 | 0.00080 | 96.94% | 0.82% |
+| 3 | 0.01508 | 0.01503 | 0.00123 | 99.34% | 0.30% |
+
+单位为现金/100。Gen3模型间差异99.34%表现为状态共同位移；这种给同状态所有动作加相同数的分量不改变raw或anchored argmax。这里观察的是**网络如何响应标签变化**，不能由此证明真实continuation差异对各动作也是常数。完整当代A/B更新分解在本地`q-output-components.json`。
+
+```bash
+CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=. .venv-cuda/bin/python scripts/diagnose-mortal-continuation-q.py
+```
+
+### 本轮判定与停止
+
+1. **continuation口径差确实存在，现金计算没有错。** 同初始物理前缀、同根动作下，
+   Gen1 B的真实MC标签平均高7.292元，95%[5.242,9.372]。A估计全程exploratory
+   continuation，B估计greedy-anchored continuation；二者不是同一个Q目标，也都不是Q*。
+2. **没有支持它是本轮actor提升的主要瓶颈。** B−A三代分别−.0133、−.0433、+.0017，
+   区间均跨零；固定Gen3最终holdout为−.00722 [−.07889,+.05667]。
+   整个区间在预声明±.5元内，两组实用接近，没有B稳定正差，也未证明B显著更差。
+3. B−baseline +.0500 [−.5050,+.60946]，B−initial −.03611 [−.22444,+.14778]，
+   都未证明现金改善；raw仍显著负，低支持排序问题没有因为这次target语义更接近部署而消失。
+   因此本轮不扩大B方案，也不替换baseline。
+4. 结论限定于**每组14,965个早期匹配根、60次更新**。它覆盖弃/吃/碰，但不探索HU，
+   不足以排除所有中晚局的continuation效应。不能把“不显著”泛化为无效；本轮的
+   “实用接近”是针对给定actor、根分布和预算的区间结论。
+5. Q的模型间变化主要落在状态共同项，说明本轮新标签更多改变输出水平，而没有明显
+   改善动作排序；训练拟合指标不是策略改进证据。官方也有behavior/greedy差异，
+   没有源码证明自动消偏；其ε混合、GRP逐kyoku奖励、辅助目标、可配置BN及数据流
+   与当前实现存在明确差别。不得称这次结果否定Mortal范式。
+6. **下一步只建议按用户指定研究LR时间尺度／更新稳定性，优先预声明单因素LR日程对照**，
+   锁定更新预算和其余配方，不同时改BN、T、lambda或target。当前60步未触及旧调度
+   320步后的最低值，因此本轮也没有证明此前长期结果是LR造成的。**本轮已停止，未启动下一阶段。**
+
+复现到其他目录时，先复制已核验的`official-source`快照到全新目录，再通过
+`--directory`传入。完成目录拒绝覆盖；同种子复现不算新的独立统计检验。
+官方源码未执行或vendoring进代码；原始快照/数据/JSON/权重只留本地。
+
+检查结果：pytest 403通过、1跳过；ruff与git diff --check通过。

@@ -464,3 +464,11 @@ fix(engine): 禁止吃后无法出牌的方案
 - 最终Gen10 anchor−baseline+.2743元95%[−.1413,.7307]，对初始offline−.1923[−.4880,.1200]；raw−19.459。后期未稳定为正，未证明policy improvement，也未证明显著差于起点或Mortal范式失效。
 - 本轮已停止，不自动扩大或启动新实验。下一步仅建议先分析MC采样继续策略与greedy部署口径差异及价值/advantage漂移，再预声明单因素验证；未经新指令不执行。
 - 完整协议、曲线、结果见docs/training/mortal-style.md；日志/权重本地，重要实现/总结commit并按既有授权push。
+
+## MC continuation单因素对照完成（2026-10-16）
+
+- 重新下载并逐Git blob核验官方固定commit的13个文件；官方online为ε-greedy/Boltzmann/top-p混合，实际动作MC监督用逐kyoku GRP期望点差，并非整场现金；CQL关闭但辅助排名loss可用，BN冻结由配置控制。不可再简写为“官方只有整场terminal cash MC”。
+- 固定原offline B-coverage共同起点、baseline、T=.5/λ=.3和MC-only/CQL0。A全程Boltzmann，B首个非HU多选动作后切本代冻结greedy；两组均只训练首根以匹配行数、shuffle和更新预算，各3×5000真实局、14,965根、60更新。全部后续行仅审计。
+- Gen1同输入/实际根动作/完整前缀一致，B−A真实标签+7.292元95%[5.242,9.372]；但最终固定Gen3 holdout B−A−.00722[−.07889,.05667]，B−baseline+.050[−.505,.60946]，B−initial−.03611[−.22444,.14778]。未见修正带来稳定actor改善，不把标签差异直接当主瓶颈证据。
+- 12万完整对局审计、采样/切换/一次消费/Adam/RNG/冻结SHA复核通过。baseline未换，本轮停止；原始证据本地，重要代码/总结commit并自动push。
+- 下一步仅建议单因素LR时间尺度／更新稳定性验证，不同时改BN、探索或target；未经新指令不执行。详细源码参数流、协议、限制和结果见docs/training/mortal-style.md。
