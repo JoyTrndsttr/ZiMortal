@@ -482,3 +482,12 @@ fix(engine): 禁止吃后无法出牌的方案
 - 34万完整对局轨迹审计、独立实际采样/Adam/RNG/LR/参数/BN/共同probe Q漂移复算通过。baseline未换、服务正常结束，本轮停止，不自动扩大或启动下一阶段。
 - 仍缺可靠超越baseline的棋力证据；下一步仅建议研究MC信用分配与更新稳定性对相对动作排序的影响，未经新指令不执行。完整曲线/指标见docs/training/mortal-style.md。
 - 为磁盘余量，五个已完成历史实验无损归档到Windows盘，原路径保留目录链接；逐文件SHA清单见本地data/generated/storage-archive-20261016.json。历史证据和权重不得按“链接/旧日志”直接删除，访问原明确路径可读取完整内容。
+
+## MC信用分配／advantage可辨识性只读诊断完成（2026-10-17）
+
+- 本轮仅分析long-v1与LR-horizon-v1 A/B各50k既有完整轨迹，共1,244,695真实历史决策；LR A/B同seed分别统计，不冒称150k独立牌局。不新增训练/对局/rollout/loss，不改网络、探索、target、LR、BN、baseline或active指针。
+- 每个有决策局约8.31–8.32个不同Observation共享1个terminal label；exact/encoded/fine均无重访；broad＋相同合法集合＋同代producer的跨局多动作覆盖仅0.0306%–0.0395%行。label复用和exact稀疏本身不证明MC理论无效，神经网络仍可泛化。
+- 固定5000状态/流：残差std约66.57–68.78元，raw margin中位1.36–1.75元；逐状态abs residual/margin中位long/A/B=7.94/8.07/10.77，整体>10条件并未三流一致通过。discard/chi均约14.6–20.9倍，peng/hu不同，不可一概而论。低chosen-return R²不证明绝对价值已学好，也不能单凭它认定条件期望拟合差；同state-action不可约噪声尚不可识别。
+- legal-mean Dueling推导与4096行只读autograd一致：chosen e(1−1/K)，未选−e/K；有chosen-vs-rest信号，无未选动作独立outcome。adv scorer梯度非零，末scalar bias均值抵消是正常gauge；不把gradient norm当信息量或棋力证据。参数/BN/.grad不变。
+- 支持把action-relative信用分配作为下一步重点，尚未因果证明是主要瓶颈，也不把本轮诊断当反事实EV真值。下一步仅建议预声明单因素可辨识性验证及独立现金标准；本轮完成后停止，未经新指令不新增loss或开训练。
+- 两个诊断入口与完整分族表/公式/数值重现修正见docs/training/mortal-style.md。本机保留输入/aggregate SHA与固定样本，重要代码/总结一次commit并按既有授权自动push，不逐JSON提交。

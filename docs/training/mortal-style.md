@@ -3352,3 +3352,422 @@ CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=. .venv-cuda/bin/python scripts/audit
 训练命令要求全新输出目录，以上是本轮原始命令记录，不能覆盖已完成结果或重复使用本轮seed。服务已正常退出（MainPID=0、Result=success）；内存峰值约4.35GiB，未触发极端安全停止。baseline与原offline checkpoint SHA保持不变，active指针仍为初始offline。本轮到此停止，不自动进入下一阶段。
 
 最终验证：`.venv/bin/python -m pytest -q`为408 passed、1 skipped；`.venv/bin/ruff check zimortal tests scripts/audit-mortal-lr-horizon.py`与`git diff --check`通过。上图为实际日志生成的独立SVG，已人工检查坐标、图例、CI和完整十代曲线；该检查只审查报告呈现，没有挑选对局或改变训练/评估规则。
+
+## MC credit assignment / advantage identifiability 诊断
+
+### 2026-10-17只读协议（统计结果前固定）
+
+本轮不训练、不生成新对局、不选case、不调整任何训练/部署参数或模型。三条已有数据流分别完整统计：`mortal-online-long-v1` 50k、`mortal-lr-horizon-v1` A/B各50k（共150k实际历史执行，LR A/B共享50k种子；不把它们合并为150k独立牌局）。原完整history仅按记录的动作重放还原Observation，不调用策略、搜索或rollout，不产生新的轨迹、动作或现金标签。原checkpoint、BN buffers、输入文件在分析前后核对hash。
+
+每条流独立统计全部十代，避免同seed A/B的相同前缀虚增独立重访；同局重复标签不当独立现金结果。exact哈希包括完整Observation的全部公开字段、顺序历史前缀digest、完整合法structured action集合（候选顺序canonical化）。另报55×20张量＋encoded候选multiset的重访，明确它不是完整Observation。
+
+粗签名在读结果前固定，不根据覆盖率调宽：
+
+- fine：20种手牌精确计数、精确锁定胡息、action family、合法动作数K、剩牌桶0/1–5/6–10/11–15/16–19、三家相对座位×六种meld的公开牌张总数、完整合法动作集合hash；省略完整历史/弃牌/过牌等信息。
+- broad：大小字分别按0/1/2/3/4张的手牌multiplicity直方图、手中红牌数、胡息//3、family、K、同一剩牌桶、18个meld总数、pending牌型。另报broad＋相同完整合法集合，以免不同候选可用性虚增“替代动作覆盖”。
+- broad＋合法集合＋generation同时单列，用于同一冻结采集策略版本下的覆盖。宽签名中存在状态异质性，不把组内收益方差直接称为同一真实state-action的不可约噪声。
+
+公开因素按seat、dealer、胡息3胡桶、精确手牌张数、剩牌桶、family、generation分别做描述性ANOVA；joint组为generation＋family＋庄闲相对位置＋胡息//3＋手牌张数//3＋剩牌桶＋公开meld总张数//3。这些单因素解释比例不能相加，也不表示因果贡献。组内方差同时报告去除同一局重复行后的独立game版本，以及leave-one-game-out组均值残差；singleton的conditional noise记为不可估，不填0。
+
+每流固定抽5000个不同exact Observation：seed20261017的uniform min-hash，重复状态的代表occurrence也由独立min-hash确定，priority不含动作、收益、误差或margin。不因结果替换样本。报告P5/P25/median/P75/P95：terminal target、chosen-Q残差、raw top1−top2、raw top1−parent、anchor score margin、anchor选择的Q−Q_parent、合法候选的centered advantage std。所有Q/收益量乘100统一为元；anchor score乘100只称“元等效prior评分”，不是现金EV。比例使用绝对残差及正分母；零margin/零parent delta单独计数，不用epsilon制造巨大比值。另列既有更新记录的advantage drift RMS，区别于单个状态内部advantage std。
+
+梯度固定抽LR-B Gen10的4096条真实训练行（NumPy seed20261017、无放回）。同一批输入比较固定initial、long Gen10、A Gen10、B Gen9采集producer、B Gen10五个checkpoint，不选最佳checkpoint。只用`autograd.grad`、不创建optimizer、不调用backward或step；分别测eval冻结BN，以及train模式但使用`torch.func.functional_call`隔离克隆的BN buffers。后者只计算梯度，原BN/参数/训练模式在结束时保持原状；不是精确重演原单遍更新中的每个中间参数与minibatch。报告value、advantage scorer、action_encoder、shared brain的全批均值梯度L2、每参数RMS、分族梯度和各minibatch norm，避免仅凭不同参数数量比较信息强度。
+
+额外检查合法动作编码的重复向量：如存在alias，Q无法仅凭相同encoded action区分它们，这是另一种可辨识限制，不能都归为MC监督。主判定参考标签复用、abs residual/raw margin中位数是否>10、exact/fine替代动作覆盖是否<1%训练行、未选动作梯度来源；宽签名结果和梯度反证一并呈现。不把这些描述性条件等同于已证明“主要因果瓶颈”，不预先假定绝对回报已经学好。
+
+exact保留Observation中的实际玩家编号；模型输入/粗签名的executed action身份按trainee相对座位canonical化，粗签名的候选集合也使用相对座位，避免仅因玩家编号不同虚增动作差异。此口径在统计启动前锁定。
+
+### Legal-mean Dueling的梯度：对应实际structured scorer
+
+当前`MortalQNet.forward_q`（faithful网络继承此公式）为：
+
+\[
+z=f_{\theta_B}(X),\quad u_j=g_{\theta_E}(a_j),\quad h_j=H_{\theta_A}([z,u_j]),\quad v=V_{\theta_V}(z),
+\]
+\[
+Q_j=v+h_j-\frac1K\sum_{\ell\in\mathcal L}h_\ell.
+\]
+
+`brain`输出1024维z，`action_encoder`把每个structured legal candidate编码为64维，`advantage`对拼接向量逐候选打一个标量h；mask只允许K个legal action进入均值，padding不参与。v是legal-uniform Q均值，不能自动解释为behavior加权的真实Vπ。定义chosen动作c、R=terminal cash/100、e=Q_c−R、单样本L=½e²，则
+
+\[
+\frac{\partial L}{\partial v}=e,\qquad
+\frac{\partial L}{\partial h_j}=e\left(\mathbf1[j=c]-\frac1K\right),\quad j\in\mathcal L.
+\]
+
+chosen输出为e(1−1/K)，每个未选输出均为−e/K，padding为0；batch mean还要除batch size。若e>0，对独立输出节点的梯度下降会降低chosen h、提高所有未选h，e<0反之。未选j/k之间的直接梯度差为0；chosen与任一未选输出的梯度差为e。这里存在chosen-vs-rest的方向信号，不能说advantage“没有梯度”。整个legal advantage输出向量的梯度L2为|e|√(1−1/K)，与value输出的|e|同量级；K=2时未选与chosen输出梯度甚至等大反号。
+
+但未选动作的系数均来自同一chosen残差e，没有其各自执行结果R_j；改变任一未选动作实际结果但保持当前record不变，当前loss/直接梯度不会变化。它们通过legal mean coupling获得信号，不是独立的未选动作outcome监督。共享非线性scorer参数更新后，各未选动作预测仍可能不同幅变化，那来自特征/参数共享，不代表额外观测到了其收益。
+
+对应实际参数链式法则：
+
+\[
+\nabla_{\theta_A}L=e\left(\nabla_{\theta_A}h_c-\frac1K\sum_j\nabla_{\theta_A}h_j\right),
+\]
+\[
+\nabla_z L=e\nabla_zv+e\left(\nabla_zh_c-\frac1K\sum_j\nabla_zh_j\right).
+\]
+
+同理θ_E穿过候选embedding/scorer反传。候选间共同的scorer成分会在mean subtraction中抵消，例如`advantage`最后一个Linear的共享scalar bias梯度理论为0（浮点实测应近零）；不是整个advantage branch梯度都为0。value/common路径与相对动作路径的参数范数受参数数量、激活尺度、状态/action特征和batch抵消影响，因此同时报告L2、每参数RMS和分batch/分族结果，不能单看某个head norm下因果结论。
+
+边界：MC chosen-action MSE在充分条件覆盖下的population最优仍是Qπ(s,a)=E[R|s,a,π continuation]。共享episode return在理论上是合法MC监督，exact state不重复也不意味着神经网络不能泛化。本轮测的是有限数据中相对价值可辨识/样本效率的证据；既不把Dueling结构说成理论不一致，也不把粗签名收益差当反事实action advantage，更不据此自动增加新loss。
+
+覆盖率同时提供更严格的“同一signature至少两局、且执行过至少两个动作”统计；同一局内的两次动作不能算两条独立收益结果。另用固定访问次数桶1、2、3、4–5、6–10、11–20、21+报告分布，避免P95仍为1时掩盖少量重访。该统计只对已有hash/动作/局ID汇总，不重新采样或改变签名。
+
+五个checkpoint的梯度比较是同一LR-B Gen10 cohort上的敏感性测量。B9是该批数据真实采集producer，B10是其单遍更新后模型；initial/long10/A10不对应这批数据的原始continuation策略，不能把它们的gradient norm跨分布当作性能排序。梯度计算不重演optimizer或改变BN行为。
+
+### 完整只读统计结果
+
+以下收益、Q、residual均为元（原模型cash/100乘100）；anchor score乘100是元等效prior评分，不能当真实现金。所有统计仅针对已有记录，150k实际执行含LR A/B同seed，三条流分别列示，不当三个独立训练seed实验。
+
+监督粒度：所有有决策的局都只有1个MC target，局内target方差和相邻差为0。这是terminal MC定义及原标签核验结果，不表示这些state-action真实价值相同。无决策局的target数为0，不伪造标签。
+
+| 流 | 实际局/训练行 | 无决策局 | 每局决策均值 | 每局决策 P5/P25/P50/P75/P95 | 同标签相邻决策对数 |
+|---|---|---|---|---|---|
+| long | 50000/415284 | 86 | 8.30568 | 4.00000/6.00000/8.00000/10.00000/13.00000 | 365370 |
+| LR-A | 50000/414760 | 108 | 8.29520 | 4.00000/6.00000/8.00000/10.00000/13.00000 | 364868 |
+| LR-B | 50000/414651 | 108 | 8.29302 | 4.00000/6.00000/8.00000/10.00000/13.00000 | 364759 |
+
+| 流 | 每个有决策局不同Observation均值 | unique target数：局数 | 同局target方差均值 | 每局最大相邻target差P95（全为0） |
+|---|---|---|---|---|
+| long | 8.31999 | {'1': 49914, '0': 86} | 0.00000 | 0.00000 |
+| LR-A | 8.31316 | {'1': 49892, '0': 108} | 0.00000 | 0.00000 |
+| LR-B | 8.31097 | {'1': 49892, '0': 108} | 0.00000 | 0.00000 |
+
+每个有决策局的terminal label平均监督的不同Observation数，等于其非强制决策数（完整history使同局各步Observation不同）；按“有该动作族的局”统计如下，分母不是独立action value：
+
+| 流/动作族 | 决策行 | 含该族的局数 | 每个含该族局共享label的state均值 | P5/P25/P50/P75/P95 |
+|---|---|---|---|---|
+| long/discard | 199106 | 49705 | 4.00575 | 2.00000/3.00000/4.00000/5.00000/6.00000 |
+| long/chi/pass | 109983 | 44182 | 2.48932 | 1.00000/1.00000/2.00000/3.00000/5.00000 |
+| long/peng/pass | 96118 | 44269 | 2.17123 | 1.00000/1.00000/2.00000/3.00000/4.00000 |
+| long/hu/pass | 10077 | 10077 | 1.00000 | 1.00000/1.00000/1.00000/1.00000/1.00000 |
+| LR-A/discard | 198786 | 49650 | 4.00375 | 2.00000/3.00000/4.00000/5.00000/6.00000 |
+| LR-A/chi/pass | 110420 | 44157 | 2.50062 | 1.00000/1.00000/2.00000/3.00000/5.00000 |
+| LR-A/peng/pass | 95619 | 44135 | 2.16651 | 1.00000/1.00000/2.00000/3.00000/4.00000 |
+| LR-A/hu/pass | 9935 | 9935 | 1.00000 | 1.00000/1.00000/1.00000/1.00000/1.00000 |
+| LR-B/discard | 198112 | 49643 | 3.99073 | 2.00000/3.00000/4.00000/5.00000/6.00000 |
+| LR-B/chi/pass | 110995 | 44234 | 2.50927 | 1.00000/1.00000/2.00000/3.00000/5.00000 |
+| LR-B/peng/pass | 95627 | 44131 | 2.16689 | 1.00000/1.00000/2.00000/3.00000/4.00000 |
+| LR-B/hu/pass | 9917 | 9917 | 1.00000 | 1.00000/1.00000/1.00000/1.00000/1.00000 |
+
+这里的Q来自每条记录实际采集时的冻结producer，跨十代汇总；不是拿最终checkpoint重新拟合旧行，也不是最终checkpoint的dev/test性能。
+
+方差来源：按同局标签分组时，decision-weighted target方差100%为between-game（恒等式）；game-weighted与decision-weighted的标签标准差分别如下。不同公开因素组的within fraction不能相加。leave-one-game-out剔除该局在同组的所有行，避免共享terminal label泄漏。
+
+| 流 | game-weighted target std | decision-weighted target std | 5000样本 residual std | 5000样本R²/corr |
+|---|---|---|---|---|
+| long | 70.38866 | 73.32763 | 68.78086 | 0.06614/0.25785 |
+| LR-A | 67.21832 | 69.68281 | 67.49901 | 0.05544/0.23885 |
+| LR-B | 67.11171 | 69.51470 | 66.56622 | 0.00847/0.16048 |
+
+| 流/公开分组 | 组数 | 组内方差占比 | 跨局组内std（df） | LOO覆盖 | LOO residual std |
+|---|---|---|---|---|---|
+| long/seat | 3 | 99.99124% | 70.42732 (49911) | 100.00000% | 73.32957 |
+| long/dealer | 3 | 99.99860% | 70.42881 (49911) | 100.00000% | 73.33227 |
+| long/huxi | 17 | 97.38594% | 79.66488 (158187) | 99.99952% | 72.39332 |
+| long/hand_length | 21 | 98.72160% | 75.00110 (364446) | 100.00000% | 72.86301 |
+| long/deck | 5 | 99.73872% | 72.73679 (124620) | 100.00000% | 73.23446 |
+| long/family | 4 | 97.36209% | 71.09253 (148229) | 100.00000% | 72.35619 |
+| long/generation | 10 | 99.99026% | 70.43194 (49904) | 100.00000% | 73.34123 |
+| long/joint_public_plus_generation | 88965 | 69.03330% | 69.40320 (315642) | 90.05211% | 76.67679 |
+| LR-A/seat | 3 | 99.99466% | 67.27319 (49889) | 100.00000% | 69.68585 |
+| LR-A/dealer | 3 | 99.99264% | 67.27256 (49889) | 100.00000% | 69.68515 |
+| LR-A/huxi | 16 | 97.13116% | 75.06052 (157888) | 99.99928% | 68.71418 |
+| LR-A/hand_length | 21 | 98.70293% | 70.96126 (363960) | 100.00000% | 69.23500 |
+| LR-A/deck | 5 | 99.71385% | 69.82157 (124329) | 100.00000% | 69.58564 |
+| LR-A/family | 4 | 97.30864% | 67.80302 (147873) | 100.00000% | 68.74076 |
+| LR-A/generation | 10 | 99.97753% | 67.27461 (49882) | 100.00000% | 69.69131 |
+| LR-A/joint_public_plus_generation | 88697 | 68.43773% | 65.57041 (315253) | 90.05063% | 72.30534 |
+| LR-B/seat | 3 | 99.99321% | 67.16594 (49889) | 100.00000% | 69.51723 |
+| LR-B/dealer | 3 | 99.99446% | 67.16631 (49889) | 100.00000% | 69.51766 |
+| LR-B/huxi | 16 | 97.21597% | 74.88480 (157616) | 99.99928% | 68.57718 |
+| LR-B/hand_length | 21 | 98.70811% | 70.82526 (362796) | 100.00000% | 69.06979 |
+| LR-B/deck | 5 | 99.71671% | 69.67001 (124538) | 100.00000% | 69.41876 |
+| LR-B/family | 4 | 97.30535% | 67.62330 (147921) | 100.00000% | 68.57376 |
+| LR-B/generation | 10 | 99.97547% | 67.16669 (49882) | 100.00000% | 69.52246 |
+| LR-B/joint_public_plus_generation | 88673 | 68.76730% | 65.58328 (315022) | 90.06152% | 72.29870 |
+
+| 流/近似签名 | 组内方差占比 | 跨局state组内std（df） | 跨局state-action组内std（df） | LOO覆盖 |
+|---|---|---|---|---|
+| long/exact | 0.00000% | — (0) | — (0) | 0.00000% |
+| long/encoded | 0.00000% | — (0) | — (0) | 0.00000% |
+| long/fine | 0.00000% | — (0) | — (0) | 0.00000% |
+| long/broad | 3.47070% | 58.21880 (22865) | 52.45187 (6384) | 7.85487% |
+| long/compatible | 0.21855% | 51.72482 (1824) | 52.99606 (1218) | 0.79223% |
+| LR-A/exact | 0.00000% | — (0) | — (0) | 0.00000% |
+| LR-A/encoded | 0.00000% | — (0) | — (0) | 0.00000% |
+| LR-A/fine | 0.00000% | — (0) | — (0) | 0.00000% |
+| LR-A/broad | 3.65066% | 56.61752 (22936) | 53.63096 (6511) | 7.85563% |
+| LR-A/compatible | 0.23910% | 52.41148 (1753) | 50.93019 (1214) | 0.76743% |
+| LR-B/exact | 0.00000% | — (0) | — (0) | 0.00000% |
+| LR-B/encoded | 0.00000% | — (0) | — (0) | 0.00000% |
+| LR-B/fine | 0.00000% | — (0) | — (0) | 0.00000% |
+| LR-B/broad | 3.65926% | 56.63763 (22857) | 53.69279 (6473) | 7.83141% |
+| LR-B/compatible | 0.24749% | 53.00545 (1765) | 51.07469 (1209) | 0.77342% |
+
+这些方差包含未分组的状态差异、隐藏信息/未来随机性、行为continuation变化及模型误差；不是某个固定state-action的不可约噪声估计。精确state-action缺少跨局重访时，其conditional noise无法识别，不能用跨状态target std替代。
+
+固定5000状态的尺度分位数，每格依次P5/P25/median/P75/P95：
+
+| 流/量 | P5/P25/median/P75/P95 |
+|---|---|
+| long/合法动作数K | 2.00000/2.00000/4.00000/9.00000/13.00000 |
+| long/terminal cash | -80.00000/-20.00000/-10.00000/0.00000/80.00000 |
+| long/R−Qchosen | -81.20680/-19.43540/-2.14480/14.95306/73.18308 |
+| long/绝对残差 | 1.32977/7.61741/17.42098/38.02218/129.39797 |
+| long/raw top1−top2 | 0.20200/0.77880/1.75200/12.65771/28.16700 |
+| long/raw top1−parent | 0.00000/0.00000/0.01510/2.78749/7.94806 |
+| long/greedy anchor Q−Qparent | 0.00000/0.00000/0.00000/0.00000/0.00000 |
+| long/anchor score margin（评分） | 7.22370/38.98295/85.61805/134.71318/218.43631 |
+| long/legal centered advantage std | 0.22012/2.00790/3.33405/6.75403/14.08350 |
+| LR-A/合法动作数K | 2.00000/2.00000/3.00000/9.00000/13.00000 |
+| LR-A/terminal cash | -100.00000/-20.00000/-10.00000/0.00000/70.00000 |
+| LR-A/R−Qchosen | -92.24401/-19.49194/-2.12487/15.45797/70.03007 |
+| LR-A/绝对残差 | 1.48426/7.94266/17.73284/38.62061/136.59658 |
+| LR-A/raw top1−top2 | 0.20587/0.79467/1.74672/10.88019/28.35095 |
+| LR-A/raw top1−parent | 0.00000/0.00000/0.00000/2.57088/7.55664 |
+| LR-A/greedy anchor Q−Qparent | 0.00000/0.00000/0.00000/0.00000/0.00000 |
+| LR-A/anchor score margin（评分） | 7.80190/40.59275/84.93962/132.96881/213.07523 |
+| LR-A/legal centered advantage std | 0.20872/1.83925/3.06777/6.05222/14.17548 |
+| LR-B/合法动作数K | 2.00000/2.00000/4.00000/9.00000/13.00000 |
+| LR-B/terminal cash | -90.00000/-20.00000/-10.00000/0.00000/70.00000 |
+| LR-B/R−Qchosen | -88.13668/-17.71604/-1.02988/16.08934/72.35864 |
+| LR-B/绝对残差 | 1.29756/7.64137/17.13606/37.15505/127.37894 |
+| LR-B/raw top1−top2 | 0.09378/0.59616/1.36318/6.14562/26.80084 |
+| LR-B/raw top1−parent | 0.00000/0.00000/0.00000/1.75403/6.10203 |
+| LR-B/greedy anchor Q−Qparent | 0.00000/0.00000/0.00000/0.00000/0.00000 |
+| LR-B/anchor score margin（评分） | 8.22896/40.87203/84.84211/132.72754/220.26935 |
+| LR-B/legal centered advantage std | 0.21246/1.07869/2.18898/4.56078/13.40042 |
+
+| 流/全量动作族 | 决策数 | terminal std | chosen residual std | raw margin median |
+|---|---|---|---|---|
+| long/all | 415284 | 73.32763 | 71.23293 | 1.73372 |
+| long/discard | 199106 | 75.06947 | 73.91255 | 1.19430 |
+| long/chi/pass | 109983 | 56.26007 | 55.83849 | 1.03516 |
+| long/peng/pass | 96118 | 79.74754 | 78.67504 | 19.92561 |
+| long/hu/pass | 10077 | 95.86606 | 86.50939 | 70.98403 |
+| LR-A/all | 414760 | 69.68281 | 67.51777 | 1.70445 |
+| LR-A/discard | 198786 | 71.13342 | 69.92005 | 1.25034 |
+| LR-A/chi/pass | 110420 | 55.30814 | 54.60925 | 0.92409 |
+| LR-A/peng/pass | 95619 | 74.96388 | 73.82267 | 18.95386 |
+| LR-A/hu/pass | 9935 | 89.04932 | 79.61743 | 68.73243 |
+| LR-B/all | 414651 | 69.51470 | 67.30784 | 1.35905 |
+| LR-B/discard | 198112 | 71.02535 | 69.85638 | 0.92355 |
+| LR-B/chi/pass | 110995 | 55.22800 | 54.65508 | 0.86165 |
+| LR-B/peng/pass | 95627 | 74.73796 | 73.66403 | 13.83446 |
+| LR-B/hu/pass | 9917 | 88.47427 | 75.94394 | 67.09787 |
+
+centered advantage std采用population标准差，等于该状态legal-uniform centered Q的RMS；不是参数更新前后的漂移量。
+
+同一状态的|MC residual|/raw Q margin为主尺度比，正分母才计算；parent Q delta大量为0时不加epsilon制造“无限倍”。下表保留分族、有效样本数及完整分位数。
+
+| 流/动作族 | 样本数 | target std/residual std | raw margin median | residualStd/marginMedian | \|residual\|/margin P5/P25/P50/P75/P95 | 零margin数 |
+|---|---|---|---|---|---|---|
+| long/all | 5000 | 71.17533/68.78086 | 1.75200 | 39.25856 | 0.23388/1.54275/7.94105/27.30963/147.25887 | 0 |
+| long/discard | 2413 | 73.93110/72.70162 | 1.20926 | 60.12098 | 0.98250/5.76989/14.86763/36.73375/151.34163 | 0 |
+| long/chi/pass | 1284 | 54.30808/53.53334 | 1.02906 | 52.02162 | 0.73238/4.32637/14.80242/46.90443/285.42773 | 0 |
+| long/peng/pass | 1178 | 72.62343/72.51352 | 20.05242 | 3.61620 | 0.09969/0.46619/1.01210/1.92169/7.15048 | 0 |
+| long/hu/pass | 125 | 103.84524/86.61463 | 72.25195 | 1.19879 | 0.01913/0.08563/0.24519/0.45800/2.53901 | 0 |
+| LR-A/all | 5000 | 69.48429/67.49901 | 1.74672 | 38.64321 | 0.26372/1.69556/8.07017/28.22961/188.17593 | 0 |
+| LR-A/discard | 2389 | 71.09704/70.04209 | 1.25516 | 55.80342 | 0.87241/5.34328/14.57732/37.02085/174.26311 | 0 |
+| LR-A/chi/pass | 1322 | 59.55285/57.95113 | 0.94956 | 61.02926 | 0.71955/5.56177/16.04547/56.18871/401.32212 | 0 |
+| LR-A/peng/pass | 1163 | 73.17079/71.24310 | 18.38033 | 3.87605 | 0.11839/0.54995/1.03983/2.12792/8.17524 | 0 |
+| LR-A/hu/pass | 126 | 70.23415/69.51753 | 66.04707 | 1.05255 | 0.03386/0.14741/0.27015/0.61140/1.98126 | 0 |
+| LR-B/all | 5000 | 66.85002/66.56622 | 1.36318 | 48.83155 | 0.28479/2.24661/10.77302/38.91079/308.79983 | 0 |
+| LR-B/discard | 2395 | 65.64351/66.90000 | 0.94876 | 70.51337 | 1.17824/7.13670/20.92352/58.10561/453.14924 | 0 |
+| LR-B/chi/pass | 1330 | 56.64329/56.62258 | 0.84025 | 67.38804 | 0.95548/5.91396/18.08025/63.64309/379.34501 | 0 |
+| LR-B/peng/pass | 1154 | 75.46681/75.71276 | 13.52711 | 5.59711 | 0.15126/0.63264/1.33241/2.79562/12.09989 | 0 |
+| LR-B/hu/pass | 121 | 72.04678/64.30583 | 65.29770 | 0.98481 | 0.03128/0.08947/0.21240/0.45868/1.86506 | 0 |
+
+| 流/分母 | 有效/零分母行数 | \|residual\|/分母 P5/P25/P50/P75/P95 |
+|---|---|---|
+| long/abs_residual_over_raw_margin_yuan | 5000/0 | 0.23388/1.54275/7.94105/27.30963/147.25887 |
+| long/abs_residual_over_anchor_score_margin_yuan_equivalent | 5000/0 | 0.01629/0.09029/0.24066/0.69122/4.28247 |
+| long/abs_residual_over_centered_advantage_std_yuan | 5000/0 | 0.30381/1.83407/5.11538/15.11332/112.18112 |
+| long/abs_residual_over_anchor_parent_delta_yuan | 56/4944 | 0.44556/1.65884/2.98990/8.44958/35.87726 |
+| LR-A/abs_residual_over_raw_margin_yuan | 5000/0 | 0.26372/1.69556/8.07017/28.22961/188.17593 |
+| LR-A/abs_residual_over_anchor_score_margin_yuan_equivalent | 5000/0 | 0.01754/0.09275/0.24285/0.67926/4.28143 |
+| LR-A/abs_residual_over_centered_advantage_std_yuan | 5000/0 | 0.35725/1.92761/5.67780/17.13169/124.04623 |
+| LR-A/abs_residual_over_anchor_parent_delta_yuan | 48/4952 | 0.09886/1.00478/3.43808/9.16770/47.65782 |
+| LR-B/abs_residual_over_raw_margin_yuan | 5000/0 | 0.28479/2.24661/10.77302/38.91079/308.79983 |
+| LR-B/abs_residual_over_anchor_score_margin_yuan_equivalent | 5000/0 | 0.01537/0.08900/0.23435/0.65402/4.38407 |
+| LR-B/abs_residual_over_centered_advantage_std_yuan | 5000/0 | 0.38578/2.56624/7.80169/23.58060/146.66191 |
+| LR-B/abs_residual_over_anchor_parent_delta_yuan | 41/4959 | 0.17584/1.22198/3.90218/8.87182/29.87489 |
+
+状态重访：下表“跨局替代覆盖”要求同一signature至少两个不同真实局且执行至少两个不同动作。与仅按不同动作计数相比，此定义排除了同一局共享标签的伪独立证据。fine/compatible含相同合法候选集合；broad未限制候选集合的覆盖不能直接解释成同一选项间有可比结果。
+
+| 流/签名 | 不同状态数 | 重复行比例 | 跨局多动作状态数 | 跨局多动作状态比例 | 跨局多动作行比例 | 访问P50/P95/max |
+|---|---|---|---|---|---|---|
+| long/exact | 415284 | 0.00000% | 0 | 0.00000% | 0.00000% | 1.00000/1.00000/1 |
+| long/encoded | 415284 | 0.00000% | 0 | 0.00000% | 0.00000% | 1.00000/1.00000/1 |
+| long/fine | 415284 | 0.00000% | 0 | 0.00000% | 0.00000% | 1.00000/1.00000/1 |
+| long/broad | 392419 | 7.85487% | 8767 | 2.23409% | 7.36147% | 1.00000/1.00000/55 |
+| long/compatible | 413460 | 0.79223% | 606 | 0.14657% | 0.34844% | 1.00000/1.00000/8 |
+| long/compatible_same_generation | 415056 | 0.10740% | 79 | 0.01903% | 0.03949% | 1.00000/1.00000/4 |
+| LR-A/exact | 414760 | 0.00000% | 0 | 0.00000% | 0.00000% | 1.00000/1.00000/1 |
+| LR-A/encoded | 414760 | 0.00000% | 0 | 0.00000% | 0.00000% | 1.00000/1.00000/1 |
+| LR-A/fine | 414760 | 0.00000% | 0 | 0.00000% | 0.00000% | 1.00000/1.00000/1 |
+| LR-A/broad | 391824 | 7.85563% | 8619 | 2.19971% | 7.33581% | 1.00000/1.00000/59 |
+| LR-A/compatible | 413007 | 0.76743% | 539 | 0.13051% | 0.30909% | 1.00000/1.00000/8 |
+| LR-A/compatible_same_generation | 414565 | 0.09234% | 63 | 0.01520% | 0.03062% | 1.00000/1.00000/3 |
+| LR-B/exact | 414651 | 0.00000% | 0 | 0.00000% | 0.00000% | 1.00000/1.00000/1 |
+| LR-B/encoded | 414651 | 0.00000% | 0 | 0.00000% | 0.00000% | 1.00000/1.00000/1 |
+| LR-B/fine | 414651 | 0.00000% | 0 | 0.00000% | 0.00000% | 1.00000/1.00000/1 |
+| LR-B/broad | 391794 | 7.83141% | 8596 | 2.19401% | 7.31507% | 1.00000/1.00000/59 |
+| LR-B/compatible | 412886 | 0.77342% | 556 | 0.13466% | 0.31786% | 1.00000/1.00000/8 |
+| LR-B/compatible_same_generation | 414455 | 0.09285% | 63 | 0.01520% | 0.03063% | 1.00000/1.00000/3 |
+
+| 流/签名 | 访问次数桶1/2/3/4–5/6–10/11–20/21+（状态数） |
+|---|---|
+| long/exact | 415284/0/0/0/0/0/0 |
+| long/encoded | 415284/0/0/0/0/0/0 |
+| long/fine | 415284/0/0/0/0/0/0 |
+| long/broad | 382664/6140/1547/1060/636/281/91 |
+| long/compatible | 411994/1215/183/57/11/0/0 |
+| long/compatible_same_generation | 414838/210/6/2/0/0/0 |
+| LR-A/exact | 414760/0/0/0/0/0/0 |
+| LR-A/encoded | 414760/0/0/0/0/0/0 |
+| LR-A/fine | 414760/0/0/0/0/0/0 |
+| LR-A/broad | 382178/5956/1589/1071/669/279/82 |
+| LR-A/compatible | 411577/1185/191/47/7/0/0 |
+| LR-A/compatible_same_generation | 414377/181/7/0/0/0/0 |
+| LR-B/exact | 414651/0/0/0/0/0/0 |
+| LR-B/encoded | 414651/0/0/0/0/0/0 |
+| LR-B/fine | 414651/0/0/0/0/0/0 |
+| LR-B/broad | 382178/5934/1584/1072/666/278/82 |
+| LR-B/compatible | 411444/1197/191/47/7/0/0 |
+| LR-B/compatible_same_generation | 414266/182/7/0/0/0/0 |
+
+| 流/族/签名 | 状态数 | 跨局至少两动作状态数 | 占该族全部行比例 | state-action跨局组内std（df） |
+|---|---|---|---|---|
+| long/discard/exact | 199106 | 0 | 0.00000% | — (0) |
+| long/discard/fine | 199106 | 0 | 0.00000% | — (0) |
+| long/discard/compatible | 199078 | 21 | 0.02109% | 48.78890 (7) |
+| long/chi/pass/exact | 109983 | 0 | 0.00000% | — (0) |
+| long/chi/pass/fine | 109983 | 0 | 0.00000% | — (0) |
+| long/chi/pass/compatible | 109515 | 183 | 0.37642% | 45.25101 (285) |
+| long/peng/pass/exact | 96118 | 0 | 0.00000% | — (0) |
+| long/peng/pass/fine | 96118 | 0 | 0.00000% | — (0) |
+| long/peng/pass/compatible | 94790 | 402 | 1.03102% | 55.19071 (926) |
+| LR-A/discard/exact | 198786 | 0 | 0.00000% | — (0) |
+| LR-A/discard/fine | 198786 | 0 | 0.00000% | — (0) |
+| LR-A/discard/compatible | 198759 | 19 | 0.01912% | 22.36068 (8) |
+| LR-A/chi/pass/exact | 110420 | 0 | 0.00000% | — (0) |
+| LR-A/chi/pass/fine | 110420 | 0 | 0.00000% | — (0) |
+| LR-A/chi/pass/compatible | 109934 | 186 | 0.37403% | 41.75599 (300) |
+| LR-A/peng/pass/exact | 95619 | 0 | 0.00000% | — (0) |
+| LR-A/peng/pass/fine | 95619 | 0 | 0.00000% | — (0) |
+| LR-A/peng/pass/compatible | 94379 | 334 | 0.86907% | 53.79533 (906) |
+| LR-B/discard/exact | 198112 | 0 | 0.00000% | — (0) |
+| LR-B/discard/fine | 198112 | 0 | 0.00000% | — (0) |
+| LR-B/discard/compatible | 198085 | 20 | 0.02019% | 23.56602 (7) |
+| LR-B/chi/pass/exact | 110995 | 0 | 0.00000% | — (0) |
+| LR-B/chi/pass/fine | 110995 | 0 | 0.00000% | — (0) |
+| LR-B/chi/pass/compatible | 110502 | 189 | 0.37749% | 41.33456 (304) |
+| LR-B/peng/pass/exact | 95627 | 0 | 0.00000% | — (0) |
+| LR-B/peng/pass/fine | 95627 | 0 | 0.00000% | — (0) |
+| LR-B/peng/pass/compatible | 94382 | 347 | 0.89828% | 54.12331 (898) |
+
+“— (0)”表示无可用于估计conditional outcome variance的跨局重复state-action，不表示噪声为0。same-generation compatible一行进一步避免跨producer版本的continuation差异。观察到的coarse组内差仍不是A−B的反事实EV。
+
+梯度实测：同一4096条LR-B Gen10样本，½MSE的target单位cash/100，所有数值为clip前梯度。train一列使用隔离BN buffers；不是修改/冻结原训练BN。norm不能直接与元单位的margin比较。
+
+| checkpoint/mode | value L2 | advantage scorer L2 | action encoder L2 | shared brain L2 | adv+encoder/value | raw advantage导数误差max | 末adv bias梯度 |
+|---|---|---|---|---|---|---|---|
+| initial/eval | 0.11496 | 0.00823 | 0.01591 | 0.13048 | 0.15580 | 1.86e-09 | -1.85e-10 |
+| initial/train_isolated_BN | 0.14230 | 0.01041 | 0.01953 | 0.39928 | 0.15553 | 1.86e-09 | -5.57e-12 |
+| long10/eval | 0.02513 | 0.00186 | 0.00599 | 0.20342 | 0.24968 | 9.31e-10 | -3.88e-10 |
+| long10/train_isolated_BN | 0.03205 | 0.00227 | 0.00656 | 0.13760 | 0.21645 | 9.31e-10 | 2.06e-10 |
+| A10/eval | 0.02104 | 0.00163 | 0.00538 | 0.23773 | 0.26710 | 1.86e-09 | 3.29e-10 |
+| A10/train_isolated_BN | 0.02280 | 0.00154 | 0.00532 | 0.16321 | 0.24303 | 1.86e-09 | -4.36e-11 |
+| B9-producer/eval | 0.02830 | 0.00088 | 0.00399 | 0.33271 | 0.14426 | 1.86e-09 | 1.17e-10 |
+| B9-producer/train_isolated_BN | 0.03337 | 0.00086 | 0.00431 | 0.23607 | 0.13180 | 9.31e-10 | -8.16e-11 |
+| B10/eval | 0.03738 | 0.00094 | 0.00389 | 0.27473 | 0.10712 | 1.86e-09 | -5.61e-10 |
+| B10/train_isolated_BN | 0.04042 | 0.00096 | 0.00388 | 0.21771 | 0.09882 | 9.31e-10 | -5.89e-10 |
+
+| checkpoint/mode | value每参数RMS | adv scorer每参数RMS | action encoder每参数RMS | brain每参数RMS |
+|---|---|---|---|---|
+| initial/eval | 2.243124e-04 | 1.557141e-05 | 1.862634e-04 | 9.460502e-05 |
+| initial/train_isolated_BN | 2.776498e-04 | 1.970427e-05 | 2.286565e-04 | 2.895126e-04 |
+| long10/eval | 4.903170e-05 | 3.514288e-06 | 7.016349e-05 | 1.474986e-04 |
+| long10/train_isolated_BN | 6.253916e-05 | 4.290525e-06 | 7.676377e-05 | 9.977347e-05 |
+| A10/eval | 4.105240e-05 | 3.083890e-06 | 6.296611e-05 | 1.723752e-04 |
+| A10/train_isolated_BN | 4.448062e-05 | 2.906099e-06 | 6.232081e-05 | 1.183386e-04 |
+| B9-producer/eval | 5.521313e-05 | 1.657790e-06 | 4.667644e-05 | 2.412428e-04 |
+| B9-producer/train_isolated_BN | 6.512014e-05 | 1.622135e-06 | 5.050928e-05 | 1.711684e-04 |
+| B10/eval | 7.294369e-05 | 1.775878e-06 | 4.557807e-05 | 1.992005e-04 |
+| B10/train_isolated_BN | 7.887462e-05 | 1.820780e-06 | 4.538876e-05 | 1.578606e-04 |
+
+| B9 producer/mode/动作族 | 样本数 | value L2 | adv scorer L2 | action encoder L2 | brain L2 |
+|---|---|---|---|---|---|
+| eval/discard | 1895 | 0.05783 | 0.00165 | 0.00754 | 0.62997 |
+| eval/chi/pass | 1123 | 0.03564 | 0.00143 | 0.00539 | 0.26843 |
+| eval/peng/pass | 976 | 0.05871 | 0.00191 | 0.00478 | 0.48048 |
+| eval/hu/pass | 102 | 0.12488 | 0.02753 | 0.03028 | 1.07227 |
+| train_isolated_BN/discard | 1895 | 0.06029 | 0.00168 | 0.00758 | 0.37895 |
+| train_isolated_BN/chi/pass | 1123 | 0.03891 | 0.00154 | 0.00581 | 0.20902 |
+| train_isolated_BN/peng/pass | 976 | 0.06592 | 0.00260 | 0.00676 | 0.39832 |
+| train_isolated_BN/hu/pass | 102 | 0.12868 | 0.01367 | 0.01424 | 0.87680 |
+
+| B9 producer/mode/group | 平均梯度L2 | minibatch梯度L2 P5/P25/P50/P75/P95 |
+|---|---|---|
+| eval/brain | 0.33271 | 0.55345/0.66371/0.85809/1.26291/2.34893 |
+| eval/value | 0.02830 | 0.05019/0.07523/0.08139/0.09834/0.20827 |
+| eval/advantage | 0.00088 | 0.00411/0.00491/0.00564/0.00687/0.00858 |
+| eval/action_encoder | 0.00399 | 0.01183/0.01564/0.01832/0.02087/0.02865 |
+| train_isolated_BN/brain | 0.23607 | 0.35832/0.47630/0.60227/0.82937/1.36750 |
+| train_isolated_BN/value | 0.03337 | 0.06475/0.07594/0.08606/0.10177/0.19553 |
+| train_isolated_BN/advantage | 0.00086 | 0.00416/0.00493/0.00556/0.00698/0.00851 |
+| train_isolated_BN/action_encoder | 0.00431 | 0.01180/0.01559/0.01853/0.02101/0.02921 |
+
+跨batch均值梯度可因方向抵消小于典型batch norm；不能把这种抵消或共享scalar bias梯度近零泛化为整个advantage路径没有信号。其余checkpoint分族L2/RMS和参数数量见本地gradients.json。
+
+另列既有训练日志的更新前后centered advantage drift RMS（乘100为元），与上面的状态内部advantage std不同。LR A/B的原记录使用同代相同A probe；long的旧记录只存总legal-Q漂移，不凭空拆分：
+
+| 流 | Gen1…Gen10 advantage drift RMS（元） |
+|---|---|
+| long | 未分解 / 未分解 / 未分解 / 未分解 / 未分解 / 未分解 / 未分解 / 未分解 / 未分解 / 未分解 |
+| LR-A | 1.52295 / 0.88330 / 0.24337 / 0.22476 / 0.16464 / 0.21397 / 0.22238 / 0.17433 / 0.28996 / 0.14849 |
+| LR-B | 1.68780 / 1.33925 / 0.86026 / 0.63510 / 0.65319 / 0.60483 / 0.45486 / 0.39365 / 0.32411 / 0.17055 |
+
+| 流 | 合法动作编码alias行比例 |
+|---|---|
+| long | 0.00000% |
+| LR-A | 0.00000% |
+| LR-B | 0.00000% |
+
+原始输入SHA复核、训练/规则/模型源码及原checkpoint/BN参数状态保持不变；诊断脚本数值核验修正单独披露，统计重算审计通过，新增游戏0、optimizer step0。分析用的statistics.npz只是旧行的hash/公开分组/统计量，不是新轨迹或训练样本；权重、RNG与active baseline均未写入。
+
+### 诊断判定与边界
+
+**现有证据支持把相对动作信用分配／有限数据下advantage可辨识性作为下一步重点，尤其discard与chi/pass；尚不能证明它是主要因果瓶颈，也没有证明“绝对回报已经学好”。** 不训练、不产生反事实真值的本轮，无法单独识别哪个训练机制会改善真实现金。
+
+1. 监督确实粗：三条流各50k局、共1,244,695行，每个有决策局平均8.31–8.32个不同Observation共享一个terminal label，局内方差和相邻差严格为0。分族平均约4次discard、2.49–2.51次chi/pass、2.17次peng/pass共享该局标签。这是合法MC监督的粒度，不是动作价值相等，也不是标签错误。
+2. 尺度不匹配以弃牌和吃牌最明显：固定样本的target std为66.85–71.18元，residual std为66.57–68.78元，raw margin中位数仅1.36–1.75元。注意“std除以margin中位数”的38.6–48.8倍，不是逐状态ratio的中位数；后者三流为7.94、8.07、10.77倍。**总体>10倍的预声明条件未在三条流一致通过**，不能挑LR-B替代整体结论。discard的逐状态ratio中位数14.58–20.92倍，chi为14.80–18.08倍，均超过一数量级；peng约1.01–1.33倍，hu约0.21–0.27倍，不能一概而论。较大的peng/hu Q margin也不证明其排序准确。
+3. 公开分组没有把回报离散程度消掉：单独seat/dealer几乎不解释方差，胡息/动作族单因素只解释约2.6%–2.9%；预声明joint组仍保留约68.4%–69.0%的row-weighted方差。相同粗签名及同动作的跨局std约51–54元，但混有状态异质性/隐藏信息/continuation差异；**不能称为某个固定state-action的不可约噪声**。exact/fine state-action没有跨局重复，真正conditional noise无法估计，不能用0或全局target std代替。
+4. 探索数量不等于同状态的动作结果覆盖：每流exact、55×20＋encoded legal set、fine的重访数均为0。broad不限制候选集合时约7.3%行属于跨局多动作组；加上相同合法集合后仅0.309%–0.348%，再限定同代producer仅0.0306%–0.0395%。compatible分族，discard仅0.0191%–0.0211%，chi约0.374%–0.377%，peng约0.869%–1.031%。故现有约25%行为偏离大多在不同状态发生，没有直接带来密集的可比action-outcome观测。粗签名本身是人为摘要；exact重访稀少在大状态空间中正常，网络仍可泛化，这不是“MC理论上不能学习”的证明。
+5. 梯度是弱于common路径而非消失：B9真实producer的4096行eval全批均值L2，value=.028297、advantage scorer=.000876、action encoder=.003987、brain=.332712；adv+encoder联合L2/value约14.43%，train隔离BN约13.18%。B10分别约10.71%/9.88%。adv scorer每参数RMS也较value小，action encoder每参数RMS则与value同量级；batch/分族方向抵消明显，不能把全批norm当信息量或因果证据。未选动作仅收到−e/K的直接mean-coupling信号，没有各自R_j；不是没有chosen-vs-rest梯度。实测公式误差≤1.87e-9、末adv共享bias梯度绝对值<6e-10，与推导一致。
+6. 不能沿用“绝对回报已学好”的强前提：固定样本chosen-return R²约.0661/.0554/.00847，correlation约.258/.239/.160，残差std仍接近target std。它只显示单次终局回报的预测解释度有限；由于不可约噪声尚未识别，低R²也不能单独证明条件期望估计差或纯粹欠拟合。我们尚没有同状态动作EV真值来直接验证advantage准确率。
+7. 未发现structured action编码alias：三流均为0，不能把本批问题归为“不同合法动作被编码成完全同一向量”。不排除编码表达力/函数逼近、continuation、更新稳定性等其他限制。
+
+因此，本轮是**支持该假设的诊断证据，不是主瓶颈的因果认证**。已有LR对照证明更大的advantage更新未产生可靠现金改进；本轮进一步说明更新有幅度不等于获得了有区分性的动作结果监督。没有反事实rollout、没有同状态A/B真值、没有新loss对照，不能宣称已证实排序错误原因，更不能声称新方法会超过baseline。
+
+目标差距仍是：缺少可靠的同状态相对收益辨识，以及独立现金检验中稳定超过冻结baseline的策略。下一步仅建议先预声明一个能单独检验action-relative credit assignment的最小对照，成功标准包含独立现金、动作排序证据和绝对回报回归，不能只用梯度更大或chosen RMSE下降判定成功。本轮不选择/新增loss，不启动该实验，不扩大数据或训练。
+
+### 只读完整性、数值重现与复现
+
+新增入口`scripts/diagnose-mortal-credit-assignment.py`及公共逻辑`zimortal/training/mortal_credit_diagnostics.py`，跨局覆盖/完整性复核入口`scripts/audit-mortal-credit-assignment.py`。原始aggregate、固定样本locators、输入SHA、梯度样本row_indices、全部分族结果留在本地`data/generated/mortal-credit-diagnostics-v1/`，不作为训练数据或逐JSON提交。
+
+首次GPU重现检查的绝对容差1e-5 cash/100过严，导致纯诊断断言中断；已保存完整统计，不重跑/新增对局。最终采用5e-4 cash/100（0.05元）数值核验容差，并完整披露实际误差，而不修改任何Q：4096行最大绝对差0.027657元、RMSE0.001659元、centered legal advantage最大差0.003595元，raw argmax变化0/4096。该误差来自同checkpoint不同批量前向的数值重现，远小于本轮残差/典型margin；它不是算法、target、Q值或训练超参数调整。初始源码/配置备份、仅这一处assert容差修改的字节级差异、恢复脚本及aggregate SHA均保留并由audit检查；统计签名、采样cohort、数学梯度及全部主指标未改变。恢复只执行autograd，原checkpoint/BN/RNG文件均未写入。
+
+以下为全新输出目录的复现命令；已完成目录故意拒绝覆盖。请为重算选一个不存在的目录，不要用原训练命令生成新轨迹：
+
+```bash
+OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=. .venv-cuda/bin/python scripts/diagnose-mortal-credit-assignment.py --directory data/generated/mortal-credit-diagnostics-recheck
+OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 PYTHONPATH=. .venv/bin/python scripts/audit-mortal-credit-assignment.py --directory data/generated/mortal-credit-diagnostics-recheck
+```
+
+本轮实际运行仍使用MemoryMax=8G、MemorySwapMax=1G、CPUQuota=300%、Nice=10的独立服务，训练锁防止并发训练；CPU仅按原动作重放以还原Observation，CUDA只用于现有模型前向与autograd。完整输入SHA与五个checkpoint核对通过、4096行原模型/BN/.grad状态不变；最终result为`complete_stop`、新对局0、optimizer step0。baseline和active指针不变，本轮完成后停止。
+
+最终检查：`.venv/bin/python -m pytest -q`为415 passed、1 skipped；`.venv/bin/ruff check zimortal tests scripts/diagnose-mortal-credit-assignment.py scripts/audit-mortal-credit-assignment.py`及`git diff --check`通过。最终只读服务Result=success、MainPID=0；原始运行及数值核验中断的日志保留，不掩盖失败记录。
