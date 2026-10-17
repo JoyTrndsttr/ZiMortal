@@ -502,3 +502,13 @@ fix(engine): 禁止吃后无法出牌的方案
 - B anchor仅5/500根偏离baseline，prior仍主要保护；不把更接近baseline或根上条件EV当完整对局现金晋级。fixed-hidden排序与玩家信息集排序可能不同，本轮未测该差异；不把本批标签输入训练。
 - 全部16k shuffle world可达性、77,984分支普通引擎/冻结actor重执行逐步一致，checkpoint/BN及源文件SHA不变、训练0。完整公式/指标/分族表/图/复现见docs/training/mortal-style.md；原始root/seed/每分支suffix与现金留本机。
 - 本轮已停止，baseline未换。目标仍缺可靠弃牌EV、权重正确的hidden posterior和独立现金提升；下一步仅建议认证information-set测度并用明确continuation的独立根复核，不自动扩样本、加loss或训练。重要代码/总结一次commit并按既有授权push，不逐JSON提交。
+
+## Information-set隐藏世界采样器认证完成（2026-10-17）
+
+- 本轮只做公开信息条件化采样与完整历史重放；未训练、未新增未来Q分支、未改模型/规则/baseline，不自动进入下一轮benchmark。
+- 固定随机从原500根抽20/10/10/10共50根，先锁manifest/config/source/checkpoint SHA，再各采1000世界；1,952,474 proposal取得50,000接受世界，普通RuleEngine独立全prefix重放50,000/50,000通过。
+- 真值仅审计：50/50在支持集；50/50不同暗手同public配对输出相同，copy-ID置换通过。两份小空间fixture穷举合法12/4世界全部覆盖；额外统一公共小空间条件下两个真实根穷举293→4、46→9，解释低多样性，无删除/替换根。
+- 认证对象为当前Observation契约下的constraint-conditioned current-slot distribution：计数分配质量∏m!/(a!b!d!)，无序暗手＋有序墙质量∝1/∏a!b!，按完整规则历史拒绝。不是均匀hidden-world，不是初始发牌诱导后验，更不是行为条件化exact posterior。
+- PublicInformationState与audit-only truth隔离；从候选初始状态重放恢复全部私有字段，不得clone真实root仅替换暗手/墙。未知规则直接失败，不像旧HistorySampler静默拒绝。旧PASS预过滤在50k合法样本未见反例，不冒称全空间证明。
+- 当前仍缺初始发牌先验权重认证、现实历史/提示可见性核对和policy likelihood；下一步优先建议前者，未经新指令不执行information-set Q benchmark或训练。完整概率差异、50根熵/边际/拒绝统计和复现见docs/training/mortal-style.md，原始赋值仅本地，不写训练dataset。
+- 服务已正常结束MainPID=0。重要代码/总结一次commit并按既有授权push，逐JSON/权重不入Git；本轮完成后停止。
