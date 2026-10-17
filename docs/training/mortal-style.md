@@ -3771,3 +3771,538 @@ OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 PYTHONPATH=. .venv/bin/python scripts/a
 本轮实际运行仍使用MemoryMax=8G、MemorySwapMax=1G、CPUQuota=300%、Nice=10的独立服务，训练锁防止并发训练；CPU仅按原动作重放以还原Observation，CUDA只用于现有模型前向与autograd。完整输入SHA与五个checkpoint核对通过、4096行原模型/BN/.grad状态不变；最终result为`complete_stop`、新对局0、optimizer step0。baseline和active指针不变，本轮完成后停止。
 
 最终检查：`.venv/bin/python -m pytest -q`为415 passed、1 skipped；`.venv/bin/ruff check zimortal tests scripts/diagnose-mortal-credit-assignment.py scripts/audit-mortal-credit-assignment.py`及`git diff --check`通过。最终只读服务Result=success、MainPID=0；原始运行及数值核验中断的日志保留，不掩盖失败记录。
+
+## Counterfactual rollout Q-ranking benchmark
+
+### 2026-10-17预声明协议：500×32，只诊断不训练
+
+动机来自上一节：exact/encoded状态重访几乎为0，约25%的行为偏离不等于same-state多动作结果覆盖，discard/chi的terminal MC residual尺度明显大于典型Q margin。本轮直接测量固定四个checkpoint对同一状态所有合法动作的排序；不训练、不加loss、不调λ/T/LR、BN保持eval，不选择新baseline，不把rollout标签输入训练。
+
+抽样在rollout开始前固定：从上一轮LR-B全十代真实轨迹的5000个uniform min-hash随机状态池，再用NumPy RNG seed20261018按族无放回抽取discard200、chi/pass125、peng/pass125、hu/pass50，并打乱执行顺序。筛选只使用family和locator，既不使用Q/margin/现金，也不手工看牌。该5000池已有各族2395/1330/1154/121条，全部足额。最终500根包含2437个合法动作，平均4.874、最大16，独立分支共77,984；每动作固定32个world，不动态追加、不替换失败根。整体结果对应40%/25%/25%/10%的预声明分层混合，不冒称自然动作频率加权收益。
+
+**隐藏信息边界：本轮为fixed-hidden-hands＋uniform shuffled remaining wall，不是information-set posterior，也不是固定真实wall重复执行32次。** 两个对手当前暗手（包括私有坎与隐藏状态）固定为历史真实root；每个world均匀打乱该root剩余牌墙，玩家Observation严格不变。对不可见手牌的posterior本轮没有积分。现有HistorySampler虽会完整合法重放，但其当前slot allocation权重尚未证明等于初始发牌和行为证据条件化的posterior；本轮不使用它，不把“可达世界”误称“正确posterior”。附件允许先做fixed-hidden诊断，故不以近似采样冒充信息集EV。不能回答fixed-hidden与information-set排序差有多大，也不能把本轮标签直接用于隐藏信息下的训练。
+
+**只有一套共同continuation：trainee固定原offline B-coverage checkpoint的greedy anchored actor，另两家固定`league-v2/stage-02/best-dev.pt`。** root先强制执行每个待评估动作，后续全部使用同一固定actor配方，score=Q+.3log(p_reference+1e-8)，没有Boltzmann、没有raw continuation、没有按结果换策略。与附件建议的“每个checkpoint用其自身continuation”不同，本轮刻意使用共同initial continuation，使四个critic对照同一EV定义，预算也不乘四。
+
+\[
+\widehat Q_{\mathrm{fixed\ hands}}^{\pi_{\mathrm{initial\ anchor}},\pi_{\mathrm{baseline}}}(s,a)
+=\frac1{32}\sum_j R(s,h_{\mathrm{true}},\mathrm{permute}(wall;r_j),a;\pi_{\mathrm{initial\ anchor}},\pi_{\mathrm{baseline}}).
+\]
+
+这不是Q*，也不是四个checkpoint各自部署策略continuation下的Q；MC训练的exploratory continuation与本benchmark仍不同，因此以相对排序为主，不作raw Q绝对现金校准的结论。网络输入始终只有Observation，真实hidden root只供simulator条件化，不进入actor/critic。
+
+同一root的所有动作共享相同world：保存world id、hidden-state seed、wall seed、continuation RNG seed、余牌墙和世界SHA。hidden-state seed仅为身份记录（暗手固定，不消费），continuation RNG seed也不消费（greedy deterministic）；只有wall seed实际打乱余牌。每个world由真实初始牌局替换未摸的deck prefix后完整重放到root，审计其可达性、守恒和Observation相等。保存每个action/world的完整suffix、terminal SHA与现金，全部分支可复现。
+
+每动作报告mean/std/SE/percentile CI/median/P25/P75；4096次共同world索引的配对percentile bootstrap同时产生所有action pair delta及95%CI。clear严格按经验top1对top2的paired CI下界>0，其余ambiguous。CI为pointwise有限样本诊断，未校正选择top1或多动作/多根比较，clear不等于认证最优；零样本方差不能认证未见尾部事件不存在。另列all/clear/ambiguous，含并列样本最优集合与ties；strict Top1用固定合法顺序打破经验EV并列，主要best-action hit允许整个经验并列集合。pairwise排除经验EV相同的pair、预测同分计半分；单独报告CI可分辨pair。Spearman使用midrank、Kendall用tau-b。无可比较pair时记不可估，不能造0或100%。
+
+每个checkpoint报告raw Q、anchor score，另保留baseline greedy及其logit排序参考。raw margin乘100为元；anchor乘100仅为prior score元等效量、baseline logit无现金单位。margin calibration只比较模型自身top1–top2与其rollout配对差，raw分桶[0,.5,1,2,5,10,25,+∞)元、anchor评分[0,5,20,50,100,200,+∞)，不做绝对Q−EV校准。regret是“经验best EV−所选动作经验EV”，有限样本max有乐观偏差，ambiguous时尤其不能当真regret。按四族单列所有指标。
+
+初始/long10/A10/B10固定比较，不按结果选checkpoint。相对initial的hit/pairwise/regret差使用10000次来源game-seed簇bootstrap，反映抽样root差异，不是完整的world×root嵌套区间。模型间指标是同一conditional benchmark下的诊断，不直接替代独立现金晋级。
+
+`--prepare`在任何rollout前写入config、selected locators、500个可恢复root/Observation/全部legal actions/真实chosen/baseline action/p_reference/四组Q与anchor score、输入及checkpoint SHA、locked-state manifest和lock SHA，并打印预算。预估future steps取原记录剩余history长度×action数×32，替代动作（尤其过胡）可能比原suffix更长；推理预算暂按20%步数为非强制、其中1/3trainee、有效batch64估算，实际步数/观察数/GPU model forward calls另计，不把估计当实测。完整审计用普通RuleEngine及冻结actor重新执行同一77,984分支，额外物理执行不增加独立world或标签；独立分支77,984、连审计最多155,968，禁止自动扩到1000或64。
+
+若触发未知规则，保存错误并排除整根，不按动作删除样本、不填0、不补抽；其他异常停止排查。所有源代码、模型、配置在运行期间冻结。原始JSON/gzip、轨迹和权重留本机，重要实现/报告一次提交。结果完成后停止，不自动接入训练。
+
+为判断“接近随机”且不混入新rollout策略，另解析计算uniform选择合法action的Top1、并列best-set hit、pairwise=.5和经验regret参考。统计补充固定比较B10−A10、各checkpoint的anchor−raw及baseline−raw，同样报告all/clear的game-seed簇区间，不调任何提取参数。补充report脚本只读取已保存结果，其源码SHA另记，不改变锁定的模拟/抽样实现。注意根来自LR-B训练访问分布，B10可能训练见过这些状态；新world结果未进入训练，但这不是全新独立root的泛化test。
+
+### 运行前封存与预算
+
+状态清单、配置、locator及源文件均在首个rollout前锁定：
+
+- config_sha256: `c6b488a5a87b17b53501b68faf870ac368243bb581c450232c6ba38f22ebaa14`
+- manifest_sha256: `bfff9e70c89c71a9a83041d2f2d858ca507371f23d0b403ebf35ce40e762fb4e`
+- locators_sha256: `059b76221cf38734a4197ac7bb512af6c475021f49e0ff4ffc571f3e404533f8`
+- budget_sha256: `69f1b031e386fe690b377cd8a11d799df32aeae09d4e00f1227c6ae7cf300a41`
+
+| 冻结模型文件 | SHA256 |
+|---|---|
+| `data/generated/league-v2/stage-02/best-dev.pt` | `9332fd07a09099dcdd38e180577a38887876c6aa2ee5ac1b8c896193c6ac1784` |
+| `data/generated/mortal-coverage-v1/B-coverage/fit/selected-common.pt` | `4e2bbee3204630d949753ad92dcaa94a0ef6a2b6e19dc8c862b6dd13d4737a8f` |
+| `data/generated/mortal-online-long-v1/gen-10/checkpoint.pt` | `066a0c30540397d128ce62be72d0e58191524f10ae284b730830f498e8e9d371` |
+| `data/generated/mortal-lr-horizon-v1/gen-10/A/checkpoint.pt` | `6a1aae3dd2f156415ac056788b27737ecb11e93fd5febb800dd09838cc58c286` |
+| `data/generated/mortal-lr-horizon-v1/gen-10/B/checkpoint.pt` | `803d8b7b0cddb0dd11dfb1b93460fa0341f13140c8626330583c25d7dbece60a` |
+
+实际规划：500根来自498个来源牌局，2437个合法动作，平均4.874、最大16。77,984个独立world/action分支；计入同world审计最多155,968次分支执行。原suffix估算2,895,776 future steps、579,155次决策观察推理、12,066次模型batch forward calls（另有root打分2500次）。推理假设较粗，实际另报，不因预算偏差增加/减少每动作32个world。
+
+### 本轮主要结果与判定
+
+**固定暗手、共同initial-anchor continuation参照下，弃牌排序仍是最明显的弱点；不是所有Q都接近随机，吃／过已出现局部改善。尚不足以把principal bottleneck唯一归为credit assignment。** 所有结论只对已封存的500根和本轮条件EV定义成立，不是新baseline或Q*认证。
+
+500根全部成功，无未知规则排除；179根clear（discard38、chi43、peng59、hu39），321根ambiguous，43根经验EV并列最优。32-world内部split-half strict top一致率all为68.2%、clear为98.88%；clear筛选也用了同一批world，后者不是独立验证。单action SE中位4.16元，top1–top2 paired CI宽中位20.16元；不能把全部500个经验top1当硬真值。完整all/clear/ambiguous和分族结果如下，表中pairwise未标pooled时均为按可比较state等权macro。
+
+1. **raw Q有信号，但整体弱于behavior参照。** B10 raw best-set hit49.4%、pairwise61.94%（pooled54.08%），baseline为52.2%/65.96%（57.60%），B10 anchor为52.6%/66.01%（57.71%）。uniform解析参考best hit37.49%、pairwise50%；B10 raw相对uniform的macro pairwise差+11.94pp，game-cluster95%CI[+8.64,+15.31]pp，不能说整体等于随机。discard多候选导致pooled pairwise更低，两个加权口径不能混用。
+2. **discard未随online得到有效改进。** initial/long/A/B raw pairwise为52.40%/51.88%/51.93%/51.96%，Spearman约.055–.066；baseline58.84%、B anchor58.98%。38个clear discard上B raw pairwise46.33%、baseline56.99%；两者best hit同为21.05%，但经验regret为36.09 vs22.49元。Top1相同不等于错误代价相同；不能只看命中率忽略错误动作有多差。
+3. **chi/pass确有局部正信号。** initial raw pairwise54.76%、long62.81%、A59.85%、B63.58%，对应Spearman约.102→.271。43个clear chi中B raw pairwise67.70%、baseline/anchor76.49%。B raw chi的经验regret5.57元，比initial7.81低，点估计也略低于baseline5.79（但best hit低于baseline）；不能总结成“online所有动作都没学到”。这是本批诊断的分族点估计，不单凭它宣布独立泛化提升。
+4. **整体online改善未获可靠证据；long LR仅有小幅、有限的排序信号。** B raw相对initial的macro pairwise+2.02pp，95%[−.26,+4.36]pp，best hit+1.8pp[−.99,+4.56]pp，regret−.282元[−1.175,+.587]；long/A相对initial的相应整体区间也跨0。B−A raw pairwise+.94pp[+.02,+2.03]pp为未多重校正的微小正信号，但clear子集+.69pp[−.35,+2.13]pp，regret+.253元[−.234,+.857]，没有更佳条件EV或regret证据。不能把更大advantage漂移或单个近零CI下界作为全面ranking改善证明。
+5. **anchor优于raw主要依赖行为先验。** B anchor仅5/500根偏离baseline（discard4、chi1），initial/long/A为9/7/8根；clear状态四个anchor的best hit都为65.92%，baseline也为65.92%。B anchor相对B raw的macro pairwise+4.07pp[+1.27,+6.93]pp，所选root条件EV+2.491元[+.762,+4.298]；baseline相对B raw也有+2.419元[+.688,+4.228]。这些是根上“只改第一动作、共同后续策略”的条件EV，不是完整对局元/局；anchor接近baseline不是Q已可靠改进策略的证明。
+6. **margin尚不能作为通用信心。** B raw总体margin-vs-rollout delta Pearson=.519、Spearman=.252，但discard族内为.205/约0，chi为.078/.075；混合HU/PENG的大margin与大金额会抬高总体关系。HU raw四个checkpoint动作完全一致，50根上pairwise约89.58%，不能用HU较好掩盖discard问题，也不能由较大的HU margin认定所有族的Q校准良好。分桶只作相对动作差诊断，anchor score包含prior，不是现金EV。
+7. **信息集问题仍未被本轮解开。** 固定真实暗手的root oracle可利用玩家看不见的条件，因此其最优排序未必是玩家信息集EV排序；本轮没运行经验证的posterior，不能声称fixed-hidden与information-set排序相同/不同，也不能把这些标签直接加入训练。四个critic训练continuation与共同π0不同，根又来自LR-B真实训练访问分布，模型比较不是各自部署continuation或独立root泛化test。有限32-world、post-selection CI、分层混合及多重比较限制仍适用。
+
+按预声明分支判断：第一分支只在discard等局部成立，不能把全部raw Q叫随机或把所有online改善否定；第二分支也只部分成立，整体clear指标仍落后于baseline且discard差，不能只归咎policy extraction。当前最具体的证据是**弃牌相对排序弱、chi有改善、prior仍必要**。对“主要瓶颈就是action-relative credit”的假设增加了分族证据，但没有唯一因果证明。
+
+与目标的差距仍包括可靠弃牌EV、合法且权重正确的隐藏信息posterior，以及独立现金上稳定超过baseline的策略。下一步仅建议先认证information-set sampler及其目标测度，再以明确continue-policy的独立根复核排序，随后才决定是否设计action-relative学习对照；本轮不启动该工作，不加loss，不把counterfactual标签用于训练。
+
+![固定暗手条件下四组raw与anchor排序对比](figures/counterfactual-ranking-v1.svg)
+
+图为点估计；上行全部500根，下行179个clear根，黑虚线baseline、灰点线uniform解析参考。regret越低越好；均为本轮条件EV的经验指标，不能当完整对局收益或Q* regret。区间及分族结果见表。
+
+### 完整benchmark结果
+
+有效状态500/500，失败0；clear=179、ambiguous=321，经验并列最优状态43。原始结果不进入训练。
+
+| 族 | 有效状态 | clear | ambiguous | 有非并列EV pair的状态 | uniform best hit(all/clear) |
+|---|---|---|---|---|---|
+| discard | 200 | 38 | 162 | 189 | 0.1958/0.1804 |
+| chi/pass | 125 | 43 | 82 | 118 | 0.4583/0.4496 |
+| peng/pass | 125 | 59 | 66 | 120 | 0.5200/0.5000 |
+| hu/pass | 50 | 39 | 11 | 48 | 0.5200/0.5000 |
+
+#### all状态：总体排序
+
+| 策略 | N | strict Top1 | best-set hit | pairwise macro/pooled | Spearman | Kendall τb | 经验regret元 | 所选经验EV元 |
+|---|---|---|---|---|---|---|---|---|
+| baseline | 500 | 0.4960 | 0.5220 | 0.6596/0.5760 | 0.3368 | 0.3146 | 8.6081 | 5.5947 |
+| initial/raw | 500 | 0.4520 | 0.4760 | 0.5993/0.5373 | 0.2074 | 0.1975 | 11.3091 | 2.8937 |
+| initial/anchor | 500 | 0.5020 | 0.5260 | 0.6584/0.5768 | 0.3351 | 0.3120 | 8.5009 | 5.7019 |
+| long10/raw | 500 | 0.4600 | 0.4860 | 0.6172/0.5359 | 0.2429 | 0.2333 | 10.8441 | 3.3588 |
+| long10/anchor | 500 | 0.5020 | 0.5280 | 0.6610/0.5783 | 0.3405 | 0.3172 | 8.4869 | 5.7159 |
+| A10/raw | 500 | 0.4620 | 0.4860 | 0.6100/0.5337 | 0.2258 | 0.2185 | 10.7744 | 3.4284 |
+| A10/anchor | 500 | 0.5040 | 0.5280 | 0.6601/0.5769 | 0.3390 | 0.3156 | 8.4869 | 5.7159 |
+| B10/raw | 500 | 0.4660 | 0.4940 | 0.6194/0.5408 | 0.2464 | 0.2372 | 11.0272 | 3.1756 |
+| B10/anchor | 500 | 0.5000 | 0.5260 | 0.6601/0.5771 | 0.3382 | 0.3156 | 8.5363 | 5.6666 |
+
+#### clear状态：总体排序
+
+| 策略 | N | strict Top1 | best-set hit | pairwise macro/pooled | Spearman | Kendall τb | 经验regret元 | 所选经验EV元 |
+|---|---|---|---|---|---|---|---|---|
+| baseline | 179 | 0.6592 | 0.6592 | 0.7405/0.5808 | 0.4865 | 0.4746 | 8.8198 | 23.8268 |
+| initial/raw | 179 | 0.5978 | 0.5978 | 0.6668/0.5291 | 0.3294 | 0.3316 | 12.8108 | 19.8359 |
+| initial/anchor | 179 | 0.6592 | 0.6592 | 0.7426/0.5854 | 0.4901 | 0.4779 | 8.7343 | 23.9124 |
+| long10/raw | 179 | 0.6145 | 0.6145 | 0.6973/0.5263 | 0.3887 | 0.3931 | 11.9282 | 20.7184 |
+| long10/anchor | 179 | 0.6592 | 0.6592 | 0.7429/0.5873 | 0.4909 | 0.4787 | 8.7343 | 23.9124 |
+| A10/raw | 179 | 0.6145 | 0.6145 | 0.6842/0.5217 | 0.3609 | 0.3668 | 11.7633 | 20.8834 |
+| A10/anchor | 179 | 0.6592 | 0.6592 | 0.7420/0.5854 | 0.4888 | 0.4768 | 8.7343 | 23.9124 |
+| B10/raw | 179 | 0.6313 | 0.6313 | 0.6912/0.5402 | 0.3761 | 0.3801 | 11.7414 | 20.9052 |
+| B10/anchor | 179 | 0.6592 | 0.6592 | 0.7416/0.5845 | 0.4879 | 0.4762 | 8.7343 | 23.9124 |
+
+#### ambiguous状态：总体排序
+
+| 策略 | N | strict Top1 | best-set hit | pairwise macro/pooled | Spearman | Kendall τb | 经验regret元 | 所选经验EV元 |
+|---|---|---|---|---|---|---|---|---|
+| baseline | 321 | 0.4050 | 0.4455 | 0.6107/0.5752 | 0.2462 | 0.2179 | 8.4901 | -4.5721 |
+| initial/raw | 321 | 0.3707 | 0.4081 | 0.5585/0.5386 | 0.1337 | 0.1165 | 10.4717 | -6.5537 |
+| initial/anchor | 321 | 0.4143 | 0.4517 | 0.6075/0.5754 | 0.2414 | 0.2117 | 8.3708 | -4.4529 |
+| long10/raw | 321 | 0.3738 | 0.4143 | 0.5688/0.5374 | 0.1548 | 0.1366 | 10.2395 | -6.3216 |
+| long10/anchor | 321 | 0.4143 | 0.4548 | 0.6115/0.5769 | 0.2496 | 0.2196 | 8.3489 | -4.4310 |
+| A10/raw | 321 | 0.3769 | 0.4143 | 0.5652/0.5356 | 0.1442 | 0.1289 | 10.2229 | -6.3050 |
+| A10/anchor | 321 | 0.4174 | 0.4548 | 0.6107/0.5755 | 0.2484 | 0.2182 | 8.3489 | -4.4310 |
+| B10/raw | 321 | 0.3738 | 0.4174 | 0.5761/0.5409 | 0.1680 | 0.1507 | 10.6289 | -6.7110 |
+| B10/anchor | 321 | 0.4112 | 0.4517 | 0.6108/0.5760 | 0.2477 | 0.2185 | 8.4258 | -4.5079 |
+
+| 策略 | 偏离baseline根数/总数 | discard/chi/peng/hu偏离数 |
+|---|---|---|
+| initial/raw | 214/500 | 149/62/3/0 |
+| initial/anchor | 9/500 | 7/1/1/0 |
+| long10/raw | 208/500 | 148/57/3/0 |
+| long10/anchor | 7/500 | 6/1/0/0 |
+| A10/raw | 212/500 | 149/60/3/0 |
+| A10/anchor | 8/500 | 7/1/0/0 |
+| B10/raw | 214/500 | 154/57/3/0 |
+| B10/anchor | 5/500 | 4/1/0/0 |
+
+| 族 | 动作数 | action SE P25/median/P75元 | top pair CI宽P25/median/P75元 | 零action SE比例 | CI可分辨pair比例 |
+|---|---|---|---|---|---|
+| all | 2437 | 1.9182/4.1624/7.7462 | 8.7500/20.1562/43.4766 | 0.0915 | 0.3722 |
+| discard | 1746 | 2.1662/4.3047/8.0161 | 8.2812/21.0156/43.5547 | 0.0699 | 0.3690 |
+| chi/pass | 341 | 1.8681/3.9207/6.8257 | 9.7852/19.4727/38.7500 | 0.0587 | 0.3511 |
+| peng/pass | 250 | 2.1332/4.3688/9.4758 | 12.1875/24.5312/46.9727 | 0.0520 | 0.4720 |
+| hu/pass | 100 | 0.0000/0.0000/2.5979 | 0.0000/10.3125/33.9307 | 0.6800 | 0.7800 |
+
+零SE可能来自相同结果、立即胡或无余牌；它不证明信息集下没有隐藏信息不确定性。每个action的mean/std/SE/CI/median/P25/P75及所有pair的配对差与CI完整保存在逐root结果，不人工筛case展示。
+
+#### 32-world排序自身的split-half稳定性
+
+| 族/子集 | N | 两半strict top相同 | 前半top命中后半best-set | 两半皆非并列pair数 | pair符号一致率 |
+|---|---|---|---|---|---|
+| all:all | 500 | 0.6820 | 0.6960 | 7643 | 0.7273 |
+| all:clear | 179 | 0.9888 | 0.9888 | 1061 | 0.8464 |
+| discard:all | 200 | 0.5400 | 0.5650 | 7145 | 0.7250 |
+| discard:clear | 38 | 0.9737 | 0.9737 | 887 | 0.8196 |
+| chi/pass:all | 125 | 0.7040 | 0.7200 | 329 | 0.7264 |
+| chi/pass:clear | 43 | 1.0000 | 1.0000 | 77 | 0.9610 |
+| peng/pass:all | 125 | 0.7920 | 0.7920 | 121 | 0.7934 |
+| peng/pass:clear | 59 | 0.9831 | 0.9831 | 58 | 1.0000 |
+| hu/pass:all | 50 | 0.9200 | 0.9200 | 48 | 0.9167 |
+| hu/pass:clear | 39 | 1.0000 | 1.0000 | 39 | 1.0000 |
+
+前16/后16只拆分已有32个world，不追加rollout；这是参照标签可靠性诊断，不是另一份训练/选型数据。并列会抬高best-set稳定性，pair符号一致率仅针对两半都非零的pair。
+
+#### 分动作族：all与clear分别报告
+
+| 族/子集/策略 | N | strict Top1 | best-set hit | pairwise macro | Spearman | Kendall τb | 经验regret元 |
+|---|---|---|---|---|---|---|---|
+| discard/all/baseline | 200 | 0.2150 | 0.2600 | 0.5884 | 0.2171 | 0.1680 | 15.3352 |
+| discard/all/initial/raw | 200 | 0.1850 | 0.2200 | 0.5240 | 0.0661 | 0.0495 | 20.7195 |
+| discard/all/initial/anchor | 200 | 0.2300 | 0.2700 | 0.5910 | 0.2225 | 0.1722 | 15.0922 |
+| discard/all/long10/raw | 200 | 0.1800 | 0.2150 | 0.5188 | 0.0588 | 0.0400 | 20.8125 |
+| discard/all/long10/anchor | 200 | 0.2250 | 0.2700 | 0.5921 | 0.2255 | 0.1745 | 15.0922 |
+| discard/all/A10/raw | 200 | 0.1850 | 0.2200 | 0.5193 | 0.0551 | 0.0399 | 20.5992 |
+| discard/all/A10/anchor | 200 | 0.2300 | 0.2700 | 0.5899 | 0.2217 | 0.1705 | 15.0922 |
+| discard/all/B10/raw | 200 | 0.1850 | 0.2250 | 0.5196 | 0.0584 | 0.0399 | 21.4141 |
+| discard/all/B10/anchor | 200 | 0.2200 | 0.2650 | 0.5898 | 0.2197 | 0.1705 | 15.2156 |
+| discard/clear/baseline | 38 | 0.2105 | 0.2105 | 0.5699 | 0.1571 | 0.1256 | 22.4918 |
+| discard/clear/initial/raw | 38 | 0.1579 | 0.1579 | 0.4694 | -0.0763 | -0.0550 | 35.8347 |
+| discard/clear/initial/anchor | 38 | 0.2105 | 0.2105 | 0.5797 | 0.1744 | 0.1412 | 22.0888 |
+| discard/clear/long10/raw | 38 | 0.1316 | 0.1316 | 0.4626 | -0.0816 | -0.0672 | 36.3240 |
+| discard/clear/long10/anchor | 38 | 0.2105 | 0.2105 | 0.5814 | 0.1778 | 0.1448 | 22.0888 |
+| discard/clear/A10/raw | 38 | 0.1579 | 0.1579 | 0.4569 | -0.1004 | -0.0805 | 35.2015 |
+| discard/clear/A10/anchor | 38 | 0.2105 | 0.2105 | 0.5768 | 0.1680 | 0.1357 | 22.0888 |
+| discard/clear/B10/raw | 38 | 0.2105 | 0.2105 | 0.4633 | -0.0815 | -0.0701 | 36.0938 |
+| discard/clear/B10/anchor | 38 | 0.2105 | 0.2105 | 0.5751 | 0.1636 | 0.1330 | 22.0888 |
+| chi/pass/all/baseline | 125 | 0.5920 | 0.6240 | 0.6618 | 0.3299 | 0.3195 | 5.7888 |
+| chi/pass/all/initial/raw | 125 | 0.4880 | 0.5280 | 0.5476 | 0.1020 | 0.0887 | 7.8087 |
+| chi/pass/all/initial/anchor | 125 | 0.6000 | 0.6320 | 0.6615 | 0.3317 | 0.3192 | 5.6925 |
+| chi/pass/all/long10/raw | 125 | 0.5280 | 0.5760 | 0.6281 | 0.2566 | 0.2478 | 5.8000 |
+| chi/pass/all/long10/anchor | 125 | 0.6000 | 0.6320 | 0.6616 | 0.3316 | 0.3194 | 5.6925 |
+| chi/pass/all/A10/raw | 125 | 0.5280 | 0.5680 | 0.5985 | 0.1936 | 0.1888 | 5.8625 |
+| chi/pass/all/A10/anchor | 125 | 0.6000 | 0.6320 | 0.6616 | 0.3316 | 0.3194 | 5.6925 |
+| chi/pass/all/B10/raw | 125 | 0.5440 | 0.5920 | 0.6358 | 0.2712 | 0.2637 | 5.5700 |
+| chi/pass/all/B10/anchor | 125 | 0.6000 | 0.6320 | 0.6616 | 0.3316 | 0.3194 | 5.6925 |
+| chi/pass/clear/baseline | 43 | 0.7442 | 0.7442 | 0.7649 | 0.5374 | 0.5159 | 9.2333 |
+| chi/pass/clear/initial/raw | 43 | 0.5581 | 0.5581 | 0.5701 | 0.1364 | 0.1264 | 13.8372 |
+| chi/pass/clear/initial/anchor | 43 | 0.7442 | 0.7442 | 0.7649 | 0.5374 | 0.5159 | 9.2333 |
+| chi/pass/clear/long10/raw | 43 | 0.6512 | 0.6512 | 0.7032 | 0.3878 | 0.3937 | 9.7311 |
+| chi/pass/clear/long10/anchor | 43 | 0.7442 | 0.7442 | 0.7649 | 0.5374 | 0.5159 | 9.2333 |
+| chi/pass/clear/A10/raw | 43 | 0.6279 | 0.6279 | 0.6538 | 0.2888 | 0.2955 | 10.0363 |
+| chi/pass/clear/A10/anchor | 43 | 0.7442 | 0.7442 | 0.7649 | 0.5374 | 0.5159 | 9.2333 |
+| chi/pass/clear/B10/raw | 43 | 0.6512 | 0.6512 | 0.6770 | 0.3353 | 0.3420 | 9.1570 |
+| chi/pass/clear/B10/anchor | 43 | 0.7442 | 0.7442 | 0.7649 | 0.5374 | 0.5159 | 9.2333 |
+| peng/pass/all/baseline | 125 | 0.6880 | 0.6880 | 0.6750 | 0.3500 | 0.3500 | 3.3487 |
+| peng/pass/all/initial/raw | 125 | 0.6640 | 0.6640 | 0.6500 | 0.3000 | 0.3000 | 3.5175 |
+| peng/pass/all/initial/anchor | 125 | 0.6800 | 0.6800 | 0.6667 | 0.3333 | 0.3333 | 3.4050 |
+| peng/pass/all/long10/raw | 125 | 0.6640 | 0.6640 | 0.6500 | 0.3000 | 0.3000 | 3.5175 |
+| peng/pass/all/long10/anchor | 125 | 0.6880 | 0.6880 | 0.6750 | 0.3500 | 0.3500 | 3.3487 |
+| peng/pass/all/A10/raw | 125 | 0.6640 | 0.6640 | 0.6500 | 0.3000 | 0.3000 | 3.5175 |
+| peng/pass/all/A10/anchor | 125 | 0.6880 | 0.6880 | 0.6750 | 0.3500 | 0.3500 | 3.3487 |
+| peng/pass/all/B10/raw | 125 | 0.6640 | 0.6640 | 0.6500 | 0.3000 | 0.3000 | 3.5175 |
+| peng/pass/all/B10/anchor | 125 | 0.6880 | 0.6880 | 0.6750 | 0.3500 | 0.3500 | 3.3487 |
+| peng/pass/clear/baseline | 59 | 0.7119 | 0.7119 | 0.7119 | 0.4237 | 0.4237 | 4.0969 |
+| peng/pass/clear/initial/raw | 59 | 0.6949 | 0.6949 | 0.6949 | 0.3898 | 0.3898 | 4.2558 |
+| peng/pass/clear/initial/anchor | 59 | 0.7119 | 0.7119 | 0.7119 | 0.4237 | 0.4237 | 4.0969 |
+| peng/pass/clear/long10/raw | 59 | 0.6949 | 0.6949 | 0.6949 | 0.3898 | 0.3898 | 4.2558 |
+| peng/pass/clear/long10/anchor | 59 | 0.7119 | 0.7119 | 0.7119 | 0.4237 | 0.4237 | 4.0969 |
+| peng/pass/clear/A10/raw | 59 | 0.6949 | 0.6949 | 0.6949 | 0.3898 | 0.3898 | 4.2558 |
+| peng/pass/clear/A10/anchor | 59 | 0.7119 | 0.7119 | 0.7119 | 0.4237 | 0.4237 | 4.0969 |
+| peng/pass/clear/B10/raw | 59 | 0.6949 | 0.6949 | 0.6949 | 0.3898 | 0.3898 | 4.2558 |
+| peng/pass/clear/B10/anchor | 59 | 0.7119 | 0.7119 | 0.7119 | 0.4237 | 0.4237 | 4.0969 |
+| hu/pass/all/baseline | 50 | 0.9000 | 0.9000 | 0.8958 | 0.7917 | 0.7917 | 1.8969 |
+| hu/pass/all/initial/raw | 50 | 0.9000 | 0.9000 | 0.8958 | 0.7917 | 0.7917 | 1.8969 |
+| hu/pass/all/initial/anchor | 50 | 0.9000 | 0.9000 | 0.8958 | 0.7917 | 0.7917 | 1.8969 |
+| hu/pass/all/long10/raw | 50 | 0.9000 | 0.9000 | 0.8958 | 0.7917 | 0.7917 | 1.8969 |
+| hu/pass/all/long10/anchor | 50 | 0.9000 | 0.9000 | 0.8958 | 0.7917 | 0.7917 | 1.8969 |
+| hu/pass/all/A10/raw | 50 | 0.9000 | 0.9000 | 0.8958 | 0.7917 | 0.7917 | 1.8969 |
+| hu/pass/all/A10/anchor | 50 | 0.9000 | 0.9000 | 0.8958 | 0.7917 | 0.7917 | 1.8969 |
+| hu/pass/all/B10/raw | 50 | 0.9000 | 0.9000 | 0.8958 | 0.7917 | 0.7917 | 1.8969 |
+| hu/pass/all/B10/anchor | 50 | 0.9000 | 0.9000 | 0.8958 | 0.7917 | 0.7917 | 1.8969 |
+| hu/pass/clear/baseline | 39 | 0.9231 | 0.9231 | 0.9231 | 0.8462 | 0.8462 | 2.1875 |
+| hu/pass/clear/initial/raw | 39 | 0.9231 | 0.9231 | 0.9231 | 0.8462 | 0.8462 | 2.1875 |
+| hu/pass/clear/initial/anchor | 39 | 0.9231 | 0.9231 | 0.9231 | 0.8462 | 0.8462 | 2.1875 |
+| hu/pass/clear/long10/raw | 39 | 0.9231 | 0.9231 | 0.9231 | 0.8462 | 0.8462 | 2.1875 |
+| hu/pass/clear/long10/anchor | 39 | 0.9231 | 0.9231 | 0.9231 | 0.8462 | 0.8462 | 2.1875 |
+| hu/pass/clear/A10/raw | 39 | 0.9231 | 0.9231 | 0.9231 | 0.8462 | 0.8462 | 2.1875 |
+| hu/pass/clear/A10/anchor | 39 | 0.9231 | 0.9231 | 0.9231 | 0.8462 | 0.8462 | 2.1875 |
+| hu/pass/clear/B10/raw | 39 | 0.9231 | 0.9231 | 0.9231 | 0.8462 | 0.8462 | 2.1875 |
+| hu/pass/clear/B10/anchor | 39 | 0.9231 | 0.9231 | 0.9231 | 0.8462 | 0.8462 | 2.1875 |
+
+| 族/子集 | uniform strict Top1 | uniform best hit | uniform pairwise | uniform经验regret元 |
+|---|---|---|---|---|
+| all:all | 0.3357 | 0.3749 | 0.5000 | 17.4993 |
+| all:clear | 0.4200 | 0.4200 | 0.5000 | 27.2353 |
+| all:ambiguous | 0.2887 | 0.3497 | 0.5000 | 12.0701 |
+| discard:all | 0.1420 | 0.1958 | 0.5000 | 22.3969 |
+| discard:clear | 0.1804 | 0.1804 | 0.5000 | 34.6293 |
+| discard:ambiguous | 0.1330 | 0.1994 | 0.5000 | 19.5275 |
+| chi/pass:all | 0.4157 | 0.4583 | 0.5000 | 9.2740 |
+| chi/pass:clear | 0.4496 | 0.4496 | 0.5000 | 17.6450 |
+| chi/pass:ambiguous | 0.3979 | 0.4628 | 0.5000 | 4.8843 |
+| peng/pass:all | 0.5000 | 0.5200 | 0.5000 | 10.0906 |
+| peng/pass:clear | 0.5000 | 0.5000 | 0.5000 | 16.6446 |
+| peng/pass:ambiguous | 0.5000 | 0.5379 | 0.5000 | 4.2318 |
+| hu/pass:all | 0.5000 | 0.5200 | 0.5000 | 36.9937 |
+| hu/pass:clear | 0.5000 | 0.5000 | 0.5000 | 46.6266 |
+| hu/pass:ambiguous | 0.5000 | 0.5909 | 0.5000 | 2.8409 |
+
+Uniform reference仅解析计算“随机选合法候选”的期望指标，没有新增random actor rollout。并列经验EV较多时best hit的随机参考也会很高，不能直接拿50%作全部Top1的随机线。macro pairwise按有可比pair的状态等权，pooled按pair等权；—为不可估。
+
+| 相对initial/指标 | 差值 | seed-cluster95%CI |
+|---|---|---|
+| long10-raw-minus-initial/best_action_hit_rate | 0.0100 | -0.0160/0.0359 |
+| long10-raw-minus-initial/pairwise_accuracy | 0.0179 | -0.0051/0.0414 |
+| long10-raw-minus-initial/regret_yuan | -0.4650 | -1.2199/0.1701 |
+| A10-raw-minus-initial/best_action_hit_rate | 0.0100 | -0.0140/0.0339 |
+| A10-raw-minus-initial/pairwise_accuracy | 0.0107 | -0.0100/0.0320 |
+| A10-raw-minus-initial/regret_yuan | -0.5347 | -1.3130/0.1182 |
+| B10-raw-minus-initial/best_action_hit_rate | 0.0180 | -0.0099/0.0456 |
+| B10-raw-minus-initial/pairwise_accuracy | 0.0202 | -0.0026/0.0436 |
+| B10-raw-minus-initial/regret_yuan | -0.2819 | -1.1747/0.5871 |
+| long10-anchor-minus-initial/best_action_hit_rate | 0.0020 | 0.0000/0.0060 |
+| long10-anchor-minus-initial/pairwise_accuracy | 0.0026 | -0.0001/0.0073 |
+| long10-anchor-minus-initial/regret_yuan | -0.0141 | -0.0423/0.0000 |
+| A10-anchor-minus-initial/best_action_hit_rate | 0.0020 | 0.0000/0.0060 |
+| A10-anchor-minus-initial/pairwise_accuracy | 0.0017 | -0.0011/0.0065 |
+| A10-anchor-minus-initial/regret_yuan | -0.0141 | -0.0423/0.0000 |
+| B10-anchor-minus-initial/best_action_hit_rate | 0.0000 | -0.0060/0.0060 |
+| B10-anchor-minus-initial/pairwise_accuracy | 0.0017 | -0.0014/0.0066 |
+| B10-anchor-minus-initial/regret_yuan | 0.0353 | -0.0282/0.1328 |
+
+| 额外配对/子集/指标 | 差值 | seed-cluster95%CI |
+|---|---|---|
+| B10/raw-minus-A10/raw:all/best_action_hit_rate | 0.0080 | -0.0060/0.0239 |
+| B10/raw-minus-A10/raw:all/pairwise_accuracy | 0.0094 | 0.0002/0.0203 |
+| B10/raw-minus-A10/raw:all/regret_yuan | 0.2528 | -0.2342/0.8567 |
+| B10/raw-minus-A10/raw:all/chosen_EV_yuan | -0.2528 | -0.8567/0.2342 |
+| B10/raw-minus-A10/raw:clear/best_action_hit_rate | 0.0168 | 0.0000/0.0391 |
+| B10/raw-minus-A10/raw:clear/pairwise_accuracy | 0.0069 | -0.0035/0.0213 |
+| B10/raw-minus-A10/raw:clear/regret_yuan | -0.0218 | -0.8642/0.8389 |
+| B10/raw-minus-A10/raw:clear/chosen_EV_yuan | 0.0218 | -0.8389/0.8642 |
+| B10/anchor-minus-A10/anchor:all/best_action_hit_rate | -0.0020 | -0.0060/0.0000 |
+| B10/anchor-minus-A10/anchor:all/pairwise_accuracy | -0.0000 | -0.0007/0.0006 |
+| B10/anchor-minus-A10/anchor:all/regret_yuan | 0.0494 | 0.0000/0.1362 |
+| B10/anchor-minus-A10/anchor:all/chosen_EV_yuan | -0.0494 | -0.1362/0.0000 |
+| B10/anchor-minus-A10/anchor:clear/best_action_hit_rate | 0.0000 | 0.0000/0.0000 |
+| B10/anchor-minus-A10/anchor:clear/pairwise_accuracy | -0.0004 | -0.0014/0.0004 |
+| B10/anchor-minus-A10/anchor:clear/regret_yuan | 0.0000 | 0.0000/0.0000 |
+| B10/anchor-minus-A10/anchor:clear/chosen_EV_yuan | 0.0000 | 0.0000/0.0000 |
+| initial/anchor-minus-initial/raw:all/best_action_hit_rate | 0.0500 | 0.0120/0.0882 |
+| initial/anchor-minus-initial/raw:all/pairwise_accuracy | 0.0591 | 0.0301/0.0888 |
+| initial/anchor-minus-initial/raw:all/regret_yuan | -2.8081 | -4.6357/-1.1165 |
+| initial/anchor-minus-initial/raw:all/chosen_EV_yuan | 2.8081 | 1.1165/4.6357 |
+| initial/anchor-minus-initial/raw:clear/best_action_hit_rate | 0.0615 | 0.0000/0.1229 |
+| initial/anchor-minus-initial/raw:clear/pairwise_accuracy | 0.0758 | 0.0246/0.1285 |
+| initial/anchor-minus-initial/raw:clear/regret_yuan | -4.0765 | -7.9462/-0.5210 |
+| initial/anchor-minus-initial/raw:clear/chosen_EV_yuan | 4.0765 | 0.5210/7.9462 |
+| long10/anchor-minus-long10/raw:all/best_action_hit_rate | 0.0420 | 0.0040/0.0783 |
+| long10/anchor-minus-long10/raw:all/pairwise_accuracy | 0.0438 | 0.0153/0.0728 |
+| long10/anchor-minus-long10/raw:all/regret_yuan | -2.3572 | -4.1071/-0.7414 |
+| long10/anchor-minus-long10/raw:all/chosen_EV_yuan | 2.3572 | 0.7414/4.1071 |
+| long10/anchor-minus-long10/raw:clear/best_action_hit_rate | 0.0447 | -0.0112/0.1006 |
+| long10/anchor-minus-long10/raw:clear/pairwise_accuracy | 0.0457 | -0.0008/0.0939 |
+| long10/anchor-minus-long10/raw:clear/regret_yuan | -3.1940 | -6.7913/0.0149 |
+| long10/anchor-minus-long10/raw:clear/chosen_EV_yuan | 3.1940 | -0.0149/6.7913 |
+| A10/anchor-minus-A10/raw:all/best_action_hit_rate | 0.0420 | 0.0040/0.0800 |
+| A10/anchor-minus-A10/raw:all/pairwise_accuracy | 0.0501 | 0.0209/0.0801 |
+| A10/anchor-minus-A10/raw:all/regret_yuan | -2.2875 | -3.9769/-0.6937 |
+| A10/anchor-minus-A10/raw:all/chosen_EV_yuan | 2.2875 | 0.6937/3.9769 |
+| A10/anchor-minus-A10/raw:clear/best_action_hit_rate | 0.0447 | -0.0168/0.1061 |
+| A10/anchor-minus-A10/raw:clear/pairwise_accuracy | 0.0577 | 0.0088/0.1090 |
+| A10/anchor-minus-A10/raw:clear/regret_yuan | -3.0290 | -6.5269/0.1153 |
+| A10/anchor-minus-A10/raw:clear/chosen_EV_yuan | 3.0290 | -0.1153/6.5269 |
+| B10/anchor-minus-B10/raw:all/best_action_hit_rate | 0.0320 | -0.0060/0.0699 |
+| B10/anchor-minus-B10/raw:all/pairwise_accuracy | 0.0407 | 0.0127/0.0693 |
+| B10/anchor-minus-B10/raw:all/regret_yuan | -2.4909 | -4.2985/-0.7623 |
+| B10/anchor-minus-B10/raw:all/chosen_EV_yuan | 2.4909 | 0.7623/4.2985 |
+| B10/anchor-minus-B10/raw:clear/best_action_hit_rate | 0.0279 | -0.0335/0.0894 |
+| B10/anchor-minus-B10/raw:clear/pairwise_accuracy | 0.0504 | 0.0023/0.1010 |
+| B10/anchor-minus-B10/raw:clear/regret_yuan | -3.0072 | -6.7389/0.3334 |
+| B10/anchor-minus-B10/raw:clear/chosen_EV_yuan | 3.0072 | -0.3334/6.7389 |
+| baseline-minus-initial/raw:all/best_action_hit_rate | 0.0460 | 0.0080/0.0855 |
+| baseline-minus-initial/raw:all/pairwise_accuracy | 0.0603 | 0.0307/0.0904 |
+| baseline-minus-initial/raw:all/regret_yuan | -2.7009 | -4.5331/-1.0034 |
+| baseline-minus-initial/raw:all/chosen_EV_yuan | 2.7009 | 1.0034/4.5331 |
+| baseline-minus-initial/raw:clear/best_action_hit_rate | 0.0615 | 0.0000/0.1229 |
+| baseline-minus-initial/raw:clear/pairwise_accuracy | 0.0737 | 0.0225/0.1267 |
+| baseline-minus-initial/raw:clear/regret_yuan | -3.9909 | -7.8711/-0.4355 |
+| baseline-minus-initial/raw:clear/chosen_EV_yuan | 3.9909 | 0.4355/7.8711 |
+| baseline-minus-long10/raw:all/best_action_hit_rate | 0.0360 | -0.0020/0.0740 |
+| baseline-minus-long10/raw:all/pairwise_accuracy | 0.0424 | 0.0138/0.0716 |
+| baseline-minus-long10/raw:all/regret_yuan | -2.2359 | -3.9849/-0.6137 |
+| baseline-minus-long10/raw:all/chosen_EV_yuan | 2.2359 | 0.6137/3.9849 |
+| baseline-minus-long10/raw:clear/best_action_hit_rate | 0.0447 | -0.0112/0.1006 |
+| baseline-minus-long10/raw:clear/pairwise_accuracy | 0.0432 | -0.0032/0.0912 |
+| baseline-minus-long10/raw:clear/regret_yuan | -3.1084 | -6.7004/0.0935 |
+| baseline-minus-long10/raw:clear/chosen_EV_yuan | 3.1084 | -0.0935/6.7004 |
+| baseline-minus-A10/raw:all/best_action_hit_rate | 0.0360 | -0.0020/0.0741 |
+| baseline-minus-A10/raw:all/pairwise_accuracy | 0.0496 | 0.0203/0.0795 |
+| baseline-minus-A10/raw:all/regret_yuan | -2.1662 | -3.8689/-0.5752 |
+| baseline-minus-A10/raw:all/chosen_EV_yuan | 2.1662 | 0.5752/3.8689 |
+| baseline-minus-A10/raw:clear/best_action_hit_rate | 0.0447 | -0.0168/0.1061 |
+| baseline-minus-A10/raw:clear/pairwise_accuracy | 0.0563 | 0.0074/0.1073 |
+| baseline-minus-A10/raw:clear/regret_yuan | -2.9434 | -6.4491/0.2279 |
+| baseline-minus-A10/raw:clear/chosen_EV_yuan | 2.9434 | -0.2279/6.4491 |
+| baseline-minus-B10/raw:all/best_action_hit_rate | 0.0280 | -0.0100/0.0660 |
+| baseline-minus-B10/raw:all/pairwise_accuracy | 0.0401 | 0.0120/0.0687 |
+| baseline-minus-B10/raw:all/regret_yuan | -2.4191 | -4.2275/-0.6882 |
+| baseline-minus-B10/raw:all/chosen_EV_yuan | 2.4191 | 0.6882/4.2275 |
+| baseline-minus-B10/raw:clear/best_action_hit_rate | 0.0279 | -0.0335/0.0894 |
+| baseline-minus-B10/raw:clear/pairwise_accuracy | 0.0493 | 0.0012/0.0998 |
+| baseline-minus-B10/raw:clear/regret_yuan | -2.9216 | -6.6612/0.4077 |
+| baseline-minus-B10/raw:clear/chosen_EV_yuan | 2.9216 | -0.4077/6.6612 |
+| initial/raw-minus-uniform_reference:all/best_action_hit_rate | 0.1011 | 0.0633/0.1395 |
+| initial/raw-minus-uniform_reference:all/pairwise_accuracy | 0.0993 | 0.0660/0.1331 |
+| initial/raw-minus-uniform_reference:all/regret_yuan | -6.1902 | -8.5896/-4.1128 |
+| initial/raw-minus-uniform_reference:all/chosen_EV_yuan | 6.1902 | 4.1128/8.5896 |
+| initial/raw-minus-uniform_reference:clear/best_action_hit_rate | 0.1777 | 0.1110/0.2425 |
+| initial/raw-minus-uniform_reference:clear/pairwise_accuracy | 0.1668 | 0.1040/0.2273 |
+| initial/raw-minus-uniform_reference:clear/regret_yuan | -14.4245 | -20.1305/-9.1727 |
+| initial/raw-minus-uniform_reference:clear/chosen_EV_yuan | 14.4245 | 9.1727/20.1305 |
+| long10/raw-minus-uniform_reference:all/best_action_hit_rate | 0.1111 | 0.0733/0.1490 |
+| long10/raw-minus-uniform_reference:all/pairwise_accuracy | 0.1172 | 0.0836/0.1507 |
+| long10/raw-minus-uniform_reference:all/regret_yuan | -6.6552 | -9.0277/-4.5737 |
+| long10/raw-minus-uniform_reference:all/chosen_EV_yuan | 6.6552 | 4.5737/9.0277 |
+| long10/raw-minus-uniform_reference:clear/best_action_hit_rate | 0.1945 | 0.1304/0.2557 |
+| long10/raw-minus-uniform_reference:clear/pairwise_accuracy | 0.1973 | 0.1368/0.2552 |
+| long10/raw-minus-uniform_reference:clear/regret_yuan | -15.3071 | -20.9735/-10.0910 |
+| long10/raw-minus-uniform_reference:clear/chosen_EV_yuan | 15.3071 | 10.0910/20.9735 |
+| A10/raw-minus-uniform_reference:all/best_action_hit_rate | 0.1111 | 0.0735/0.1493 |
+| A10/raw-minus-uniform_reference:all/pairwise_accuracy | 0.1100 | 0.0763/0.1435 |
+| A10/raw-minus-uniform_reference:all/regret_yuan | -6.7249 | -9.0849/-4.6374 |
+| A10/raw-minus-uniform_reference:all/chosen_EV_yuan | 6.7249 | 4.6374/9.0849 |
+| A10/raw-minus-uniform_reference:clear/best_action_hit_rate | 0.1945 | 0.1285/0.2562 |
+| A10/raw-minus-uniform_reference:clear/pairwise_accuracy | 0.1842 | 0.1226/0.2427 |
+| A10/raw-minus-uniform_reference:clear/regret_yuan | -15.4720 | -21.1346/-10.3131 |
+| A10/raw-minus-uniform_reference:clear/chosen_EV_yuan | 15.4720 | 10.3131/21.1346 |
+| B10/raw-minus-uniform_reference:all/best_action_hit_rate | 0.1191 | 0.0813/0.1572 |
+| B10/raw-minus-uniform_reference:all/pairwise_accuracy | 0.1194 | 0.0864/0.1531 |
+| B10/raw-minus-uniform_reference:all/regret_yuan | -6.4721 | -8.8404/-4.3593 |
+| B10/raw-minus-uniform_reference:all/chosen_EV_yuan | 6.4721 | 4.3593/8.8404 |
+| B10/raw-minus-uniform_reference:clear/best_action_hit_rate | 0.2112 | 0.1459/0.2738 |
+| B10/raw-minus-uniform_reference:clear/pairwise_accuracy | 0.1912 | 0.1297/0.2495 |
+| B10/raw-minus-uniform_reference:clear/regret_yuan | -15.4939 | -21.1289/-10.2405 |
+| B10/raw-minus-uniform_reference:clear/chosen_EV_yuan | 15.4939 | 10.2405/21.1289 |
+
+这些区间仅覆盖来源game簇抽样差异，没有嵌套重抽world，也未校正多重比较；不能当正式棋力晋级证据。regret负差表示改进，hit/pairwise正差表示改进。
+
+| 策略 | model top1-top2 margin与真实配对差Pearson/Spearman | 可分辨pair上的macro准确率 |
+|---|---|---|
+| baseline | 0.2939/0.2656 | 0.6993 |
+| initial/raw | 0.4080/0.2581 | 0.6195 |
+| initial/anchor | 0.2108/0.1991 | 0.7026 |
+| long10/raw | 0.4743/0.2553 | 0.6355 |
+| long10/anchor | 0.2483/0.2021 | 0.7030 |
+| A10/raw | 0.4864/0.2324 | 0.6291 |
+| A10/anchor | 0.2531/0.2052 | 0.7020 |
+| B10/raw | 0.5186/0.2521 | 0.6325 |
+| B10/anchor | 0.2855/0.2197 | 0.7000 |
+
+| 族/策略 | 自身top1-top2 margin vs rollout配对差Pearson/Spearman |
+|---|---|
+| discard/baseline | 0.1465/0.1574 |
+| discard/initial/raw | 0.2052/0.0173 |
+| discard/initial/anchor | 0.1006/0.0845 |
+| discard/long10/raw | 0.1984/-0.0136 |
+| discard/long10/anchor | 0.1031/0.0798 |
+| discard/A10/raw | 0.2075/-0.0813 |
+| discard/A10/anchor | 0.1065/0.0898 |
+| discard/B10/raw | 0.2049/-0.0000 |
+| discard/B10/anchor | 0.1292/0.1211 |
+| chi/pass/baseline | 0.1002/0.1720 |
+| chi/pass/initial/raw | 0.0936/-0.0048 |
+| chi/pass/initial/anchor | 0.0930/0.1384 |
+| chi/pass/long10/raw | 0.0852/0.1322 |
+| chi/pass/long10/anchor | 0.0970/0.1451 |
+| chi/pass/A10/raw | 0.0696/0.1348 |
+| chi/pass/A10/anchor | 0.0956/0.1442 |
+| chi/pass/B10/raw | 0.0783/0.0754 |
+| chi/pass/B10/anchor | 0.0955/0.1478 |
+| peng/pass/baseline | 0.0573/0.0274 |
+| peng/pass/initial/raw | 0.1281/0.0734 |
+| peng/pass/initial/anchor | 0.0707/0.0402 |
+| peng/pass/long10/raw | 0.2112/0.1205 |
+| peng/pass/long10/anchor | 0.0850/0.0333 |
+| peng/pass/A10/raw | 0.2435/0.1379 |
+| peng/pass/A10/anchor | 0.0893/0.0292 |
+| peng/pass/B10/raw | 0.1394/0.0990 |
+| peng/pass/B10/anchor | 0.0743/0.0165 |
+| hu/pass/baseline | -0.1465/-0.1231 |
+| hu/pass/initial/raw | 0.5068/0.4090 |
+| hu/pass/initial/anchor | 0.5068/0.4090 |
+| hu/pass/long10/raw | 0.3864/0.3695 |
+| hu/pass/long10/anchor | 0.3864/0.3695 |
+| hu/pass/A10/raw | 0.4384/0.4083 |
+| hu/pass/A10/anchor | 0.4384/0.4083 |
+| hu/pass/B10/raw | 0.5302/0.4483 |
+| hu/pass/B10/anchor | 0.5302/0.4483 |
+
+跨动作族的总体margin相关可能混入HU/PENG与discard的尺度差异；应同时看族内相关，不能只凭总体Pearson宣称margin可用于confidence gate。
+
+#### Margin分桶：相对差值校准，不是绝对return校准
+
+| 策略/桶 | N | 模型margin均值（raw元/anchor评分） | 其top1-top2真实配对差均值元 | pairwise | 经验regret元 |
+|---|---|---|---|---|---|
+| initial/raw/0:0.5 | 43 | 0.2452 | 0.5705 | 0.6265 | 14.0916 |
+| initial/raw/0.5:1 | 89 | 0.7566 | 2.9407 | 0.4983 | 16.4993 |
+| initial/raw/1:2 | 73 | 1.4672 | -6.7059 | 0.4772 | 18.2235 |
+| initial/raw/2:5 | 100 | 2.7893 | 1.4953 | 0.5154 | 16.9953 |
+| initial/raw/5:10 | 17 | 6.9636 | 28.2904 | 0.8675 | 0.2665 |
+| initial/raw/10:25 | 3 | 13.0327 | -1.2500 | 0.5000 | 3.7500 |
+| initial/raw/25:inf | 175 | 38.5740 | 29.4455 | 0.7202 | 3.0545 |
+| initial/anchor/0:5 | 14 | 2.7178 | -0.7254 | 0.5704 | 8.4375 |
+| initial/anchor/5:20 | 48 | 12.7297 | 1.8587 | 0.5735 | 12.5814 |
+| initial/anchor/20:50 | 85 | 35.3657 | 2.3915 | 0.5873 | 11.6673 |
+| initial/anchor/50:100 | 109 | 76.9970 | 8.8747 | 0.6117 | 8.8231 |
+| initial/anchor/100:200 | 212 | 150.7887 | 24.3330 | 0.7379 | 5.1511 |
+| initial/anchor/200:inf | 32 | 240.0059 | 12.5684 | 0.6568 | 15.0928 |
+| long10/raw/0:0.5 | 75 | 0.2521 | 4.9167 | 0.6015 | 10.8396 |
+| long10/raw/0.5:1 | 78 | 0.7449 | 1.5365 | 0.5169 | 14.7396 |
+| long10/raw/1:2 | 103 | 1.4205 | 1.4336 | 0.5551 | 18.9563 |
+| long10/raw/2:5 | 53 | 2.8683 | -5.1946 | 0.5243 | 17.9570 |
+| long10/raw/5:10 | 17 | 6.8601 | 14.4761 | 0.7335 | 1.4890 |
+| long10/raw/10:25 | 104 | 16.7104 | 13.9453 | 0.6465 | 3.4180 |
+| long10/raw/25:inf | 70 | 61.4545 | 56.1161 | 0.8358 | 2.4911 |
+| long10/anchor/0:5 | 18 | 2.5259 | 0.7465 | 0.6235 | 6.5625 |
+| long10/anchor/5:20 | 44 | 12.7190 | 2.9048 | 0.5895 | 13.1428 |
+| long10/anchor/20:50 | 86 | 34.6893 | 1.6788 | 0.5759 | 11.7860 |
+| long10/anchor/50:100 | 119 | 76.0885 | 8.9049 | 0.6363 | 8.5859 |
+| long10/anchor/100:200 | 189 | 148.0461 | 18.9922 | 0.7262 | 5.0628 |
+| long10/anchor/200:inf | 44 | 232.7426 | 42.6882 | 0.7089 | 12.6101 |
+| A10/raw/0:0.5 | 76 | 0.2549 | 6.3487 | 0.5383 | 12.4075 |
+| A10/raw/0.5:1 | 80 | 0.7300 | 1.0801 | 0.5753 | 12.2910 |
+| A10/raw/1:2 | 106 | 1.4538 | -0.0162 | 0.5167 | 19.5519 |
+| A10/raw/2:5 | 48 | 3.0392 | -1.4941 | 0.5312 | 17.3600 |
+| A10/raw/5:10 | 23 | 7.3017 | 12.6630 | 0.6880 | 1.7188 |
+| A10/raw/10:25 | 101 | 16.2550 | 13.5396 | 0.6667 | 3.3787 |
+| A10/raw/25:inf | 66 | 63.2522 | 59.9053 | 0.8254 | 2.6420 |
+| A10/anchor/0:5 | 18 | 2.4618 | 0.7465 | 0.6229 | 6.5625 |
+| A10/anchor/5:20 | 44 | 12.6572 | 2.9048 | 0.5895 | 13.1428 |
+| A10/anchor/20:50 | 89 | 35.0945 | 1.8961 | 0.5655 | 11.4168 |
+| A10/anchor/50:100 | 122 | 77.3732 | 8.8998 | 0.6505 | 8.4759 |
+| A10/anchor/100:200 | 183 | 149.1053 | 17.2575 | 0.7211 | 5.1477 |
+| A10/anchor/200:inf | 44 | 232.6948 | 51.8999 | 0.7162 | 12.6101 |
+| B10/raw/0:0.5 | 121 | 0.2314 | 3.5331 | 0.5768 | 13.5757 |
+| B10/raw/0.5:1 | 103 | 0.7256 | -0.0046 | 0.5342 | 18.4087 |
+| B10/raw/1:2 | 59 | 1.4588 | -1.9518 | 0.5472 | 17.6642 |
+| B10/raw/2:5 | 51 | 3.2846 | 5.0766 | 0.6342 | 8.0545 |
+| B10/raw/5:10 | 45 | 7.6128 | 12.7396 | 0.6098 | 2.8160 |
+| B10/raw/10:25 | 64 | 14.7011 | 18.6816 | 0.6613 | 4.6216 |
+| B10/raw/25:inf | 57 | 73.8746 | 62.8262 | 0.8889 | 1.7434 |
+| B10/anchor/0:5 | 19 | 2.4040 | -1.3816 | 0.5705 | 9.8355 |
+| B10/anchor/5:20 | 46 | 12.9840 | 1.1379 | 0.5695 | 12.7378 |
+| B10/anchor/20:50 | 87 | 35.0947 | 3.0585 | 0.5820 | 10.9159 |
+| B10/anchor/50:100 | 124 | 75.8636 | 8.8697 | 0.6456 | 8.4816 |
+| B10/anchor/100:200 | 175 | 146.3398 | 14.3598 | 0.7220 | 5.3661 |
+| B10/anchor/200:inf | 49 | 233.9507 | 59.3718 | 0.7400 | 11.3233 |
+
+anchor margin包含log-prior，不能把评分数值和现金EV不等直接叫Q错误；观察其与真实配对差的关系即可。raw差值也对应训练continuation之外的共同π0和fixed hands，不能由绝对scale偏差直接判断Q训练错误。
+
+### 执行、完整性与复现
+
+本轮实际CUDA环境为PyTorch2.7.1+cu128、CUDA12.8、cuDNN90701、NumPy2.5.3、RTX5080，float32、batch上限256，开启deterministic algorithms并设置`CUBLAS_WORKSPACE_CONFIG=:4096:8`；完全复现审计使用同一环境/批处理顺序，不承诺不同GPU/backend逐bit相同。CPU执行规则，GPU执行冻结神经网络，没有optimizer或BN更新。独立systemd服务限MemoryMax=8G、MemorySwapMax=1G、CPUQuota=300%、Nice=10，训练锁防止并发learner。
+
+首次完整执行695.82秒，实际2,917,285 future steps（估计2,895,776，约+0.74%）；1,126,524个非强制决策Observation、333,555个trainee/792,969个opponent观察，42,808次角色batch、62,822次模型forward（trainee每batch含reference与Q两模型）。原20%非强制步/有效batch64假设偏低：实际非强制约38.6%、平均26.32观察/角色batch，故推理量显著高于预算。分支数和32-world预算没有调整，root打分另有2500次forward。复现审计重复同一77,984分支，不把重复执行当新样本。
+
+本地`data/generated/counterfactual-ranking-v1/`保存完整locked root/Observation、2437候选、p_reference、四组Q/anchor、initial deal与完整suffix、32组CRN种子/余牌墙、terminal SHA/现金、所有action mean/std/SE/CI/median/P25/P75、所有pair配对差/CI、all/clear/ambiguous分族指标、模型及输入SHA、runtime环境和审计证据。它是诊断隔离目录，没有写入训练manifest、replay buffer或active checkpoint。`report-counterfactual-ranking-benchmark.py`只读旧结果，生成完整比较/解析uniform/split-half与图，源码SHA保存在comparison-report.json；不是新增rollout或策略筛选。
+
+下面命令为全新目录复现；原完成目录拒绝覆盖，不应重跑原online采集命令：
+
+```bash
+OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=. .venv-cuda/bin/python scripts/run-counterfactual-ranking-benchmark.py --prepare --directory data/generated/counterfactual-ranking-recheck
+OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=. .venv-cuda/bin/python scripts/run-counterfactual-ranking-benchmark.py --directory data/generated/counterfactual-ranking-recheck
+OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=. .venv-cuda/bin/python scripts/audit-counterfactual-ranking-benchmark.py --directory data/generated/counterfactual-ranking-recheck
+OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2 MPLCONFIGDIR=/tmp/zimortal-mpl PYTHONPATH=. .venv/bin/python scripts/report-counterfactual-ranking-benchmark.py --directory data/generated/counterfactual-ranking-recheck --figure docs/training/figures/counterfactual-ranking-recheck.svg
+```
+
+本轮没有训练、没有任何新online training trajectory、没有新loss、没有改变λ/T/LR/网络/reward/BN；未用benchmark挑checkpoint，未替换baseline。不要把fixed-hidden结果误用为玩家信息集训练标签。本轮完成后停止，不自动扩大500/32或启动下一阶段。
+
+最终全量审计通过：普通RuleEngine逐根验证全部16,000个shuffle world的可达性，再重执行同一77,984分支、2,917,285 future steps，每次policy动作、suffix、terminal SHA及现金均与首次一致。模型/BN与源码/输入SHA保持不变；聚合指标重算一致，report另外从锁定score和outcome重算全部500根的逐策略排名指标。审计857.51秒，独立world增量0、训练update0；最终result SHA=`1f0ec7a928d95f246241c6bfd6982ea9b02b057ec33579bd0300f168f831096e`。服务Result=success、MainPID=0，已停止。
+
+最终验证：`.venv/bin/python -m pytest -q`为421 passed、1 skipped；`.venv/bin/ruff check zimortal tests scripts/run-counterfactual-ranking-benchmark.py scripts/audit-counterfactual-ranking-benchmark.py scripts/report-counterfactual-ranking-benchmark.py`与`git diff --check`通过。SVG已核对坐标/图例/点估计与表格一致、无裁切；检查仅针对呈现，没有挑state。重要代码/总结提交并按既有授权push，逐root证据本地保留。本轮到此停止。

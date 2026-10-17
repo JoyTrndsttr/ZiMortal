@@ -491,3 +491,14 @@ fix(engine): 禁止吃后无法出牌的方案
 - legal-mean Dueling推导与4096行只读autograd一致：chosen e(1−1/K)，未选−e/K；有chosen-vs-rest信号，无未选动作独立outcome。adv scorer梯度非零，末scalar bias均值抵消是正常gauge；不把gradient norm当信息量或棋力证据。参数/BN/.grad不变。
 - 支持把action-relative信用分配作为下一步重点，尚未因果证明是主要瓶颈，也不把本轮诊断当反事实EV真值。下一步仅建议预声明单因素可辨识性验证及独立现金标准；本轮完成后停止，未经新指令不新增loss或开训练。
 - 两个诊断入口与完整分族表/公式/数值重现修正见docs/training/mortal-style.md。本机保留输入/aggregate SHA与固定样本，重要代码/总结一次commit并按既有授权自动push，不逐JSON提交。
+
+
+## Counterfactual Q-ranking benchmark完成（2026-10-17）
+
+- 用户授权诊断用500根、全部2437合法动作×32，共77,984分支；从旧LR-B uniform5000池按200/125/125/50无放回分层抽样，先锁locator/manifest/SHA和预算，无人工挑case、无补抽/自适应追加。四个固定checkpoint都比较raw/anchor及baseline，不选新冠军。
+- 现有HistorySampler的合法重放不等于已认证posterior权重，本轮明确fixed-hidden-hands＋uniform shuffled余牌墙，不称information-set EV。共同continuation固定initial offline greedy anchor，两个冻结baseline，四critic对照同一Qπ0参照而非各自continuation；不是Q*。
+- 500根有效、0失败，179clear/321ambiguous、43经验并列。B10 raw macro pairwise61.94%、pooled54.08%，baseline65.96%/57.60%、B anchor66.01%/57.71%；raw高于uniform参考，不可说整体随机。
+- discard raw全程约52%，B clear discard pairwise46.33%仍差；chi initial54.76%→B63.58%有局部改善。B−initial整体pairwise CI跨0；B−A约+.94pp仅小幅未校正信号，未带来更佳条件EV。不能把所有动作都说没学习，也未证明principal bottleneck唯一是credit assignment。
+- B anchor仅5/500根偏离baseline，prior仍主要保护；不把更接近baseline或根上条件EV当完整对局现金晋级。fixed-hidden排序与玩家信息集排序可能不同，本轮未测该差异；不把本批标签输入训练。
+- 全部16k shuffle world可达性、77,984分支普通引擎/冻结actor重执行逐步一致，checkpoint/BN及源文件SHA不变、训练0。完整公式/指标/分族表/图/复现见docs/training/mortal-style.md；原始root/seed/每分支suffix与现金留本机。
+- 本轮已停止，baseline未换。目标仍缺可靠弃牌EV、权重正确的hidden posterior和独立现金提升；下一步仅建议认证information-set测度并用明确continuation的独立根复核，不自动扩样本、加loss或训练。重要代码/总结一次commit并按既有授权push，不逐JSON提交。
