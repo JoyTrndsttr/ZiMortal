@@ -512,3 +512,13 @@ fix(engine): 禁止吃后无法出牌的方案
 - PublicInformationState与audit-only truth隔离；从候选初始状态重放恢复全部私有字段，不得clone真实root仅替换暗手/墙。未知规则直接失败，不像旧HistorySampler静默拒绝。旧PASS预过滤在50k合法样本未见反例，不冒称全空间证明。
 - 当前仍缺初始发牌先验权重认证、现实历史/提示可见性核对和policy likelihood；下一步优先建议前者，未经新指令不执行information-set Q benchmark或训练。完整概率差异、50根熵/边际/拒绝统计和复现见docs/training/mortal-style.md，原始赋值仅本地，不写训练dataset。
 - 服务已正常结束MainPID=0。重要代码/总结一次commit并按既有授权push，逐JSON/权重不入Git；本轮完成后停止。
+
+## Mortal fidelity主线收束（2026-10-18最新指令）
+
+- 优先级：Mortal fidelity > independent cash improvement > Q-ranking diagnostics > counterfactual/belief extensions。
+- 封存counterfactual-ranking/information-set-sampler、fixed-hidden/information-set rollout、initial-deal posterior/behavior likelihood/belief、pairwise/ranking及新counterfactual训练；不删除代码/证据，不进入主线。覆盖上一轮“继续认证发牌先验”的下一步建议。
+- 本轮只重新下载固定commit 0cff2b52982be5b1163aa9a62fb01f03ce91e0d2的15源码并验Git blob，扫描既有415284决策，更新fidelity差异/排序及唯一下一步实验设计；训练/新局/rollout均0，不改训练核心。
+- 官方自身Q控制greedy/探索/test，无frozen prior；示例ε=.005不是生产默认。官方gamma1同kyoku也共享target；GRP是独立终场排名预测构造局界utility差，next-rank aux则预测下一边界比分排名，两者不能混同。生产aux/探索/数据密度未知。
+- 现有MC每行单遍并不比官方示例更稀疏；官方sample reuse字段无实现路径，不能杜撰高倍replay或量级更快更新。旧加量/探索/LR实验削弱简单解释，未做等效性证明，不说全面排除。
+- 仅建议受限actor-center对照：共同小ε环境、固定10%整局probe开关anchor中心/自身Q中心，统一D算子评估与匹配updates；保留现金MC/LR/BN/网络，不直接整条主线raw接管。协议见docs/training/mortal-style.md。reward缺忠实单局现金GRP适配，暂不设计自创shaping。
+- 本轮审计/设计后停止，不自动训练或进入任何下一阶段。重要总结/只读脚本commit并按既有授权push；下轮实验需新指令。

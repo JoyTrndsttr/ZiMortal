@@ -4529,3 +4529,215 @@ PYTHONPATH=. .venv/bin/python scripts/audit-information-set-finite-support.py --
 下一步优先建议认证**均匀初始发牌先验＋同一硬历史约束**的权重，并保持行为likelihood是否启用可区分。只有明确目标测度后再单独授权information-set Q benchmark；本轮不启动它，不训练或加入新loss。当前约定认证通过，任务到此停止。
 
 最终检查：`.venv/bin/python -m pytest -q`为431 passed、1 skipped；`ruff check zimortal tests`及三个本轮scripts通过，`git diff --check`通过。提交前再次校验冻结源码/checkpoint和public/world输入SHA；50份完整world文件、临时文件0。重要代码/报告一次commit并按既有授权push，不提交原始采样赋值。
+
+## Mortal fidelity gap audit
+
+### 路线收束与本轮边界（2026-10-18）
+
+优先级重新固定为：**Mortal fidelity > independent cash improvement > Q-ranking diagnostics > counterfactual/belief extensions**。
+
+封存`counterfactual-ranking-v1`、`information-set-sampler-v1`、fixed-hidden/information-set rollout、initial-deal posterior、behavior likelihood、belief modeling、pairwise/ranking loss和新的counterfactual training。代码、模型与证据保留，不继续开发，不进入主训练线。上一节“下一步优先认证发牌先验”的建议自本轮起被覆盖。本轮仅重新下载/读取官方源码、读取既有config/旧日志、排序差异和设计**一个**候选实验；不训练、不生成对局、不调用rollout、不调参，不改训练核心。
+
+结论先列明：首选**受限actor-center单因素实验**，不是马上删anchor。明确源码差异为自身Q控制策略与外部冻结prior控制策略；它尚未被直接实验。reward/GRP与next-rank auxiliary也有重要差异，但当前单局现金任务没有足够定义来忠实移植GRP。55×20 Observation、三人structured legal action及真实现金目标属于任务适配；frozen prior和保守HU探索限制不是跑胡子规则所强制的机制，应与必要适配分开记录。更新密度及持续数据流须进一步区分“每条样本”和“每场比赛”，不能由50k/1625这个数字断言Mortal有隐藏的高倍replay。
+
+### 固定源码与证据等级
+
+重新下载官方commit `0cff2b52982be5b1163aa9a62fb01f03ce91e0d2`的15份源码：此前13文件，加`mortal/train_grp.py`及`libriichi/src/dataset/grp.rs`。逐文件重新计算Git blob SHA1，匹配该commit递归tree；与此前快照重叠的13份同时匹配旧SHA256。**本节结论来自重读当前快照，不沿用旧总结作为证据。** 下载结果及清单位于本地`data/generated/mortal-fidelity-audit-v1/official-source/`。
+
+证据必须区分三层：
+
+- **S，source guarantees**：给定配置，控制流/公式确实如此。能证明有无某机制，通常不能证明其生产数值或棋力因果。
+- **E，example config**：`config.example.toml:1–2`明确是dummy placeholders，不是推荐值，更不是生产配置。下文所有`.005/.05/512/400/.2`等带E的数字仅用于理解路径。
+- **U，unknown production**：真实生产epsilon/temperature、aux权重、GRP checkpoint质量、worker数、数据规模/强度、实际kyoku数/样本密度与参数时延，均不能从该仓库代码推定。
+
+主要源码定位（以下均链接固定commit，行号指该版本）：
+
+| 标记 | 文件/关键函数 | 核对内容 |
+|---|---|---|
+| O-engine | [engine.py:9–99，MortalEngine / _react_batch / sample_top_p](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/engine.py#L9) | eval/inference、自身Q、ε分支、temperature、nucleus |
+| O-player | [player.py:14–157，TestPlayer / TrainPlayer](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/player.py#L14) | baseline角色、train profile、每批冻结、test greedy |
+| O-train | [train.py:30–130、215–272、390–438，train / train_epoch / train_batch](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/train.py#L215) | MC/CQL/aux、optimizer恢复、累积、发布、尾批与循环 |
+| O-loader | [dataloader.py:39–126，build_iter / load_files / populate_buffer](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/dataloader.py#L39) | GRP奖励、折扣步、next-rank、epoch/augmentation/shuffle |
+| O-reward | [reward_calculator.py:4–38，RewardCalculator](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/reward_calculator.py#L4) | 期望终场排名utility的kyoku差分 |
+| O-model | [model.py:169–286，Brain.train / AuxNet / DQN / GRP](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/model.py#L169) | BN、legal-mean Dueling、两个排名模型 |
+| O-GRP-fit | [train_grp.py:45–58、172–182](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/train_grp.py#L172) | 独立GRP用完整比赛最终排名的24排列CE训练 |
+| O-GRP-data | [dataset/grp.rs:90–147，Grp.load_events](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/libriichi/src/dataset/grp.rs#L90) | 各kyoku开局的公开比分/本场/供托与最终分数 |
+| O-gameplay | [dataset/gameplay.rs:240–273、341–429](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/libriichi/src/dataset/gameplay.rs#L240) | 实际动作标签、kyoku结束、apply_gamma与额外杠选择行 |
+| O-quick | [agent/mortal.rs:210–240、299–328](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/libriichi/src/agent/mortal.rs#L210) | 唯一弃牌quick-eval、可配置agari guard |
+| O-client | [client.py:29–85，main](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/client.py#L29) | 每批get_param，带版本提交日志 |
+| O-server | [server.py:51–114，四个handle函数](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/server.py#L51) | capacity、版本、drain、sequential gate |
+| O-common | [common.py:30–51，drain / submit_param](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/common.py#L30) | 参数发布和持续取新文件 |
+| O-LR | [lr_scheduler.py:4–32](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/lr_scheduler.py#L4) | 按minibatch推进的可配置warmup/cosine/offset/cycle |
+| O-example | [config.example.toml:1–102](https://github.com/Equim-chan/Mortal/blob/0cff2b52982be5b1163aa9a62fb01f03ce91e0d2/mortal/config.example.toml#L1) | 全部数值均为示例，非生产保证 |
+
+本地对应控制流：`mortal_online.py:22–73`的MC/update与`:150–159`checkpoint；`mortal_extraction.py:27–81`score/parent；`mortal_boltzmann.py:15–65`整分布采样与HU例外；`mortal_online_long.py:168–224`先收5000再更新/发布；`mortal_lr_horizon.py`保留同一actor/update，仅A/B schedule不同；`mortal_data.py:103–125`现金/100与终局行；`mortal_offline.py:27–55`target/CQL；`online_rl.py`的forced分支不记神经网络训练行。下表的“当前”指这些已完成长期online及LR-horizon实现，不指旧SARSA/RouteQ支线。
+
+### 严格对照表
+
+| 机制 | Official Mortal | 当前 ZiMortal | 是否一致 | 可能影响 |
+|---|---|---|---|---|
+| offline target | S：`gamma^steps_to_done × kyoku_reward`，实际chosen Q的½MSE，O-train/O-loader | terminal cash/100 MC；3-step仅历史对照，mortal_offline.py | 形式相近，目标语义不同 |  utility和窗口不同，不能把双方都简写为整场terminal现金 |
+| offline CQL | S：仅not-online加`logsumexp(Q_legal)−Qchosen`，权重配置；E=5（O-train237–246/O-example56–60） | 同公式，alpha=.1 | 公式同，尺度/系数不同 | reward单位不同，不能用5/.1推断保守强度恰好50倍 |
+| online target | S：仍为上述MC，没有max/bootstrap，O-train228–235 | terminal现金/100，gamma=1，½MSE | MC chosen回归同，utility不同 | 同样不是常规TD DQN |
+| reward unit | S：GRP终场排名utility的相邻kyoku差；E pts=[6,4,2,0]，O-reward | 三家真实payments/100，流局0，mortal_data.py | 不同，现金是跑胡子任务目标 | utility有界/尾部/训练Q尺度与现金不同 |
+| actor center | S：自身当前brain+DQN输出的legal Q，O-engine | `Q+.3log(p_reference+1e-8)`，mortal_extraction.py42 | **核心不同** | prior可压过当前Q的动作优势，Q不能直接决定大部分采集/部署 |
+| exploration mixture | S：外层Bernoulli greedy与Q-based采样混合，O-engine76–85 | 非HU每次都Boltzmann，mortal_boltzmann.py | 不同 | 等价采样分支概率1，不等于每动作都偏离 |
+| epsilon | S：进入采样分支的概率；构造器默认0；TrainPlayer必须从profile显式传；E=.005 | 没有外层epsilon | 不同 | 25%实际偏离不能直接称ε=.25 |
+| temperature | S：采样分支内Q/T；构造器默认1，E=.05；生产U | anchored score/T=.5固定 | 不同 | 温度必须结合Q/reward单位；禁止直接声称官方生产更冷 |
+| top-p | S：采样分支nucleus，保留跨阈值边界候选；构造器/E均1 | 没有截断，相当于top-p=1 | 与该示例同 | p≤0取argmax、p≥1完整Categorical，非top-k |
+| reference prior | S：trainee路径无外部prior；baseline只作为三家对手，O-player/O-engine | frozen league-v2 actor logits按family变成reference p | 不同 | frozen对手≠frozen策略正则；本项目两种角色用了同一parent模型 |
+| deployment policy | S：MortalEngine默认epsilon0，自身Q greedy；V4不使用stochastic latent，O-engine | greedy anchored；raw只诊断 | 不同 | 当前Q被训练却不拥有部署greedy中心 |
+| optimizer lifecycle | S：AdamW先构造；offline→online不加载旧optimizer/scheduler；online→online恢复，O-train94–118 | offline起点重新make_optimizer；跨代保留Adam/RNG，保存optimizer.pt | 跨阶段/跨代基本同；自动resume不同 | 官方训练子进程restart恢复；本项目runner拒绝已有目录，没有同等通用自动resume入口，不把“已保存”说成“已恢复” |
+| online CQL | S：条件分支为0，不依赖min_q_weight数值，O-train237 | 0，mortal_online.py22–72 | 同 | 不新增CQL不是遗漏官方online机制 |
+| auxiliary loss | S：每batch next-rank CE继续计算/配置权重，O-train240–246；E=.2，U未知 | 唯一MC loss，auxiliary_loss=0 | 不同 | 可能改善brain表示；不是直接同状态action ranking真值 |
+| data freshness | S：client每train_play前取snapshot，批内冻结；异步可陈旧；O-client/O-server | 每代5000局同producer，收完单遍更新后发布 | 不同 | 异步流≠严格on-policy；并不自动证明官方刷新更快 |
+| sample reuse | S：每drain文件遍历num_epochs次，augmentation可再翻倍；E 1×无增强；O-loader39–49 | 每条真实非强制行一次，不replay、不混offline | 与示例单遍同 | 没有源码证据支持“官方高倍重复训练所以变强” |
+| model versioning | S：server发布version++；submit_replay带版本但server不据其过滤，多worker可混版本 | producer hash/manifest，每代单版本，跨代optimizer连续 | 不同 | 官方允许staleness，不是每行都来自当前learner |
+| evaluation actor | S：TestPlayer不传探索参数，自身Q greedy；baseline有agari guard，challenger未开，O-player32–55 | greedy anchor＋单独raw，两家固定baseline | 不同 | Q能否独立接管尚未直接受控验证 |
+| gamma / discount | S：可配置；Rust按`label<=37`标记折扣步，loader到当前kyoku末累计；E gamma1 | 实际gamma1，训练行共享终局cash | gamma1效果同，非1时步定义不同 | 不能把计步注释当所有动作都折扣；额外kan-select标签也可能落在该范围 |
+| Q normalization | S：legal-mean Dueling；没有target std/advantage normalization或reward clipping，O-model221–230/O-train | legal-mean Dueling，现金/100固定缩放 | 中心化同，reward尺度不同 | dueling均值不是回报标准化；GRP输入比分/1e4也不是Q标准化 |
+| BN / train-eval | S：actor构造强制eval/inference；learner train，freeze_bn由配置决定；E注释online=true但占位值false，O-model169–186；freeze_bn仅BN.eval，affine参数仍可训练 | actor eval，learner.train()更新BN；无冻结开关接入本轮 | 与未冻BN配置同，生产U | 不自动把未冻结BN称官方违例；本轮不改BN |
+| target network | S：无训练target network，只有actor/对手/GRP等独立模型；O-train全部loss路径 | 当前MC无；SARSA旧对照有，不属于当前主线 | 同 | GRP冻结网络不是TD target-Q network |
+| TD / next-Q | S：train_batch不读取next-observation、不bootstrap；O-train228 | 无 | 同 | 不为“faithful”额外加TD |
+| replay buffer | S：server是文件排队/转移buffer，drain取走；example reuse字段没有消费路径，O-server74–113 | 同步代数据，不长期replay | 无长期replay基本同 | `reserve_ratio`是文件批shuffle保留尾部，不等于跨训练周期经验重放 |
+| 数值配置 | S：由配置决定，O-train/O-LR；E AdamW decay=.1、clip关闭、LR常数1e-4 | decay=.01、clip1、peak3e-5；A cos300/B cos1609均已试；float32 | 示例数值不同，生产U | 不将示例视为规范；本轮不调LR/clip/decay/AMP |
+| update/accumulation | S：batch由配置、`opt_step_every`累积；scheduler每minibatch一步，O-train248–268 | batch256，每batch一次AdamW；schedule每update一步 | opt_step_every1时结构同 | 示例512不是比256更密集；不能混淆minibatch和optimizer计数 |
+| 数据行选择 | S：trainee名字过滤实际动作；保留可用训练行与kan-select，quick-eval不等于删训练行，O-gameplay | 只记真实非强制多选决策 | 不同 | 每game行数可能不同，且麻将game含多kyoku，原始game数不可直接对比 |
+| offline起点与对手 | S：加载所配置state；不保证其已强、也不保证日志名字代表高手，O-train106/O-player | 固定B-coverage selected-common.pt，规则/启发式训练父策略作为对手 | 不可直接等同 | offline初始化质量可能决定去anchor风险；源码没有无条件防崩保证 |
+
+### Actor控制权与exploration的具体含义
+
+官方V4的策略为：令g=argmax合法Q，b=top_p(softmax(Q/T))，则`π=(1−ε)·δ_g+ε·b`。Bernoulli决定走哪个分支，采样分支仍可抽到g；`is_greedy`标记的是分支，不是动作是否等于g。quick-eval可跳过唯一弃牌的神经网络调用；epsilon的偏离上界只针对网络决策。TrainPlayer把profile参数原样传给engine，没有epsilon/T/top-p自动schedule，实际偏离随Q间隔变化。默认构造器ε=0；`.005`是示例profile值，不是TrainPlayer内置默认，更不是生产保证。（O-engine/O-player/O-quick）
+
+官方greedy中心、Boltzmann logits和TestPlayer greedy都由自身Q决定；外部baseline不参与trainee score，没有frozen behavior prior。源码也没有专门保护随机/劣质raw Q起点的anchor、support或“先验证再接管”开关。可能承担安全启动作用的是足够好的offline初始化、offline CQL、小ε、适当的排名utility尺度等，但这里只能列为机制解释候选，**不能从源码证明其分别防崩或宣称生产确实用了示例小ε**。官方next-rank任务和实际预训练数据质量也可能参与，当前没有相应单因素证据。
+
+本项目anchor对替代动作a的要求是：
+
+\[
+ Q(a)-Q(parent) > .3\log\frac{p_{reference}(parent)+10^{-8}}{p_{reference}(a)+10^{-8}}.
+\]
+
+若parent概率.8、替代.1，门槛约`.624 cash/100`，即62.4元；不是给某个动作固定加62元，而是这个例子的Q优势必须克服的prior差。既有真实输入raw top1-top2 margin中位约1.36～1.75元，因此固定anchor在当前尺度上可能很强。共同Q平移不能克服这个阈值，必须改变动作间优势。**它不是数学上的硬锁**：足够大的正确Q advantage可以接管；但实测B10在旧500根仅5次偏离parent，30k独立检验也主要复制baseline，支持“Q只负责轻微修正”的风险假设。旧500根并非独立现金结论，不能直接说anchor导致了学习失败。
+
+重新只读扫描长期online全部415,284个真实训练决策，按存下的Q/p重新计算当时anchored greedy，并与实际保存的float32 score argmax核对（统计以实际score为准），结果如下。low support统一指原frozen reference的`p<=.1`，不是实际采样概率；它是诊断量，不启用新的过滤。
+
+| 族 | 决策数 | 偏离parent | 偏离自身anchor-greedy | chosen p_ref≤.1 | chosen p_ref均值 / P5 / 中位 |
+|---|---:|---:|---:|---:|---|
+| all | 415,284 | 25.2459% | 25.2044% | 11.7325% | 0.7017 / 0.0207 / 0.8906 |
+| discard | 199,106 | 30.4843% | 30.4587% | 17.2823% | 0.6506 / 0.0070 / 0.8507 |
+| chi/pass | 109,983 | 29.7091% | 29.6737% | 7.7630% | 0.6496 / 0.0591 / 0.7560 |
+| peng/pass | 96,118 | 11.9332% | 11.8490% | 6.0082% | 0.8380 / 0.0792 / 0.9516 |
+| hu/pass | 10,077 | 0.0099% | 0.0000% | 0.0000% | 0.9800 / 0.9800 / 0.9800 |
+
+这比E=.005时“偏离自身greedy最多.5%”的源码上界高约50.4倍，**相对于这个示例明显更激进**。但不能说比未知生产配置高50倍，也不能把raw一致率解释成官方ε；raw、anchor、parent是三种不同中心。greedy近似parent不代表采样分布完全冻结：25%的采集动作确实偏离，且分布仍受Q影响。因此anchor锁定是待检验的greedy控制权假设，不是“完全没有探索”的事实。25%真实偏离没有产生持续现金改善，不能再把“几乎不探索”作为简单解释；它也不证明有足够的同状态多动作outcome覆盖。
+
+### Reward granularity：差异重要，但不等于官方解决了action credit assignment
+
+GRP在这里是**独立的终场排名分布预测器**，不是Q的value stream，也不是与Q一同更新的TD target。`model.GRP`将每个kyoku开局的7维公开特征序列（局数、本场、供托、四家比分/10000）输入GRU，对四人最终排名的24种排列输出logits，再边缘化为每人各名次概率。`train_grp.py`用完整比赛的真实最终排名做排列CE预训练；Q的dataloader加载指定GRP checkpoint，在CPU eval/inference下构造reward。（O-model233–286/O-GRP-fit/O-GRP-data/O-loader39–44）
+
+令边界k处的预测终场排名utility为\(U_k=\sum_rP_{GRP}(rank=r\mid prefix_k)pts_r\)。最后边界不用预测，使用真实终场排名one-hot，所以\(U_K=pts_{actual\ final\ rank}\)。官方为当前kyoku生成\(r_k=U_{k+1}-U_k\)，当前局决策i的target是
+
+\[
+ y_i=\gamma^{d_i}r_{k(i)}.
+\]
+
+**不是**把未来全部kyoku的真实收益之和贴给当前动作，也不是普通麻将点数的差，更不是本项目的整局cash。GRP用下一边界预测把更长期终场排名价值传回当前kyoku；这是reward构造中的learned boundary potential，不是当前DQN的next-Q bootstrap。跨所有kyoku的未折扣差分会望远镜相消为最终utility减初始预测utility，但单个Q训练行只读本kyoku的那个差值。（O-reward24–38/O-loader102–122/O-train228）
+
+回答粒度问题：**gamma=1时，同一玩家同一kyoku内所有行确实共享完全相同的target**；gamma≠1才因d_i不同而不同。源码没有逐动作反事实收益或优势真值。因此不能说Mortal通过GRP直接克服了我们“约8.3个决策共用一个label”的困难。麻将一场game包含多个kyoku，而一局跑胡子本身更接近一个kyoku；机械比较“场/局”会放大或缩小差异。
+
+现有128通道×12块、1024 latent的ResNet＋Channel Attention与legal-mean Dueling保持不改；结构化动作scorer适配跑胡子可变吃/比选项，不能把其具体MLP层宽说成规则强制，官方E的192×40也不是生产保证。
+
+Q target没有经验标准差归一化/whitening；pts决定单位。E=[6,4,2,0]时U在[0,6]、差值在[−6,6]，这是取值界而非实际标准差。O-reward自带备用pts=[3,1,−1,−3]也不是TrainPlayer的生产值，实际由config.env.pts传入。GRP输入比分/10000只是feature缩放。client/train用于成绩显示的[90,45,0,−135]不是训练reward，后者以config.env.pts为准。官方真实target std、utility超参/GRP精度均U；不能拿示例界与我们的真实std直接比较学习难度。
+
+ZiMortal固定payments/100，同一局平均8.31～8.32个非空决策Observation共享一个终局现金；上轮校正后的固定5000/流probe残差std约66.57～68.78元，而raw margin中位1.36～1.75元；弃牌/吃牌的逐状态abs residual/margin中位约14.6～20.9。它们说明尺度挑战，不能把条件回报残差直接认定为不可约噪声，更不能证明官方GRP必然消除了该噪声。
+
+**reward差异比“双方都是terminal MC”这一旧简化重要，优先级高；尚无证据证明它是主因。** 当前跑胡子没有定义跨局persistent比分、固定比赛终点与排名效用。照搬GRP需新增比赛定义/GRP预训练，或把现金目标改成排名；随意加手牌潜力reward也不faithful。故本轮不具备一个同时忠实、仍优化原现金目标的reward替代方案，不选B作为下一步，不强行自创shaping。
+
+### Dataflow、reuse与更新密度
+
+1. 官方不是简单单机“5000局全采完→训一次→发一代”：worker批前get_param→冻结train_play→submit_replay，learner不断drain文件、shuffle/batch训练、按submit_every发布；可多worker异步。force_sequential=true才按idle-version及capacity门控；false时允许旧快照、多版本混在一次drain，提交的param_version不用于拒绝旧日志。生产worker数/版本混合数量/staleness分布**unknown**，没有从源码得到固定上界。（O-client/O-server/O-common）
+2. 完成一次文件遍历时，raw行读取次数是`num_epochs×(1+enable_augmentation)`。E=1且augmentation=false，是单遍，不长期反复reuse。`TrainPlayer.repeats`重复seed不等于复用同一个已标注行。server的buffer是文件排队；example sample_reuse_rate/threshold没有实际消费路径。`reserve_ratio`只是当前文件批的shuffle尾部保留，最后会yield。train.py测试后重启子进程可能中断当前drain，完整batch之外的尾行也可能丢弃；不能反过来保证每个提交样本恰好消费一次。（O-loader39–78/O-player148–151/O-server/O-train381–438）
+3. 当前50k真实跑胡子给出415,284非强制行、1,627更新；8.30568行/game，0.03254更新/game，平均255.25实际行/update；LR A/B分别414,760/414,651行、均1,625更新。1625不是凭空“训练次数少”，主要是行数/256的结果。相同N行下，官方E batch512、opt_step_every1反而约N/512次optimizer step；没有源码依据认定本项目每行训练更稀疏。
+4. 官方每game可产生更多行：game是多kyoku比赛，含额外杠选择，且没有按唯一合法动作统一删行。本项目只训练非强制多选决策。但真实官方trainee行/game未知；loader注释约660 instances/file没有说明在线trainee过滤后统计口径，不能拿它作生产样本量。官方完整遍历的近似更新数为`N×num_epochs×(1+augmentation)/(batch_size×opt_step_every)`，有尾批/中断修正；games→N的倍率仍未知。按E512，只要每game约16.66行就达到本项目0.03254 updates/game，但实际值及“差几个量级”不能从源码推断。
+5. 官方参数发布以**minibatch**steps计数，而不一定是optimizer steps。E submit_every400、batch512、accum1，周期约204,800行；本项目每5000局约41,500行/162更新发布。以观察行计，示例周期反而更长，且官方epoch-end也会发布；worker还要等自己的train_play批结束才取参数。只因它异步就断言“官方更新频率高一个量级”不成立。E worker batch800 games相对5000更小，但game定义、并行worker/耗时、重复版本与生产配置均未知。（O-train258–272/312–314/433/O-player112/O-client）
+
+optimizer核对补充：官方每次启动先构造AdamW；加载offline checkpoint进入online时不恢复旧optimizer/scheduler，但保留权重、aux/scaler、日志steps；online checkpoint再恢复会加载optimizer/scheduler。测试处sys.exit后父进程重启，再由该恢复逻辑延续，不是每批清Adam。ZiMortal首次online同样新建AdamW、generation间沿用对象与RNG；文件保存足够审计，却没有等价的通用自动恢复runner。这不是已完成无故中断实验的因果解释，也不在本轮改动。（O-train94–118/381–386/446–467；本地mortal_online.py/mortal_online_long.py）
+
+### Auxiliary：必须区分GRP与next-rank head
+
+| 对象 | 标签/作用 | online是否使用 | 对Q的关系 |
+|---|---|---|---|
+| 独立GRP | 终场四人排名的24排列，读取公开kyoku边界序列，独立CE预训练 | Q loader加载冻结GRP构造reward | 不接当前brain梯度，不是target-Q网络 |
+| `AuxNet((4,))` | **下一kyoku边界的当前比分排名**，末局用最终比分排名；不是当前kyoku胜者，也不是每行直接预测终场排名 | train_batch无online条件地计算CE，乘`config.aux.next_rank_weight`；E=.2，生产U | 1024 latent→无bias Linear→4 logits；CE梯度进入AuxNet和shared brain，不直接训练DQN action head；推理不拿它做动作分数 |
+
+源码：O-loader105–108从`grp_feature[:,3:]*1e4`拼接final_scores，稳定sort计算score ranks，再取`at_kyoku+1`；O-train64/80–94把AuxNet纳入同一个optimizer，240–246把CE加入总loss，O-model188–195定义head。即使权重设0也仍算CE但无加权梯度；能启用不等于生产一定启用非零值。当前缺少此表示学习信号可能重要，但本轮不加head/loss，也不把“缺aux”直接认定为全部差距。
+
+### 现有证据重新排序
+
+“排除”只限已经执行的特定配方/预算；未通过显著性检验不等于等效性证明。
+
+| 候选差异 | 已有证据 | 是否已基本排除 | 当前优先级 |
+|---|---|---|---|
+| 独立数据量不足 | 8k→16k离线同预算，raw现金差−.99元CI[−4.11,1.98]；50k online也没持续现金提升 | 削弱“继续堆同分布局数就够”；未跑50k offline，不能说它已被排除 | 低，先不扩量 |
+| exploration不足 | Boltzmann真实偏离25.20% vs自身anchor，50k未持续提升 | 削弱“缺总探索次数”；未排除访问质量/center/低支持风险 | 不再扩T/grid |
+| continuation mismatch | 首根B标签明显改善，但仅各约15k根/60更新，Gen3 B−A−.0072元CI[−.0789,.0567] | 局部未支持改善，不能等同于全面排除continuation影响 | 低，保留限制 |
+| LR过早衰减 | B更大centered-advantage漂移，final B−A+.1227[−.084,.3387]，对initial也跨0 | 已削弱“只要更新幅度更大就持续变强”；没有证明小效应为零 | 低，本轮不改LR |
+| Q ranking弱 | 旧fixed-hidden B macro61.94%、弃牌弱、吃牌有改善，anchor仅5/500偏离parent | 是局部现象，不是全动作随机，也非已证明唯一原因 | 保留诊断，不再扩支线 |
+| frozen anchor / actor center | 官方无prior；本项目强prior阈值、30k anchor近baseline无显著增益；尚无受控自身Q采集比较 | **未直接实验**；解除前须考虑raw现金显著为负 | **1，首选** |
+| reward granularity/utility | 官方GRP局界差分＋终场排名目标；本项目单局现金；双方gamma1时局内共享label | 未排除且重要，但目前没有忠实现金适配 | **2，设计未就绪** |
+| auxiliary loss | 官方可在线next-score-rank CE，当前无；生产权重未知 | 未直接对照，可能影响表示 | 3，暂不新增 |
+| online update density / freshness | 官方异步/可多epoch，但E单遍；本项目按行并不更稀疏；生产rows/game未知 | 数值差异尚未建立，不把unknown当大gap | 4，暂不实验 |
+| offline初始化/数据质量 | 官方允许配置任意checkpoint/名字过滤，并不保证生产预训练等同本项目 | 不可排除，也不能靠源码量化 | 风险边界，不新增实验网格 |
+
+**选择只有一个：actor-center。** 理由是源码差异明确，现有直接证据显示prior强，尚未做受控对照，而且可不改utility、loss或模型就检验“Q拥有部分真实访问分布后能否形成正反馈”。它不是已经证明的根因；raw Q当前会亏钱，因此不能用直接全部raw接管作一个预期崩掉的实验，也不允许把它和高温探索混成同一因素。
+
+### 唯一下一步候选：受限Q控制权实验（仅设计，未运行）
+
+**假设**：同等MC训练预算下，让Q在预先随机指定的一小部分真实牌局拥有非HU动作的greedy中心，能否比冻结prior主导的访问分布学出更有用的Q，并改善同一个部署算子的独立现金。
+
+需要先纠正两种混杂设计：直接比较“现有全程anchored Boltzmann”与“raw Q＋小ε”同时改变center和exploration，不能归因；让B整条主线立即raw greedy接管则把已知糟糕offline raw当安全起点，难以区分冷启动崩溃与持续学习。这里使用**两组共同的小ε控制环境＋固定10%整局Q ownership**，唯一A/B开关是这些预指定牌局的center。它是局部fidelity验证，不冒称完整复现Mortal。
+
+| 项目 | 预声明协议 |
+|---|---|
+| 起点 | 两组同一原B-coverage `selected-common.pt`，initial SHA=`4e2bbee3204630d949753ad92dcaa94a0ef6a2b6e19dc8c862b6dd13d4737a8f`；两个对手始终`league-v2/stage-02/best-dev.pt`，SHA=`9332fd07a09099dcdd38e180577a38887876c6aa2ee5ac1b8c896193c6ac1784` |
+| 规模 | 各3代×5000真实新局，各15k，合计30k；原始offline数据不混入；最终候选固定Gen3，不选中间冠军 |
+| ownership mask | 每代按(dealer,trainee seat)九层分配500个probe名额（余数按固定层序分配），各层按预先固定独立hash选择game id，A/B完全共用；不看手牌、Q gap、现金、是否吃碰、任何人工case。其余4500局两组均为anchor中心 |
+| A唯一处理 | probe也继续`S_A=Q_A+.3log(p_ref+1e-8)`，即当前固定anchor的中心；prior冻结，Q仍更新 |
+| B唯一处理 | probe的非HU多选决策用`S_B=Q_B`；无额外prior/support，Q整局拥有这些决策的中心。非probe仍`Q_B+.3log(p_ref+1e-8)`；不是全部游戏直接raw接管 |
+| 共同exploration | 两组所有非HU多选都固定`(1−.005)δ_argmax(S)+.005 softmax(S/.5)`，top-p=1。外层结构来自官方，ε=.005仅借用示例作固定小概率；T保持现有.5、不搜索、不改Q/reward单位，不冒称官方生产温度。HU/PASS两组均保留当前greedy anchor，不增加过胡探索 |
+| 单变量边界 | A不是旧25%探索历史线的完全复跑，而是同一小ε环境下的frozen-anchor控制组。A/B只差probe中心函数；共同探索变更不能用来解释A/B差。对10%整局有Q控制的局部问题作结论，不对100%接管或所有HU作外推 |
+| 唯一训练loss | 真实执行chosen动作的terminal cash/100 MC ½MSE，gamma1、CQL0、aux0。无反事实、无importance ratio、无TD/target network、无replay或旧offline行 |
+| optimizer/LR/网络 | 沿用现有online默认A schedule warm20+cos300，peak3e-5/floor3e-6；不为新规模重算。AdamW betas(.9,.999)/eps1e-8/decay .01及仅Linear/Conv weight分组，batch256/clip1，float32/BN行为不改。各自新建同配置optimizer，跨代Adam/RNG连续，Q/55×20/structured action/现金结算不改 |
+| 匹配更新预算 | 同代采完A/B真实行N_A/N_B，按事前规则`U_g=floor(min(N_A,N_B)/256)`，两组各抽`256U_g`行均匀无放回，再用同batch-index RNG单遍更新；未匹配尾行仅审计。没有为了补行重跑游戏或repeat/replay；此共同尾部匹配区别于旧all-row配方，应记录丢弃数量与分族分布，不能按回报挑行 |
+| producer | 每代actor冻结采完，再更新/发布；记录producer/updated SHA、完整真实轨迹与概率、optimizer/RNG与manifest；不模仿未知生产异步规模 |
+| 安全性 | 不改10%份额，不临时回退某类动作、不按中间现金改ε/T/λ/LR。若B共同部署actor对baseline连续两代CI上界<−5元/局，停止整轮、回到initial，holdout不用；普通波动不停止 |
+
+B学习的是该固定ownership混合访问下真实chosen动作的MC回报，不是纯raw策略的Q真值。整局ownership未加入55×20输入，可能带来混合continuation的限制；这是安全局部验证的已知边界，不另做continuation实验。若结果不明确，不能直接据此否定100%自身Q控制，也不私自扩大份额。
+
+这里没有λ网格：所有仍使用anchor的地方固定.3，probe中B去掉外部prior是**被检验的center开关本身**。不是声称没有改变策略。ε=.005是两组共同的新固定控制环境，既不比较温度，也不能拿本轮A与旧50k曲线的差异宣布actor-center有效。10%是预算/风险上限而非搜索得到的“最佳比例”；既有raw亏约20元的量级提示整局mixture初期也可能亏钱，不承诺成本上界或正收益。
+
+**统一评估算子以排除policy extraction混杂**：定义`D(Q)`，在独立预锁10%整局mask中非HU取raw greedy，其余及HU取greedy anchor，epsilon=0。用**同一个D**评估A/B/initial；不能用A-anchor对B-raw的差冒充训练效应。每代额外直接测A raw greedy、B raw greedy和frozen baseline，共6种策略；raw包含当前既有raw诊断的HU选择，不用于生成整条训练主线或自动部署。采样策略的真实执行现金另报，不能代替部署成绩。
+
+每代全新500 seeds×3座位，6策略共9000局；三代27k评估局。所有训练结束且Gen3 SHA锁定后，全新最终2000 seeds×3座位，仅一次评估baseline、D(initial)、D(A3)、D(B3)、raw(A3)、raw(B3)，共36k局。总计30k训练＋63k评估，最多93k真实新局；**本轮均未启动**。最终holdout seed-cluster paired bootstrap 10,000次；不根据任何中间评估挑冠军或调mask。
+
+建议预留互不相交的新seed块：train `1700000000+g×100000+i`（g=1..3，i<5000）；中期评估 `1710000000+g×100000+i`（i<500）；holdout `1720000000+i`（i<2000）。训练dealer=i%3、trainee seat=(i//3)%3；评估每seed三座位轮换。执行前必须对所有旧seed-lock/input manifest做重叠审计并锁定最终清单；当前仅是设计，不把未做的全库重叠核查说成已通过。ownership只由独立随机key和公开实验game index决定，角色在发牌前锁定；不读取隐藏shuffle或手牌来选择Q控制。eval probe按seed簇层预先选择恰好10% trials、三个seat使用同一标记，A/B同mask，配对bootstrap保留整seed簇。
+
+必须记录：各代真实probe局数/执行次数、相对baseline/anchor/raw的偏离率、各族数量、chosen p_ref/实际actor概率/entropy、低support访问、相同D下现金、raw现金、训练行chosen-Q MAE/RMSE/corr、centered-advantage与参数/BN漂移、实际LR/update、matched/drop行数量。所有指标按角色和分母区分，避免把10% ownership当成10%动作偏离或把采样概率当p_ref。
+
+**最终主比较只三条**：D(B3)−D(A3)、D(B3)−D(initial)、D(B3)−baseline，报告各自seed簇95%区间；若要宣称可靠policy improvement，三条下界同时>0（这是交集标准，不拿三次检验中任一显著作成功）。仅前两条为正而未过baseline，最多说明获得有用学习信号，仍无部署晋级。raw排序/现金改善为辅助证据，不能替代主现金。无改善或CI跨0，只能否定/未证明**这10% ownership、该起点和3代预算下**的收益，不宣称完全排除Mortal-style自博弈；不自动扩份额或generation。
+
+### 本轮只读审计产物与停止点
+
+`scripts/audit-mortal-fidelity.py`只做固定commit源码下载/校验、旧50k训练日志扫描、冻结源码/起点checkpoint前后SHA检查。没有torch/model/optimizer导入，不产生游戏、梯度、训练标签或counterfactual分支。数据结果在本地`data/generated/mortal-fidelity-audit-v1/`，新代码/报告入Git，源码快照/逐JSON仍留本机。
+
+```bash
+PYTHONPATH=. .venv/bin/python scripts/audit-mortal-fidelity.py --refresh-official
+# 已下载并锁定官方快照后可离线复核：
+PYTHONPATH=. .venv/bin/python scripts/audit-mortal-fidelity.py
+```
+
+当前主要差距是：尚未证明Q在可控真实访问中能独立改进现金；官方自Q中心、reward/GRP、auxiliary与实际部署语义并未全部对齐。现有数据不支持继续盲目堆同分布数据、提高探索或只拉长LR，**也没有严格因果排除全部潜在作用**。本轮选定一个受限actor-center候选，仅设计，不启动；reward方案因缺乏忠实现金适配而暂不选。所有counterfactual/information-set/posterior/belief/ranking扩展封存，待用户另行指令；报告后停止。
+
+本轮实测：官方15文件Git blob/旧13文件SHA核验通过；旧415,284行的重新计算anchor中心与存下float32 score argmax分歧0；低support占全部动作11.7325%、占偏离parent动作46.4728%。冻结源码与offline起点/baseline权重前后SHA相同，训练更新/新对局/新rollout全部0。只读结果SHA256=`58150c0b7aa629b7ad23953a80fe2c3ab7dae8cdf25052659d71c495070ff90d`，审计脚本SHA256=`390eefdf8c0ff7269fdf0f0563138df247cc2340a81492c99af11ccd22779861`。完整原始日志没有重写，不把本轮统计写成新的训练数据。
+
+验证：pytest 431 passed、1 skipped；ruff（zimortal/tests及本轮只读脚本）与git diff --check通过。仅提交Agent约定、完整审计/协议文档及只读脚本；按既有授权push。没有自动开始下一阶段。
