@@ -522,3 +522,12 @@ fix(engine): 禁止吃后无法出牌的方案
 - 现有MC每行单遍并不比官方示例更稀疏；官方sample reuse字段无实现路径，不能杜撰高倍replay或量级更快更新。旧加量/探索/LR实验削弱简单解释，未做等效性证明，不说全面排除。
 - 仅建议受限actor-center对照：共同小ε环境、固定10%整局probe开关anchor中心/自身Q中心，统一D算子评估与匹配updates；保留现金MC/LR/BN/网络，不直接整条主线raw接管。协议见docs/training/mortal-style.md。reward缺忠实单局现金GRP适配，暂不设计自创shaping。
 - 本轮审计/设计后停止，不自动训练或进入任何下一阶段。重要总结/只读脚本commit并按既有授权push；下轮实验需新指令。
+
+## Restricted Q-ownership actor-center A/B完成（2026-10-18）
+
+- 最新用户授权仅执行fidelity audit预定的受限center干预，现已完成并停止。共同offline起点、冻结两对手、55×20/网络/现金MC halfMSE/CQL0/BN/默认warm20+cos300均未改；A全anchor，B仅预锁10%整局probe的非HU用raw Q，HU全anchor；共同ε=.005、T=.5、top-p1，不称官方生产配置或完整Mortal复现。
+- 3代×5000局/arm＝30k真实训练；27k中期eval＋36k最终holdout，总93k轨迹、18,500独立seed。A/B相同seed/mask、独立连续optimizer/RNG；匹配每组489 updates、125,184 used行单遍，无replay/补采/按family或cash筛行，993尾行仅审计。
+- 最终统一D（eval10%raw/其余anchor/HUanchor/ε0）下B3−A3=−.242元/局，95%CI[−.612,+.098]；B3−D(initial)=−.098[−.494,+.278]；B3−baseline=−2.247[−3.114,−1.407]。未通过三条下界>0，baseline不换；Gen1/2局部正差未持续，不挑冠军。D(initial)本身含10%raw并亏约2.15，不能与旧纯anchor部署结论混淆。
+- B实际raw-center12,278决策、父动作偏离约6.2%–6.7%，A约1.5%–1.8%，干预生效但未取得可靠现金证据；不得外推100%ownership或Mortal范式无效。counterfactual/infoset/posterior/belief/pairwise等支线继续封存，不自动扩ownership/generation或新loss。
+- 完整独立审计通过：全部真实规则/守恒/MC、seed/mask、实际抽样与概率/RNG、匹配updates、连续Adam、参数/BN/Q漂移、四块eval现金及bootstrap。reader先修复并发完成顺序比较、后修复跨batch浮点核对，均有旧源码/config/SHA及amendment；actor/learner/权重/轨迹/结果不改。251,361训练行重算最大Q偏差.0251元、centered .0035元，raw argmax变化0；不放松真实动作一致性。
+- pytest438 passed/1 skipped，ruff及diff检查通过。原始638项artifact封存本机completion-evidence，不逐JSON/权重提交；重要代码/完整总结一次commit并按授权push。结果/协议/边界/审计SHA见docs/training/mortal-style.md。与强AI目标仍缺稳定独立现金提升；本轮停住，下一步等用户决定，不自行新增实验。

@@ -4741,3 +4741,300 @@ PYTHONPATH=. .venv/bin/python scripts/audit-mortal-fidelity.py
 本轮实测：官方15文件Git blob/旧13文件SHA核验通过；旧415,284行的重新计算anchor中心与存下float32 score argmax分歧0；低support占全部动作11.7325%、占偏离parent动作46.4728%。冻结源码与offline起点/baseline权重前后SHA相同，训练更新/新对局/新rollout全部0。只读结果SHA256=`58150c0b7aa629b7ad23953a80fe2c3ab7dae8cdf25052659d71c495070ff90d`，审计脚本SHA256=`390eefdf8c0ff7269fdf0f0563138df247cc2340a81492c99af11ccd22779861`。完整原始日志没有重写，不把本轮统计写成新的训练数据。
 
 验证：pytest 431 passed、1 skipped；ruff（zimortal/tests及本轮只读脚本）与git diff --check通过。仅提交Agent约定、完整审计/协议文档及只读脚本；按既有授权push。没有自动开始下一阶段。
+
+## Restricted Q-ownership actor-center experiment
+
+### 预声明协议（2026-10-18，结果产生前锁定）
+
+本轮执行上一节 fidelity gap audit 已设计的唯一干预，不重复官方源码审计，不继续
+counterfactual / information-set / posterior / belief 支线。它是 **controlled actor-center
+intervention**，不是完整 Mortal reproduction：官方的 greedy center 是自身 Q，而我们
+长期 actor 的中心仍为 `Q+.3 log(p_reference+1e-8)`。旧 raw Q 仍明显较差，故不直接
+100% 接管；固定10%整局 probe 仅检验一小部分真实访问分布的控制权是否产生有效学习。
+10% ownership 不是10%动作偏离，也不包含 HU ownership。
+
+共同起点为 B-coverage `selected-common.pt`（SHA256
+`4e2bbee3204630d949753ad92dcaa94a0ef6a2b6e19dc8c862b6dd13d4737a8f`）；两家对手恒为
+league-v2/stage-02 `best-dev.pt`（SHA256
+`9332fd07a09099dcdd38e180577a38887876c6aa2ee5ac1b8c896193c6ac1784`）。A/B独立参数、
+optimizer、Torch/NumPy RNG，相同初始化、训练 seed、庄家、trainee seat 和 ownership。
+55×20 Observation、网络、structured scorer、legal-mean Dueling、规则/结算、BN均不改。
+
+每组3代×5000新真实局，合计30,000训练局。每代开始前按 `(dealer, trainee seat)` 九层
+固定 SHA256 ticket 选500 probe，余4500 non-probe；层按字典序，前五层各56、后四层各55。
+mask函数只接收 seed、dealer、seat、固定实验标签和固定salt，不接收游戏状态、Q或现金。
+A/B使用完全相同manifest；不按牌型筛局、不补局、不动态回退、不加support guard。
+
+- A：全部非HU多动作决策中心为 anchor。
+- B：probe非HU中心为 raw Q，non-probe为anchor。
+- 两组全部HU/PASS均为 greedy anchor，不进行探索。
+- 共同非HU行为为 `π=.995 δ_argmax(S)+.005 softmax(S/.5)`，top-p=1。
+  显式先抽Bernoulli分支，进采样分支仍可能选中center；实际偏离率与分支率分别记录。
+  `.005`只借用官方example的小探索值，不称官方生产配置。每局独立RNG避免并发完成顺序
+  改变采样；A/B同seed/seat使用同初始随机流。
+
+每代先冻结两组producer、分别采完真实完整轨迹并锁定日志/manifest，随后定义
+`U_g=floor(min(N_A,N_B)/256)`。每组均匀无放回抽取256U行，以共同batch-index RNG逻辑
+单遍训练U步；未用行只审计，保存used/dropped及分族计数，不补采、不混offline、不replay。
+optimizer和RNG跨代连续。训练直接复用既有 `mortal_online.update/mc_loss/make_optimizer`：
+`½(Qchosen-terminal_cash/100)^2`，gamma=1、CQL=aux=0，无bootstrap/TD/importance等新项。
+AdamW现有Linear/Conv权重decay=.01、其余0，betas(.9,.999)、eps1e-8；batch256、clip1、
+float32。LR严格复用warm20+cosine300、peak3e-5、floor3e-6，不延长或重启。
+
+统一部署算子 **D(Q)**：独立eval seed事前hash锁定10% probe，同seed三个seat一起标记；
+probe非HU raw greedy，non-probe anchor greedy，HU anchor greedy，epsilon=0。
+initial/A/B均使用同一个D，禁止A用纯anchor而B用raw。每代500全新seed×3seat×六策略
+（baseline、D(initial)、D(A)、D(B)、raw A、raw B），共27,000中期eval局。raw只是诊断，
+其中HU保持既有raw诊断语义；不把它称为共同部署D。
+
+最终候选在开始前固定A3/B3，不按中期test选代。两份Gen3 SHA锁定后，唯一一次最终
+holdout为2000全新seed×3seat×相同六策略=36,000局；正常完整预算93,000真实局。
+所有差值同seed同seat配对，10,000次seed-cluster bootstrap，三个seat整簇重采。
+三个primary endpoints为 `D(B3)−D(A3)`、`D(B3)−D(initial)`、`D(B3)−baseline`；只有
+三条95%CI下界都>0才宣称可靠policy improvement，不自动替换baseline。
+
+唯一安全停止为连续两代 `D(B)−baseline` 95%CI上界<−5元/局：停止后续generation和holdout，
+保留initial供回退。普通波动不改配置、不停止。若B优于A/initial但未超过baseline，只能说
+有局部学习信号；若CI跨0，只能说本起点、10%ownership、3代预算未取得可靠证据，不能
+外推100%ownership或Mortal self-play无效。
+
+训练seed计划 `1700000000+g*100000+i`，中期eval `1710000000+g*100000+i`，holdout
+`1720000000+i`。prepare遍历本地及归档symlink下所有seed/lock/manifest/config/outcomes
+JSON，并锁文件SHA；有冲突则整块平移10,000,000，运行时禁止改seed。最终使用范围及
+seed/ownership SHA见本节结果和本机 `seed-lock.json`、`ownership-manifest.json`。
+
+实现复用现有collect、完整规则重放、数据编码、MC updater、bootstrap和checkpoint机制；
+新增编排 `zimortal/training/mortal_actor_center_probe.py`、runner及独立auditor。
+源码/起点/对手/config/seed/mask在首局前锁定；每代保存真实轨迹、行为概率、终局现金、
+row manifest、producer SHA、更新后checkpoint、optimizer、RNG、BN及LR状态。
+逐代/seat/family记录访问、center/parent/anchor/raw偏离、分支率、熵、p_ref、低支持率，
+以及chosen-Q回归、参数与BN分离漂移、common/centered-advantage Q漂移、梯度与clip。
+训练行指标只作拟合诊断，分族终局现金仅描述性归属，不当单动作因果EV。
+
+复现（需CUDA和至少2GiB磁盘保留空间，原始目录不得覆盖）：
+
+```bash
+PYTHONPATH=. .venv-cuda/bin/python scripts/run-mortal-actor-center-probe.py --prepare
+PYTHONPATH=. CUBLAS_WORKSPACE_CONFIG=:4096:8 .venv-cuda/bin/python scripts/run-mortal-actor-center-probe.py
+PYTHONPATH=. .venv-cuda/bin/python scripts/audit-mortal-actor-center-probe.py --q-device cuda
+```
+
+本轮完成后停止，不扩ownership/generation、不调ε/T/λ/LR、不增加loss或换baseline。
+
+### 执行锁与只读审计修正
+
+扫描287份历史JSON清单（包含Windows归档目录的symlink），最终seed offset=0、无重叠，
+采用上述原计划范围。seed-lock SHA256为
+`d0e97309f0e2487a4f6039f5784bccda5c106abf485cc9a607a2cc22b2ddfff5`；ownership SHA256为
+`31ccbb3cb8e8f9e27881977667b73f2fc7257ddb4ad72b527a1654062fe763ad`。
+
+启动采集后、首次optimizer更新前，独立审计器修正了一项**比较顺序**：Gen1非probe
+轨迹按 `(seed,seat,step)` 排序后比较，不能直接比较并发slot的完成顺序，因为probe局
+长度变化会影响后续slot调度。只更改审计器，不改actor、learner、seed、mask或超参数。
+原config/lock、审计器新旧SHA、修正时间和零更新事实保存在本机
+`audit-reader-amendment.json`，更新的只读审计器SHA重新绑定配置锁；不冒称审计器从首局
+前到最后完全未改。所有产生训练动作和loss的代码自首局前冻结。
+
+资源：RTX5080 CUDA float32；systemd服务 `zimortal-actor-center-probe-v1`，MemoryMax=8G、
+SwapMax=1G、CPUQuota=300%、Nice=10、OMP/OPENBLAS线程2，持有训练flock。旧volume20k-v2
+已逐文件SHA校验归档到Windows盘并保留原路径symlink，原数据未删除；本轮保留2GiB最低
+写入余量，原始轨迹/权重仅本地保存。
+
+### 完整结果（固定Gen3，未选冠军）
+
+正常完成3代，未触发安全停止。30,000训练局＋27,000中期eval＋36,000最终holdout＝**93,000真实局**。
+A/B均累计489 updates；每组各125,184行仅消费一次，未用尾行仅审计。训练与Q数值单位为cash/100，下面现金单位均为元/局。
+
+最终候选先锁SHA再开启holdout，A3/B3分别为：
+
+- A3：`5bcd5e1ad82556569b26047629b90bb6863f3e73c29f7ec1a3d57eb673ad7454`。
+- B3：`ded40bdd88f84b995710c8c54b42da582c4598a263e64c7947d22c5d475142bc`。
+
+#### 中期与最终现金（配对seed-cluster，10,000次bootstrap）
+
+| 阶段 | D(B)−D(A) [95%CI] | D(B)−D(initial) [95%CI] | D(B)−baseline [95%CI] |
+|---|---|---|---|
+| Gen1 | +0.257 [-0.380, +1.007] | +0.800 [+0.070, +1.667] | -1.967 [-3.507, -0.570] |
+| Gen2 | +1.003 [-0.080, +2.497] | +0.473 [-0.753, +1.997] | -1.530 [-3.113, +0.177] |
+| Gen3 | -0.033 [-0.607, +0.530] | +0.257 [-0.563, +1.200] | -1.800 [-3.340, -0.337] |
+| 最终holdout | -0.242 [-0.612, +0.098] | -0.098 [-0.494, +0.278] | -2.247 [-3.114, -1.407] |
+
+| 策略 | 最终mean cash | 相对baseline [95%CI] |
+|---|---|---|
+| baseline | +0.000 | +0.000 [+0.000, +0.000] |
+| initial | -2.149 | -2.149 [-3.028, -1.289] |
+| A-D | -2.005 | -2.005 [-2.886, -1.129] |
+| B-D | -2.247 | -2.247 [-3.114, -1.407] |
+| A-raw | -19.587 | -19.587 [-21.076, -18.083] |
+| B-raw | -19.685 | -19.685 [-21.103, -18.244] |
+
+#### 训练访问与匹配更新
+
+| Gen/arm | 实际行/used/dropped | 本代/累计updates | probe/raw-center决策 | branch/偏离center/偏离parent |
+|---|---|---|---|---|
+| 1/A | 42075/41984/91 | 164/164 | 4186/0 | 0.516%/0.100%/1.799% |
+| 1/B | 42010/41984/26 | 164/164 | 4121/4095 | 0.503%/0.105%/6.727% |
+| 2/A | 41663/41472/191 | 162/326 | 4207/0 | 0.425%/0.130%/1.464% |
+| 2/B | 41580/41472/108 | 162/326 | 4121/4097 | 0.427%/0.149%/6.205% |
+| 3/A | 42065/41728/337 | 163/489 | 4188/0 | 0.597%/0.195%/1.512% |
+| 3/B | 41968/41728/240 | 163/489 | 4109/4086 | 0.592%/0.210%/6.181% |
+
+branch率分母为非HU多动作决策；另外两个偏离率分母为全部非强制决策。每代每组始终500 probe/4500 non-probe。
+
+| Gen/arm | used family | dropped family |
+|---|---|---|
+| 1/A | {'peng/pass': 9923, 'discard': 20165, 'chi/pass': 10536, 'hu/pass': 1360} | {'discard': 43, 'peng/pass': 27, 'chi/pass': 17, 'hu/pass': 4} |
+| 1/B | {'discard': 20339, 'chi/pass': 10579, 'peng/pass': 9805, 'hu/pass': 1261} | {'peng/pass': 13, 'discard': 10, 'chi/pass': 2, 'hu/pass': 1} |
+| 2/A | {'chi/pass': 10344, 'peng/pass': 9725, 'discard': 20016, 'hu/pass': 1387} | {'discard': 71, 'peng/pass': 57, 'chi/pass': 57, 'hu/pass': 6} |
+| 2/B | {'discard': 20150, 'chi/pass': 10436, 'peng/pass': 9612, 'hu/pass': 1274} | {'chi/pass': 27, 'discard': 54, 'hu/pass': 2, 'peng/pass': 25} |
+| 3/A | {'discard': 20035, 'peng/pass': 9925, 'chi/pass': 10406, 'hu/pass': 1362} | {'chi/pass': 89, 'discard': 154, 'peng/pass': 81, 'hu/pass': 13} |
+| 3/B | {'chi/pass': 10546, 'discard': 20088, 'peng/pass': 9851, 'hu/pass': 1243} | {'chi/pass': 59, 'peng/pass': 66, 'discard': 108, 'hu/pass': 7} |
+
+| Gen/arm | chosen p_ref均值 | 实际actor p均值 | entropy均值 | low-support | 偏离anchor/raw |
+|---|---|---|---|---|---|
+| 1/A | 0.83168 | 0.99772 | 0.01068 | 0.038% | 0.100%/50.370% |
+| 1/B | 0.79557 | 0.99747 | 0.01231 | 3.963% | 5.092%/45.546% |
+| 2/A | 0.83379 | 0.99742 | 0.01069 | 0.050% | 0.130%/51.379% |
+| 2/B | 0.79892 | 0.99702 | 0.01235 | 3.862% | 4.971%/45.765% |
+| 3/A | 0.83232 | 0.99676 | 0.01074 | 0.090% | 0.195%/50.541% |
+| 3/B | 0.79808 | 0.99641 | 0.01235 | 3.803% | 5.025%/44.472% |
+
+#### MC拟合和更新（训练行诊断，不是泛化指标）
+
+| Gen/arm | MAE前→后 | RMSE前→后 | corr前→后 | adv RMS前→后 | raw margin均值前→后 |
+|---|---|---|---|---|---|
+| 1/A | 0.4195→0.3980 | 0.8700→0.8523 | 0.1280→0.3228 | 0.0674→0.0604 | 0.10164→0.09097 |
+| 1/B | 0.4105→0.3861 | 0.8402→0.8212 | 0.1257→0.3365 | 0.0664→0.0579 | 0.09909→0.08618 |
+| 2/A | 0.3886→0.3889 | 0.7789→0.7464 | 0.2087→0.3375 | 0.0608→0.0652 | 0.09157→0.09553 |
+| 2/B | 0.3884→0.3890 | 0.8010→0.7691 | 0.1975→0.3297 | 0.0581→0.0619 | 0.08642→0.08966 |
+| 3/A | 0.4195→0.4239 | 0.8045→0.7946 | 0.2608→0.2950 | 0.0644→0.0680 | 0.09465→0.09916 |
+| 3/B | 0.4023→0.4034 | 0.7846→0.7767 | 0.2443→0.2783 | 0.0610→0.0631 | 0.08907→0.09161 |
+
+| Gen/arm | LR min/mean/max | floor步 | grad norm均值 / clip率 | Δθ/‖θ‖ | BN mean/var ΔL2 |
+|---|---|---|---|---|---|
+| 1/A | 3e-06/2.43e-05/3e-05 | 0 | 0.9489 / 28.049% | 1.2994% | 1.49007/2.71523 |
+| 1/B | 3e-06/2.43e-05/3e-05 | 0 | 0.9274 / 26.220% | 1.3077% | 1.47438/2.71074 |
+| 2/A | 3e-06/8.1e-06/1.73e-05 | 6 | 0.7593 / 18.519% | 0.4650% | 0.38148/0.65936 |
+| 2/B | 3e-06/8.1e-06/1.73e-05 | 6 | 0.7718 / 14.815% | 0.4815% | 0.39307/0.73938 |
+| 3/A | 3e-06/3e-06/3e-06 | 163 | 0.7433 / 10.429% | 0.1637% | 0.12510/0.18817 |
+| 3/B | 3e-06/3e-06/3e-06 | 163 | 0.7457 / 14.110% | 0.1686% | 0.13162/0.18323 |
+
+| Gen/arm | legal Q漂移RMSE | common/adv漂移RMS | adv平方占比 | raw/anchor argmax改变率 |
+|---|---|---|---|---|
+| 1/A | 0.11055 | 0.11004/0.01065 | 0.928% | 2.343%/0.290% |
+| 1/B | 0.12408 | 0.12353/0.01170 | 0.889% | 2.683%/0.321% |
+| 2/A | 0.10287 | 0.10248/0.00896 | 0.759% | 1.764%/0.149% |
+| 2/B | 0.10361 | 0.10323/0.00882 | 0.724% | 5.911%/0.168% |
+| 3/A | 0.05125 | 0.05104/0.00457 | 0.794% | 0.314%/0.064% |
+| 3/B | 0.03544 | 0.03529/0.00319 | 0.808% | 0.460%/0.038% |
+
+每组Q漂移使用同一批**本组本代**全部可见训练输入的更新前后输出；不是两组共同输入的因果Q比较。BN drift单列，不混进parameter norm。
+
+#### 动作族与座位诊断
+
+| Gen/arm | family | 决策/raw-center | 偏离parent | p_ref均值 | low-support |
+|---|---|---|---|---|---|
+| 1/A | discard | 20208/0 | 2.237% | 0.80358 | 0.049% |
+| 1/A | chi/pass | 10553/0 | 1.213% | 0.79027 | 0.047% |
+| 1/A | peng/pass | 9950/0 | 1.779% | 0.91233 | 0.010% |
+| 1/A | hu/pass | 1364/0 | 0.000% | 0.98000 | 0.000% |
+| 1/B | discard | 20349/2144 | 9.966% | 0.74387 | 7.190% |
+| 1/B | chi/pass | 10581/1092 | 5.878% | 0.76277 | 1.900% |
+| 1/B | peng/pass | 9818/859 | 1.793% | 0.91438 | 0.010% |
+| 1/B | hu/pass | 1262/0 | 0.000% | 0.98000 | 0.000% |
+| 2/A | discard | 20087/0 | 1.772% | 0.80545 | 0.095% |
+| 2/A | chi/pass | 10401/0 | 1.259% | 0.79123 | 0.010% |
+| 2/A | peng/pass | 9782/0 | 1.257% | 0.91645 | 0.010% |
+| 2/A | hu/pass | 1393/0 | 0.000% | 0.98000 | 0.000% |
+| 2/B | discard | 20204/2165 | 9.147% | 0.74862 | 6.924% |
+| 2/B | chi/pass | 10463/1092 | 5.773% | 0.76420 | 1.950% |
+| 2/B | peng/pass | 9637/840 | 1.328% | 0.91809 | 0.031% |
+| 2/B | hu/pass | 1276/0 | 0.000% | 0.98000 | 0.000% |
+| 3/A | discard | 20189/0 | 1.957% | 0.80421 | 0.139% |
+| 3/A | chi/pass | 10495/0 | 1.286% | 0.78864 | 0.067% |
+| 3/A | peng/pass | 10006/0 | 1.059% | 0.91454 | 0.030% |
+| 3/A | hu/pass | 1375/0 | 0.000% | 0.98000 | 0.000% |
+| 3/B | discard | 20196/2048 | 9.086% | 0.74850 | 6.808% |
+| 3/B | chi/pass | 10605/1153 | 6.176% | 0.76007 | 2.046% |
+| 3/B | peng/pass | 9917/885 | 1.049% | 0.91674 | 0.040% |
+| 3/B | hu/pass | 1250/0 | 0.000% | 0.98000 | 0.000% |
+
+| 最终策略 | seat0 cash−baseline [95%CI] | seat1 | seat2 |
+|---|---|---|---|
+| initial | -2.065 [-4.100, -0.080] | -2.890 [-4.993, -1.018] | -1.492 [-3.305, +0.297] |
+| A-D | -1.657 [-3.697, +0.310] | -2.910 [-4.960, -1.075] | -1.448 [-3.277, +0.358] |
+| B-D | -2.062 [-3.925, -0.290] | -3.060 [-5.120, -1.218] | -1.617 [-3.450, +0.150] |
+| A-raw | -18.102 [-21.948, -14.360] | -19.608 [-23.468, -15.842] | -21.052 [-25.080, -17.017] |
+| B-raw | -18.800 [-22.485, -15.240] | -19.442 [-23.203, -15.707] | -20.812 [-24.808, -16.807] |
+
+分族及seat×family完整访问、熵、p_ref/实际p分位数、低支持率、center/anchor/raw偏离、描述性终局现金、chosen-Q MAE/RMSE/corr与adv/margin分布全部保存在每代 `training-result.json` 的 `behavior/regression_before/regression_after`，部署对应各评估 `result.json`。每局重复归属的分族现金只作描述，不当动作因果收益；不人工挑case。
+
+#### 判定与适用边界
+
+**没有通过预声明的可靠policy-improvement门槛。** 最终B−A与B−initial的区间均跨0，
+且B−baseline整个区间为负。Gen1的B−initial正区间与Gen2的B−A正均值未在Gen3/final
+持续，不能挑它们宣布成功，也不把CI跨0解释为严格等效性证明。
+
+干预本身生效：B在1500个预锁probe局的非HU决策中累计12,278次使用raw center；
+相对父策略的训练动作偏离约6.2%–6.7%，A约1.5%–1.8%。B的低支持已执行动作占比
+约3.8%–4.0%，主要在discard（约6.8%–7.2%）与chi（约1.9%–2.0%），peng基本不变；
+两组HU始终anchor且本批实际全部与父HU选择一致。10%整局ownership不是10%动作偏离，
+ε分支更不是控制权本身：实际偏离center仅约0.10%–0.21%，多数新增偏离来自center开关。
+
+回归/更新没有带来可靠现金改善。各代本组输入Q漂移的centered-advantage平方占比均
+不足1%，多数为共同平移；这是诊断现象，不单独证明advantage不可学习或唯一瓶颈。
+最终raw A/B仍分别约−19.59/−19.69元/局。两组D相对baseline均亏约2元，**D(initial)
+也亏约2.15元**：这里的initial采用同一10%raw部署mixture，不能与旧纯anchor≈baseline
+的结论混淆，不能说本轮把旧纯anchor部署策略训练退化了2元。
+
+本实验只识别“这个起点、共同小ε环境、10%整局非HU控制权、既定MC/optimizer/LR/BN、
+3代15k局/arm”的处理效应，未测100%ownership、HU ownership、异步持续数据流、更多
+generation或其他reward/auxiliary。负结果不证明official Mortal范式无效，也不能说明
+anchor一定不是瓶颈。没有更换baseline，没有将counterfactual/infoset/posterior/belief
+支线重新引入训练；本轮完成后停止，后续扩大或改配方须人工决定。
+
+#### 审计数值精度说明（结果不变）
+
+第一次独立审计在“256行重算Q vs 采集时变长batch记录Q”的绝对误差检查处停止，
+不是规则/收益/采样审计失败。随后对全部六个流251,361行只读重算，显式匹配原实验的
+Torch deterministic模式；最大绝对误差0.000250578 cash/100（0.025058元），最大去均值
+误差0.000035003 cash/100（0.003500元），**所有251,361行raw argmax均未改变**。
+Gen1全部non-probe真实逐局动作也完全相同。细表保存在 `numeric-batch-review.json`。
+
+审计器据此区分跨batch float32共同数值偏移与排序误差：绝对atol=.0005 cash/100
+（.05元）、centered atol=.00005（.005元），rtol均3e-5，并强制所有训练行raw argmax
+一致；同时依然逐条精确复核**实际记录分数**下的center/ε分支/抽样动作/probability，
+未放松真实执行一致性。更新前后Q drift则用同形状256批次独立重算并核对完整统计。
+这项审计器修正发生在实验结束后，原审计器源码、旧config/lock及新旧SHA均保存在
+`audit-reader-before-numeric-fix.py`、`audit-numeric-amendment.json`，不冒称审计容差预注册。
+实验actor/learner源文件、seed/mask、checkpoint、optimizer、全部真实轨迹、现金及bootstrap
+结果均未改，也没有重跑训练、holdout或增加实验局。
+
+#### 最终审计与停止状态
+
+独立 `audit-report.json` **passed=true**：三代30,000训练局完整规则/守恒/可见编码/真实MC
+重放、四块63,000评估局完整重放、实际actor分支/动作/probability/RNG、mask与seed、
+匹配无放回updates、连续Adam/shuffle/Torch RNG、参数/BN/Q统计、Gen3 SHA和10,000次
+配对seed-cluster bootstrap全部核对通过。训练每组489 updates、125,184行只消费一次，
+合计250,368 used＋993 dropped＝251,361实际决策。18,500个锁定独立seed中训练15,000
+被A/B配对使用；93,000是真实轨迹数，不能称93,000个独立seed。
+
+只读审计器AST与冻结的普通collect/play/update调用链确认未引入counterfactual、隐藏
+世界采样、posterior/belief、TD/target/replay/importance或新loss；ownership函数只接收
+试验公共metadata。两次reader修正均独立重构旧config确认**除reader SHA以外逐项完全
+相同**，训练producer、权重、对手、rules/Observation/reward/loss/BN/LR均未变。
+完整规则重放证明实际执行/MC标签正确，不是证明Q最优或策略变强。
+
+本机审计证据：
+
+- `data/generated/mortal-actor-center-probe-v1/audit-report.json`，SHA256
+  `19fa3800ec30e887e601de8a98985e7df3468610ddbf5dbc84200a2227856fb5`。
+- `completion-evidence.json`封存638个本机artifact SHA，SHA256
+  `91e1939a58dd6447e27ca0cfda6f894d7c8caf78527f0ee049abe5da71fabf3a`。
+- 原始局/row/行为/optimizer/RNG/权重保留本机，逐JSON/权重不进Git；重要汇总/代码一次提交。
+
+最终 `.venv/bin/python -m pytest -q`：**438 passed, 1 skipped**；ruff覆盖zimortal/tests及
+两个新增入口通过；`git diff --check`通过。实验正常退出，未触发安全停止，baseline与
+initial SHA未变，未替换active baseline。**审计通过与性能晋级通过是两回事：前者true，
+后者false。** 当前仍缺可重复的独立现金提升；本轮结束，等待人工决定下一步，不自动
+扩大ownership/generation或进入其他训练线。
